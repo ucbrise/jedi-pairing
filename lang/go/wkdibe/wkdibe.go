@@ -39,6 +39,8 @@ import (
 	"runtime"
 	"sort"
 	"unsafe"
+
+	"golang.org/x/crypto/sha3"
 )
 
 /*
@@ -77,6 +79,17 @@ func (m *Encryptable) Bytes() []byte {
 	return C.GoBytes(unsafe.Pointer(&m.data), C.sizeof_embedded_pairing_wkdibe_gt_t)
 }
 
+// HashToSymmetricKey hashes the encryptable to get a symmetric key. The
+// symmetric key fills the provided slice (which can be of any length, but
+// remember that there are only 32 bytes of entropy in the underlying group
+// element). Returns sthe provided slice.
+func (m *Encryptable) HashToSymmetricKey(sk []byte) []byte {
+	shake := sha3.NewShake256()
+	shake.Write(m.Bytes())
+	shake.Read(sk)
+	return sk
+}
+
 // Signable represents a message that is signable with WKD-IBE. The intended
 // usage is to hash the message to sign to a Signable, and then pass the
 // Signable to the Sign function.
@@ -88,7 +101,17 @@ type Signable struct {
 // provided data. The cryptographic hash used is sha256.
 func (m *Signable) Hash(data []byte) *Signable {
 	digest := sha256.Sum256(data)
-	C.memcpy(unsafe.Pointer(&m.data), unsafe.Pointer(&digest[0]), C.sizeof_embedded_pairing_wkdibe_scalar_t)
+	return m.Set(digest[:])
+}
+
+// Set sets the value of this signable to the specified byte slice, which
+// must be 32 bytes long. It will automatically "reduce" itself if the
+// specified byte slice represents an int value greater than GroupOrder.
+func (m *Signable) Set(data []byte) *Signable {
+	if C.size_t(len(data)) != C.sizeof_embedded_pairing_wkdibe_scalar_t {
+		panic("Slice has wrong size")
+	}
+	C.memcpy(unsafe.Pointer(&m.data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_scalar_t)
 	C.embedded_pairing_wkdibe_scalar_hash_reduce(&m.data)
 	return m
 }
