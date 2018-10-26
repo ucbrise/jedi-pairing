@@ -156,7 +156,16 @@ namespace embedded_pairing::bls12_381 {
         void from_projective(const Projective<BaseField>& __restrict a) {
             if (a.is_zero()) {
                 this->copy(zero);
+                return;
             }
+#ifndef RESIST_SIDE_CHANNELS
+            if (BaseField::equal(a.z, BaseField::one)) {
+                this->x.copy(a.x);
+                this->y.copy(a.y);
+                this->infinity = false;
+                return;
+            }
+#endif
 
             BaseField zinv;
             zinv.inverse(a.z);

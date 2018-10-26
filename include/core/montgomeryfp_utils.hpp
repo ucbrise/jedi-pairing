@@ -61,17 +61,27 @@ namespace embedded_pairing::core {
     void exponentiate_restrict(F& __restrict res, const F& __restrict a, const BigInt& __restrict power) {
 #ifdef RESIST_SIDE_CHANNELS
         F tmp;
+#else
+        bool found_one = false;
 #endif
         res.copy(F::one);
         for (int i = BigInt::bits_value - 1; i != -1; i--) {
+#ifdef RESIST_SIDE_CHANNELS
             res.square(res);
             if (power.bit(i)) {
                 res.multiply(res, a);
             } else {
-#ifdef RESIST_SIDE_CHANNELS
                 tmp.multiply(res, a);
-#endif
             }
+#else
+            if (found_one) {
+                res.square(res);
+            }
+            if (power.bit(i)) {
+                res.multiply(res, a);
+                found_one = true;
+            }
+#endif
         }
     }
 

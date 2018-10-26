@@ -233,6 +233,29 @@ func TestNonDelegableQualifyKey(t *testing.T) {
 	decryptAndCheckHelper(t, key2, ciphertext, message)
 }
 
+func TestAdjustNonDelegable(t *testing.T) {
+	// Set up parameters
+	params, masterkey := Setup(10, false)
+
+	attrs1 := AttributeList{2: big.NewInt(4)}
+	attrs2 := AttributeList{2: big.NewInt(4), 7: big.NewInt(123), 8: big.NewInt(365)}
+	attrs3 := AttributeList{2: big.NewInt(4), 3: big.NewInt(123), 7: big.NewInt(6), 9: big.NewInt(366)}
+
+	// Come up with a message to encrypt
+	message := NewMessage()
+
+	// Generate key in two steps
+	key1 := genFromMasterHelper(t, params, masterkey, attrs1)
+	key2 := NonDelegableQualifyKey(params, key1, attrs2)
+
+	ciphertext := encryptHelper(t, params, attrs2, message)
+	decryptAndCheckHelper(t, key2, ciphertext, message)
+
+	AdjustNonDelegable(key2, key1, attrs2, attrs3)
+	ciphertext = encryptHelper(t, params, attrs3, message)
+	decryptAndCheckHelper(t, key2, ciphertext, message)
+}
+
 func TestDecryptWithMaster(t *testing.T) {
 	// Set up parameters
 	params, masterkey := Setup(10, false)
