@@ -15,13 +15,15 @@ This library implements a bilinear group and pairing-based cryptographic schemes
 
 Building the Code
 -----------------
-This code has been tested with g++ version 7 and clang++ version 6 on Ubuntu 16.04 and on the Atmel SAMR21 SoC. Other compilers/versions may work, but **the compiler must support C++17 features**.
+This code has been tested with g++ version 7 and clang++ version 6 on Ubuntu 16.04/18.04 and on the Atmel SAMR21 SoC. Other compilers/versions may work, but **the compiler must support C++17 features**.
 
 You can compile with either g++ or clang++, but the Makefile defaults to clang++ because, in our experience, clang++ generates faster code than g++ for this library. You can switch compilers by editing the top of the Makefile (just comment out the clang++ section and uncomment the g++ section). You can also compile for Cortex-M0+ this way, by uncommenting the section that uses arm-none-eabi-g++ (we do not support clang++ for embedded builds).
 
 The result of running `make` is the `pairing.a` file, which can be statically linked with your code.
 
 To build the go library, you must first build the `pairing.a` file, and then copy it into the same directory as the `.go` files. This is necessary because CGo will only look for C and C++ files in the same directory as the Go package. Unfortunately, it is not as simple as running `go get`.
+
+Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output.
 
 License
 -------
