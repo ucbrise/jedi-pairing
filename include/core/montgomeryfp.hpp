@@ -344,7 +344,7 @@ namespace embedded_pairing::core {
  * appropriate headers for optimization.
  */
  #if defined(__ARM_ARCH_6M__)
- #include "./arch/armv6_m/bigint.hpp"
+ #include "./arch/armv6_m/montgomeryfp.hpp"
  #endif
 
 #endif
