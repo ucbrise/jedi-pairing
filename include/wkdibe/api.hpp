@@ -40,6 +40,7 @@
 #include "bls12_381/fr.hpp"
 #include "bls12_381/fq12.hpp"
 #include "bls12_381/curve.hpp"
+#include "bls12_381/pairing.hpp"
 
 namespace embedded_pairing::wkdibe {
     typedef bls12_381::G1 G1;
@@ -245,7 +246,8 @@ namespace embedded_pairing::wkdibe {
     }
 
     inline void random_gt(GT& gt, void (*get_random_bytes)(void*, size_t)) {
-        gt.random(get_random_bytes);
+        Scalar s;
+        gt.random_gt(s, bls12_381::generator_pairing, get_random_bytes);
     }
 
     void setup(Params& params, MasterKey& msk, int l, bool signatures, void (*get_random_bytes)(void*, size_t));

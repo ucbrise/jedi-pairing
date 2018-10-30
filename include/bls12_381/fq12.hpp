@@ -60,6 +60,70 @@ namespace embedded_pairing::bls12_381 {
         void conjugate(const Fq12& a);
         void random(void (*get_random_bytes)(void*, size_t));
 
+        /*
+         * Faster functions for the pairing target group GT, which is a
+         * subgroup of the cyclotomic subgroup.
+         */
+        void square_cyclotomic(const Fq12& a);
+        template <typename BigInt>
+        void exponentiate_restrict_cyclotomic(const Fq12& __restrict a, const BigInt& __restrict power) {
+#ifdef RESIST_SIDE_CHANNELS
+            Fq12 tmp;
+#else
+            bool found_one = false;
+#endif
+            this->copy(Fq12::one);
+            for (int i = BigInt::bits_value - 1; i != -1; i--) {
+#ifdef RESIST_SIDE_CHANNELS
+                this->square_cyclotomic(*this);
+                if (power.bit(i)) {
+                    this->multiply(*this, a);
+                } else {
+                    tmp.multiply(*this, a);
+                }
+#else
+                if (found_one) {
+                    this->square_cyclotomic(*this);
+                }
+                if (power.bit(i)) {
+                    this->multiply(*this, a);
+                    found_one = true;
+                }
+#endif
+            }
+        }
+        template <typename BigInt>
+        void exponentiate_cyclotomic(const Fq12& a, const BigInt& __restrict power) {
+            Fq12 tmp;
+            tmp.exponentiate_restrict_cyclotomic<BigInt>(a, power);
+            this->copy(tmp);
+        }
+        /* Sets this to a^((q^6 - 1)*(q^2 + 1)). */
+        void map_to_cyclotomic(const Fq12& a);
+
+        /*
+         * This method computes a^(c0 + c1*|x| + c2*|x|^2 + c3*|x|^3). It uses the
+         * fact that r = x^4 - x^2 + 1 and q = (x - 1)^2 * r * 3^(-1) + x, which
+         * implies that, if |a| = r (which is true for a in GT), then a^q = a^x.
+         * Therefore, we can use the frobenius map to calculate a^x, speeding up
+         * computation substantially.
+         */
+        void exponentiate_gt_coeff(const Fq12& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
+
+        /*
+         * Chooses random c0, c1, c2, c3 such that each c is in [0, |x|) and
+         * y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3 is uniformly distributed in
+         * [0, r).
+         */
+        static void random_gt_exp_coeff(BigInt<256>& y, BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, void (*get_random_bytes)(void*, size_t));
+
+        /*
+         * Chooses an exponent y uniformly distributed in [0, r) and computes
+         * base^y. This is significantly faster than using exponentiate or
+         * exponentiate_cyclotomic.
+         */
+        void random_gt(BigInt<256>& y, const Fq12& base, void (*get_random_bytes)(void*, size_t));
+
         static bool equal(const Fq12& a, const Fq12& b);
     };
 

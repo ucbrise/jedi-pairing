@@ -346,8 +346,7 @@ namespace embedded_pairing::wkdibe {
 
     void encrypt_precomputed(Ciphertext& ciphertext, const GT& message, const Params& params, const Precomputed& precomputed, void (*get_random_bytes)(void*, size_t)) {
         Scalar s;
-        random_zpstar(s, get_random_bytes);
-        core::exponentiate(ciphertext.a, params.pairing, s);
+        ciphertext.a.random_gt(s, params.pairing, get_random_bytes);
         ciphertext.a.multiply(ciphertext.a, message);
         ciphertext.b.multiply(params.g, s);
         ciphertext.c.multiply(precomputed.prodexp, s);

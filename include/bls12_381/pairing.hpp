@@ -40,7 +40,7 @@
 using embedded_pairing::core::BigInt;
 
 namespace embedded_pairing::bls12_381 {
-    static constexpr BigInt<128> bls_x = {.std_words = {0x00010000, 0xd2010000, 0x0, 0x0}};
+    static constexpr BigInt<64> bls_x = {.std_words = {0x00010000, 0xd2010000}};
     static constexpr unsigned int bls_x_num_set_bits = 6;
     static constexpr unsigned int bls_x_highest_set_bit = 63;
     static constexpr bool bls_x_is_negative = true;

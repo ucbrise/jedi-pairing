@@ -93,14 +93,14 @@ namespace embedded_pairing::core {
 
         bool is_zero(void) const {
 #ifdef RESIST_SIDE_CHANNELS
-            dword_t res = this->dwords[0];
-            for (int i = 1; i != dword_length; i++) {
-                res |= this->dwords[i];
+            word_t res = this->words[0];
+            for (int i = 1; i != word_length; i++) {
+                res |= this->words[i];
             }
             return res == 0;
 #else
-            for (int i = 0; i != dword_length; i++) {
-                if (this->dwords[i] != 0) {
+            for (int i = 0; i != word_length; i++) {
+                if (this->words[i] != 0) {
                     return false;
                 }
             }
@@ -143,19 +143,19 @@ namespace embedded_pairing::core {
 
         template <int from_bits>
         void copy(const BigInt<from_bits>& a) {
-            if constexpr(sizeof(*this) <= sizeof(a)) {
-                memmove(this, &a, sizeof(*this));
+            if constexpr(bits <= from_bits) {
+                memmove(&this->bytes[0], &a.bytes[0], sizeof(this->bytes));
             } else {
-                memmove(this, &a, sizeof(a));
-                memset(&this->bytes[sizeof(a)], 0x0, sizeof(*this) - sizeof(a));
+                memmove(&this->bytes[0], &a.bytes[0], sizeof(a.bytes));
+                memset(&this->bytes[sizeof(a.bytes)], 0x0, sizeof(this->bytes) - sizeof(a.bytes));
             }
         }
 
         static bool equal(const BigInt<bits>& a, const BigInt<bits>& b) {
 #ifdef RESIST_SIDE_CHANNELS
-            dword_t res = a.dwords[0] ^ b.dwords[0];
+            dword_t res = a.words[0] ^ b.words[0];
             for (int i = 1; i != dword_length; i++) {
-                res |= (a.dwords[i] ^ b.dwords[i]);
+                res |= (a.words[i] ^ b.words[i]);
             }
             return res == 0;
 #else
@@ -166,21 +166,21 @@ namespace embedded_pairing::core {
         static int compare(const BigInt<bits>& a, const BigInt<bits>& b) {
 #ifdef RESIST_SIDE_CHANNELS
             int result = 0;
-            for (int i = 0; i != dword_length; i++) {
-                if (a.dwords[i] < b.dwords[i]) {
+            for (int i = 0; i != word_length; i++) {
+                if (a.words[i] < b.words[i]) {
                     result = -1;
                 }
-                if (a.dwords[i] > b.dwords[i]) {
+                if (a.words[i] > b.words[i]) {
                     result = 1;
                 }
             }
             return result;
 #else
-            for (int i = dword_length - 1; i != -1; i--) {
-                if (a.dwords[i] < b.dwords[i]) {
+            for (int i = word_length - 1; i != -1; i--) {
+                if (a.words[i] < b.words[i]) {
                     return -1;
                 }
-                if (a.dwords[i] > b.dwords[i]) {
+                if (a.words[i] > b.words[i]) {
                     return 1;
                 }
             }
@@ -190,12 +190,12 @@ namespace embedded_pairing::core {
 
         bool add(const BigInt<bits>& a, const BigInt<bits>& __restrict b) {
             uint8_t carry = 0;
-            for (int i = 0; i != dword_length; i++) {
-                this->dwords[i] = a.dwords[i] + b.dwords[i] + carry;
+            for (int i = 0; i != word_length; i++) {
+                this->words[i] = a.words[i] + b.words[i] + carry;
                 if (carry == 0) {
-                    carry = (this->dwords[i] < b.dwords[i]) ? 1 : 0;
+                    carry = (this->words[i] < b.words[i]) ? 1 : 0;
                 } else {
-                    carry = (this->dwords[i] <= b.dwords[i]) ? 1 : 0;
+                    carry = (this->words[i] <= b.words[i]) ? 1 : 0;
                 }
             }
             return (carry != 0);
@@ -203,13 +203,13 @@ namespace embedded_pairing::core {
 
         bool subtract(const BigInt<bits>& a, const BigInt<bits>& __restrict b) {
             uint8_t borrow = 0;
-            for (int i = 0; i != dword_length; i++) {
-                dword_t old_a_val = a.dwords[i];
-                this->dwords[i] = a.dwords[i] - b.dwords[i] - borrow;
+            for (int i = 0; i != word_length; i++) {
+                dword_t old_a_val = a.words[i];
+                this->words[i] = a.words[i] - b.words[i] - borrow;
                 if (borrow == 0) {
-                    borrow = (old_a_val < this->dwords[i]) ? 1 : 0;
+                    borrow = (old_a_val < this->words[i]) ? 1 : 0;
                 } else {
-                    borrow = (old_a_val <= this->dwords[i]) ? 1 : 0;
+                    borrow = (old_a_val <= this->words[i]) ? 1 : 0;
                 }
             }
             return (borrow != 0);
@@ -308,7 +308,8 @@ namespace embedded_pairing::core {
         //     }
         // }
 
-        void multiply(const BigInt<bits/2>& __restrict a, const BigInt<bits/2>& __restrict b) {
+        template <int a_bits>
+        void multiply(const BigInt<a_bits>& __restrict a, const BigInt<bits - a_bits>& __restrict b) {
             {
                 /* First iteration of loop; avoids memset at the beginning. */
                 word_t carry = 0;

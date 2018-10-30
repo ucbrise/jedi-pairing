@@ -64,7 +64,15 @@ namespace embedded_pairing::bls12_381 {
         /* Constant for zero. */
         static const Affine<BaseField, ScalarField, curve_b> zero;
 
-        void copy(const Affine<BaseField,ScalarField, curve_b>& a) {
+        void set(const Projective<BaseField>& a) {
+            this->from_projective(a);
+        }
+
+        void set(const Affine<BaseField, ScalarField, curve_b>& a) {
+            this->copy(a);
+        }
+
+        void copy(const Affine<BaseField, ScalarField, curve_b>& a) {
             if (this != &a) {
                 memcpy(this, &a, sizeof(*this));
             }
@@ -195,6 +203,15 @@ namespace embedded_pairing::bls12_381 {
         BaseField z;
 
         static const Projective<BaseField> zero;
+
+        void set(const Projective<BaseField>& a) {
+            this->copy(a);
+        }
+
+        template <typename ScalarField, const BaseField& coeff_b>
+        void set(const Affine<BaseField, ScalarField, coeff_b>& a) {
+            this->from_affine(a);
+        }
 
         void copy(const Projective<BaseField>& a) {
             if (this != &a) {

@@ -49,6 +49,7 @@ namespace embedded_pairing::core {
     }
 
     template <>
+    template <>
     inline void BigInt<768>::multiply(const BigInt<384>& __restrict a, const BigInt<384>& __restrict b) {
         embedded_pairing_core_arch_thumb_bigint_768_multiply_alt(&this->words, &a.words, &b.words);
     }
