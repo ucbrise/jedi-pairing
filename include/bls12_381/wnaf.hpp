@@ -116,7 +116,7 @@ namespace embedded_pairing::bls12_381 {
         }
     }
 
-    template <typename Projective, typename Base, int bits, unsigned int window>
+    template <typename Projective, typename Base, int bits, unsigned int window = 4>
     void wnaf_multiply(Projective& result, const Base& a, const BigInt<bits>& power) {
         WnafTable<Projective, window> t;
         t.fill_table(a);
@@ -125,6 +125,22 @@ namespace embedded_pairing::bls12_381 {
         s.from_bigint(power);
 
         wnaf_table_multiply(result, t, s);
+    }
+
+    template <typename Projective, typename Base, int bits, unsigned int window>
+    void wnaf_multiply(Projective& result, const Base& a, const WnafScalar<bits, window>& power) {
+        WnafTable<Projective, window> t;
+        t.fill_table(a);
+
+        wnaf_table_multiply(result, t, power);
+    }
+
+    template <typename Projective, typename Base, int bits, unsigned int window>
+    void wnaf_multiply(Projective& result, const WnafTable<Projective, window>& a, const BigInt<bits>& power) {
+        WnafScalar<bits, window> s;
+        s.from_bigint(power);
+
+        wnaf_table_multiply(result, a, s);
     }
 }
 
