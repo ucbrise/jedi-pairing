@@ -98,6 +98,12 @@ namespace embedded_pairing::core {
      */
     template <typename MontgomeryFp>
     void montgomeryfp_inverse(MontgomeryFp& res, const MontgomeryFp& a) {
+        /* Algorithm below will not terminate for a = 0, so check if it is. */
+        if (a.is_zero()) {
+            res.set_zero();
+            return;
+        }
+
         MontgomeryFp b;
         b.copy(MontgomeryFp::r2_value);
 

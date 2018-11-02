@@ -334,7 +334,7 @@ namespace embedded_pairing::wkdibe {
         }
 
         for (int i = 0; i != this->l; i++) {
-            if (!this->b[i].unmarshal<compressed>(&b[i])) {
+            if (!this->b[i].unmarshal<compressed>(&b[i], checked)) {
                 return false;
             }
         }

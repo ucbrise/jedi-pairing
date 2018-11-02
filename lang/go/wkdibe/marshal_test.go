@@ -180,16 +180,16 @@ func HelperBenchmarkUnmarshalSecretKey(b *testing.B, numAttrs int, compressed bo
 	b.StopTimer()
 	attrs := make(AttributeList)
 
-	for i := 0; i < b.N; i++ {
-		params, key := Setup(numAttrs, true)
-		privkey := KeyGen(params, key, attrs)
-		privkeybytes := privkey.Marshal(compressed)
-		privkey2 := new(SecretKey)
+	params, key := Setup(numAttrs, true)
+	privkey := KeyGen(params, key, attrs)
+	privkeybytes := privkey.Marshal(compressed)
+	privkey2 := new(SecretKey)
 
-		b.StartTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
 		privkey2.Unmarshal(privkeybytes, compressed, checked)
-		b.StopTimer()
 	}
+	b.StopTimer()
 }
 
 // func BenchmarkMarshalSecretKey5Compressed(b *testing.B) {

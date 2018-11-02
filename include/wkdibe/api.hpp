@@ -82,7 +82,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
         inline int setLength(const void* marshalled, size_t marshalledLength) {
@@ -127,7 +127,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
         static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size + bls12_381::Encoding<G2Affine, compressed>::size + sizeof(GT);
@@ -141,7 +141,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
         static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size + bls12_381::Encoding<G2Affine, compressed>::size;
@@ -158,7 +158,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
     };
 
     struct SecretKey {
@@ -174,7 +174,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
         int setLength(const void* marshalled, size_t marshalledLength) {
@@ -217,7 +217,7 @@ namespace embedded_pairing::wkdibe {
         void marshal(void* buffer) const;
 
         template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked = true);
+        bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
         static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size;

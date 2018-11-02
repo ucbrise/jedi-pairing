@@ -54,10 +54,8 @@ func (p *Params) Marshal(compressed bool) []byte {
 // Unmarshal recovers a Params object from a byte slice, which must encode
 // either its compressed or uncompressed form, depending on the argument. If
 // CHECKED is set to false, then unmarshalling is faster (some checks on the
-// result are skipped), but UNDEFINED BEHAVIOR may result if an invalid byte
-// array is passed as an argument. In general, you should not set CHECKED to
-// false unless you absolutely need the extra performance AND you absolutely
-// trust that MARSHALLED is valid.
+// result are skipped), but the function will not detect if the group elements
+// are not valid.
 func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	arrlength := C.embedded_pairing_wkdibe_params_set_length(&p.data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
@@ -100,10 +98,8 @@ func (c *Ciphertext) Marshal(compressed bool) []byte {
 // Unmarshal recovers a Ciphertext object from a byte slice, which must encode
 // either its compressed on uncompressed form, depending on the argument. If
 // CHECKED is set to false, then unmarshalling is faster (some checks on the
-// result are skipped), but UNDEFINED BEHAVIOR may result if an invalid byte
-// array is passed as an argument. In general, you should not set CHECKED to
-// false unless you absolutely need the extra performance AND you absolutely
-// trust that MARSHALLED is valid.
+// result are skipped), but the function will not detect if the group elements
+// are not valid.
 func (c *Ciphertext) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	if checked && C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
@@ -123,10 +119,8 @@ func (s *Signature) Marshal(compressed bool) []byte {
 // Unmarshal recovers a Signature object from a byte slice, which must encode
 // either its compressed on uncompressed form, depending on the argument. If
 // CHECKED is set to false, then unmarshalling is faster (some checks on the
-// result are skipped), but UNDEFINED BEHAVIOR may result if an invalid byte
-// array is passed as an argument. In general, you should not set CHECKED to
-// false unless you absolutely need the extra performance AND you absolutely
-// trust that MARSHALLED is valid.
+// result are skipped), but the function will not detect if the group elements
+// are not valid.
 func (s *Signature) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	if checked && C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
@@ -146,10 +140,8 @@ func (sk *SecretKey) Marshal(compressed bool) []byte {
 // Unmarshal recovers a SecretKey object from a byte slice, which must encode
 // either its compressed on uncompressed form, depending on the argument. If
 // CHECKED is set to false, then unmarshalling is faster (some checks on the
-// result are skipped), but UNDEFINED BEHAVIOR may result if an invalid byte
-// array is passed as an argument. In general, you should not set CHECKED to
-// false unless you absolutely need the extra performance AND you absolutely
-// trust that MARSHALLED is valid.
+// result are skipped), but the function will not detect if the group elements
+// are not valid.
 func (sk *SecretKey) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	arrlength := C.embedded_pairing_wkdibe_secretkey_set_length(&sk.data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
@@ -192,10 +184,8 @@ func (msk *MasterKey) Marshal(compressed bool) []byte {
 // Unmarshal recovers a MasterKey object from a byte slice, which must encode
 // either its compressed on uncompressed form, depending on the argument. If
 // CHECKED is set to false, then unmarshalling is faster (some checks on the
-// result are skipped), but UNDEFINED BEHAVIOR may result if an invalid byte
-// array is passed as an argument. In general, you should not set CHECKED to
-// false unless you absolutely need the extra performance AND you absolutely
-// trust that MARSHALLED is valid.
+// result are skipped), but the function will not detect if the group elements
+// are not valid.
 func (msk *MasterKey) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	if checked && C.embedded_pairing_wkdibe_masterkey_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
