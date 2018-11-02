@@ -155,7 +155,7 @@ namespace embedded_pairing::wkdibe {
 
     template <bool compressed>
     struct CiphertextMarshalled {
-        GT a;
+        uint8_t a[sizeof(GT)];
         Encoding<G2Affine, compressed> b;
         Encoding<G1Affine, compressed> c;
     };
@@ -163,7 +163,7 @@ namespace embedded_pairing::wkdibe {
     template <bool compressed>
     void Ciphertext::marshal(void* buffer) const {
         CiphertextMarshalled<compressed>* encoded = static_cast<CiphertextMarshalled<compressed>*>(buffer);
-        encoded->a.copy(this->a);
+        memcpy(encoded->a, &this->a, sizeof(GT));
 
         G2Affine baffine;
         baffine.from_projective(this->b);
@@ -177,7 +177,7 @@ namespace embedded_pairing::wkdibe {
     template <bool compressed>
     bool Ciphertext::unmarshal(const void* buffer, bool checked) {
         const CiphertextMarshalled<compressed>* encoded = reinterpret_cast<const CiphertextMarshalled<compressed>*>(buffer);
-        this->a.copy(encoded->a);
+        memcpy(&this->a, encoded->a, sizeof(GT));
 
         G2Affine baffine;
         if (!encoded->b.decode(baffine, checked)) {
