@@ -34,7 +34,7 @@ package cryptutils
 
 /*
 #cgo CFLAGS: -I ../../../include
-#cgo LDFLAGS: pairing.a
+#cgo LDFLAGS: ${SRCDIR}/pairing.a
 #include <string.h>
 #include "wkdibe/wkdibe.h"
 #include "go_utils.h"
@@ -87,6 +87,25 @@ func (m *Encryptable) Bytes() []byte {
 	return C.GoBytes(unsafe.Pointer(&m.Data), C.sizeof_embedded_pairing_wkdibe_gt_t)
 }
 
+// Set sets the value of an encryptable to the provided byte slice.
+func (m *Encryptable) Set(data []byte) bool {
+	if len(data) != int(C.sizeof_embedded_pairing_wkdibe_gt_t) {
+		return false
+	}
+	C.memcpy(unsafe.Pointer(&m.Data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_gt_t)
+	return true
+}
+
+// Marshal does the same thing as Bytes.
+func (m *Encryptable) Marshal() []byte {
+	return m.Bytes()
+}
+
+// Unmarshal does the same thing as Set.
+func (m *Encryptable) Unmarshal(marshalled []byte) bool {
+	return m.Set(marshalled)
+}
+
 // HashToSymmetricKey hashes the encryptable to get a symmetric key. The
 // symmetric key fills the provided slice (which can be of any length, but
 // remember that there are only 32 bytes of entropy in the underlying group
@@ -132,4 +151,13 @@ func (m *Signable) Set(data []byte) *Signable {
 	C.memcpy(unsafe.Pointer(&m.Data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_scalar_t)
 	C.embedded_pairing_wkdibe_scalar_hash_reduce(&m.Data)
 	return m
+}
+
+// HashToZp hashes a byte slice to an integer in Zp*.
+func HashToZp(bytestring []byte) *big.Int {
+	digest := sha256.Sum256(bytestring)
+	bigint := new(big.Int).SetBytes(digest[:])
+	bigint.Mod(bigint, new(big.Int).Add(GroupOrder, big.NewInt(-1)))
+	bigint.Add(bigint, big.NewInt(1))
+	return bigint
 }

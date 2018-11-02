@@ -43,7 +43,7 @@ import (
 
 /*
 #cgo CFLAGS: -I ../../../include
-#cgo LDFLAGS: pairing.a
+#cgo LDFLAGS: ${SRCDIR}/pairing.a
 #include <stdlib.h>
 #include <string.h>
 #include "wkdibe/wkdibe.h"
