@@ -98,6 +98,16 @@ func (m *Encryptable) HashToSymmetricKey(sk []byte) []byte {
 	return sk
 }
 
+// GenerateKey generates a random key, and an Encryptable that hashes to that
+// key. The key is written to the provided slice, and that same slice is
+// returned. Note that, while the slice can be of any length, there are only
+// 32 bytes of entropy in the Encryptable
+func GenerateKey(sk []byte) ([]byte, *Encryptable) {
+	e := new(Encryptable).Random()
+	e.HashToSymmetricKey(sk)
+	return sk, e
+}
+
 // Signable represents a message that is signable with WKD-IBE. The intended
 // usage is to hash the message to sign to a Signable, and then pass the
 // Signable to the Sign function.
