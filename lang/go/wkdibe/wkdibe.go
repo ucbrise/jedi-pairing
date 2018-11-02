@@ -33,14 +33,12 @@
 package wkdibe
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
 	"math/big"
 	"runtime"
 	"sort"
 	"unsafe"
 
-	"golang.org/x/crypto/sha3"
+	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
 )
 
 /*
@@ -49,103 +47,39 @@ import (
 #include <stdlib.h>
 #include <string.h>
 #include "wkdibe/wkdibe.h"
-#include "go_utils.h"
 */
 import "C"
 
-// GroupOrder is the order of the bilinear group on which this implementation
-// is based. Signables and elements of attribute lists must have a value
-// strictly less than this and strictly greater than 0.
-var GroupOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
-
-// Encryptable represents a message that can be encrypted with WKD-IBE. The
-// intended usage is to choose a random message, encrypt that message, and
-// then hash the message to obtain a symmetric key.
-type Encryptable struct {
-	data C.embedded_pairing_wkdibe_gt_t
-}
-
-// Random sets the message to a random valid message and returns a pointer to
-// the message on which it was invoked.
-func (m *Encryptable) Random() *Encryptable {
-	C.embedded_pairing_wkdibe_random_gt(&m.data, randomBytesFunction)
-	return m
-}
-
-// Bytes returns a slice of bytes representing the value of the message. It is
-// a copy of the underlying C memory, so it can be safely mutated. It can be
-// passed to a hash function to hash the message to a symmetric key.
-func (m *Encryptable) Bytes() []byte {
-	return C.GoBytes(unsafe.Pointer(&m.data), C.sizeof_embedded_pairing_wkdibe_gt_t)
-}
-
-// HashToSymmetricKey hashes the encryptable to get a symmetric key. The
-// symmetric key fills the provided slice (which can be of any length, but
-// remember that there are only 32 bytes of entropy in the underlying group
-// element). Returns sthe provided slice.
-func (m *Encryptable) HashToSymmetricKey(sk []byte) []byte {
-	shake := sha3.NewShake256()
-	shake.Write(m.Bytes())
-	shake.Read(sk)
-	return sk
-}
-
-// Signable represents a message that is signable with WKD-IBE. The intended
-// usage is to hash the message to sign to a Signable, and then pass the
-// Signable to the Sign function.
-type Signable struct {
-	data C.embedded_pairing_wkdibe_scalar_t
-}
-
-// Hash assigns the value of this Signable to a cryptographic hash of the
-// provided data. The cryptographic hash used is sha256.
-func (m *Signable) Hash(data []byte) *Signable {
-	digest := sha256.Sum256(data)
-	return m.Set(digest[:])
-}
-
-// Set sets the value of this signable to the specified byte slice, which
-// must be 32 bytes long. It will automatically "reduce" itself if the
-// specified byte slice represents an int value greater than GroupOrder.
-func (m *Signable) Set(data []byte) *Signable {
-	if C.size_t(len(data)) != C.sizeof_embedded_pairing_wkdibe_scalar_t {
-		panic("Slice has wrong size")
-	}
-	C.memcpy(unsafe.Pointer(&m.data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_scalar_t)
-	C.embedded_pairing_wkdibe_scalar_hash_reduce(&m.data)
-	return m
-}
-
 // Params represents public parameters for a WKD-IBE system.
 type Params struct {
-	data C.embedded_pairing_wkdibe_params_t
+	Data C.embedded_pairing_wkdibe_params_t
 }
 
 // Ciphertext represents a WKD-IBE ciphertext.
 type Ciphertext struct {
-	data C.embedded_pairing_wkdibe_ciphertext_t
+	Data C.embedded_pairing_wkdibe_ciphertext_t
 }
 
 // Signature represents a WKD-IBE signature.
 type Signature struct {
-	data C.embedded_pairing_wkdibe_signature_t
+	Data C.embedded_pairing_wkdibe_signature_t
 }
 
 // SecretKey represents a WKD-IBE secret key.
 type SecretKey struct {
-	data C.embedded_pairing_wkdibe_secretkey_t
+	Data C.embedded_pairing_wkdibe_secretkey_t
 }
 
 // MasterKey represents a WKD-IBE master key.
 type MasterKey struct {
-	data C.embedded_pairing_wkdibe_masterkey_t
+	Data C.embedded_pairing_wkdibe_masterkey_t
 }
 
 // PreparedAttributeList represents precomputation for a specific attribute
 // list to accelerate e.g., repeated encryption for that attribute list with
 // the same public parameters.
 type PreparedAttributeList struct {
-	data C.embedded_pairing_wkdibe_precomputed_t
+	Data C.embedded_pairing_wkdibe_precomputed_t
 }
 
 // AttributeIndex represents an attribute --- specifically, its index in the
@@ -155,16 +89,6 @@ type AttributeIndex int
 // AttributeList represents a list of attributes. It is map from each set
 // attribute (by its index) to the value of that attribute.
 type AttributeList map[AttributeIndex]*big.Int
-
-//export randomBytes
-func randomBytes(buffer unsafe.Pointer, length int) {
-	slice := (*[1 << 32]byte)(buffer)[:length:length]
-	if _, err := rand.Read(slice); err != nil {
-		panic(err)
-	}
-}
-
-var randomBytesFunction = (*[0]byte)(C.go_random_bytes)
 
 func convertAttributeList(attrs AttributeList) *C.embedded_pairing_wkdibe_attributelist_t {
 	if attrs == nil {
@@ -223,11 +147,11 @@ func allocateSecretKeyB(sk *SecretKey, length int) {
 	if length < 0 {
 		panic("Too many attributes in attribute list")
 	} else if length == 0 {
-		sk.data.b = nil
+		sk.Data.b = nil
 	} else {
-		sk.data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.malloc(C.size_t(length) * C.sizeof_embedded_pairing_wkdibe_freeslot_t))
+		sk.Data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.malloc(C.size_t(length) * C.sizeof_embedded_pairing_wkdibe_freeslot_t))
 		runtime.SetFinalizer(sk, func(k *SecretKey) {
-			C.free(unsafe.Pointer(k.data.b))
+			C.free(unsafe.Pointer(k.Data.b))
 		})
 	}
 }
@@ -235,7 +159,7 @@ func allocateSecretKeyB(sk *SecretKey, length int) {
 // NumAttributes returns the number of attributes supported. This was specified
 // via the "l" argument when Setup was called.
 func (params *Params) NumAttributes() int {
-	return int(params.data.l)
+	return int(params.Data.l)
 }
 
 // Setup generates the system parameters, which may be made visible to an
@@ -244,11 +168,11 @@ func (params *Params) NumAttributes() int {
 func Setup(l int, supportSignatures bool) (*Params, *MasterKey) {
 	pp := new(Params)
 	msk := new(MasterKey)
-	pp.data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.malloc(C.size_t(l) * C.sizeof_embedded_pairing_wkdibe_g1_t))
+	pp.Data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.malloc(C.size_t(l) * C.sizeof_embedded_pairing_wkdibe_g1_t))
 	runtime.SetFinalizer(pp, func(p *Params) {
-		C.free(unsafe.Pointer(p.data.h))
+		C.free(unsafe.Pointer(p.Data.h))
 	})
-	C.embedded_pairing_wkdibe_setup(&pp.data, &msk.data, C.int(l), C._Bool(supportSignatures), randomBytesFunction)
+	C.embedded_pairing_wkdibe_setup(&pp.Data, &msk.Data, C.int(l), C._Bool(supportSignatures), cryptutils.RandomBytesFunction)
 	return pp, msk
 }
 
@@ -261,7 +185,7 @@ func Setup(l int, supportSignatures bool) (*Params, *MasterKey) {
 func KeyGen(params *Params, msk *MasterKey, attrs AttributeList) *SecretKey {
 	sk := new(SecretKey)
 	allocateSecretKeyB(sk, params.NumAttributes()-len(attrs))
-	C.embedded_pairing_wkdibe_keygen(&sk.data, &params.data, &msk.data, convertAttributeList(attrs), randomBytesFunction)
+	C.embedded_pairing_wkdibe_keygen(&sk.Data, &params.Data, &msk.Data, convertAttributeList(attrs), cryptutils.RandomBytesFunction)
 	return sk
 }
 
@@ -277,7 +201,7 @@ func KeyGen(params *Params, msk *MasterKey, attrs AttributeList) *SecretKey {
 func QualifyKey(params *Params, qualify *SecretKey, attrs AttributeList) *SecretKey {
 	sk := new(SecretKey)
 	allocateSecretKeyB(sk, params.NumAttributes()-len(attrs))
-	C.embedded_pairing_wkdibe_qualifykey(&sk.data, &params.data, &qualify.data, convertAttributeList(attrs), randomBytesFunction)
+	C.embedded_pairing_wkdibe_qualifykey(&sk.Data, &params.Data, &qualify.Data, convertAttributeList(attrs), cryptutils.RandomBytesFunction)
 	return sk
 }
 
@@ -291,7 +215,7 @@ func QualifyKey(params *Params, qualify *SecretKey, attrs AttributeList) *Secret
 func NonDelegableKeyGen(params *Params, msk *MasterKey, attrs AttributeList) *SecretKey {
 	sk := new(SecretKey)
 	allocateSecretKeyB(sk, params.NumAttributes()-len(attrs))
-	C.embedded_pairing_wkdibe_nondelegable_keygen(&sk.data, &params.data, &msk.data, convertAttributeList(attrs))
+	C.embedded_pairing_wkdibe_nondelegable_keygen(&sk.Data, &params.Data, &msk.Data, convertAttributeList(attrs))
 	return sk
 }
 
@@ -306,7 +230,7 @@ func NonDelegableKeyGen(params *Params, msk *MasterKey, attrs AttributeList) *Se
 func NonDelegableQualifyKey(params *Params, qualify *SecretKey, attrs AttributeList) *SecretKey {
 	sk := new(SecretKey)
 	allocateSecretKeyB(sk, params.NumAttributes()-len(attrs))
-	C.embedded_pairing_wkdibe_nondelegable_qualifykey(&sk.data, &params.data, &qualify.data, convertAttributeList(attrs))
+	C.embedded_pairing_wkdibe_nondelegable_qualifykey(&sk.Data, &params.Data, &qualify.Data, convertAttributeList(attrs))
 	return sk
 }
 
@@ -319,11 +243,11 @@ func NonDelegableQualifyKey(params *Params, qualify *SecretKey, attrs AttributeL
 func ResampleKey(params *Params, precomputed *PreparedAttributeList, key *SecretKey, supportFurtherQualification bool) *SecretKey {
 	sk := new(SecretKey)
 	if supportFurtherQualification {
-		allocateSecretKeyB(sk, int(key.data.l))
+		allocateSecretKeyB(sk, int(key.Data.l))
 	} else {
-		sk.data.b = nil
+		sk.Data.b = nil
 	}
-	C.embedded_pairing_wkdibe_resamplekey(&sk.data, &params.data, &precomputed.data, &key.data, C._Bool(supportFurtherQualification), randomBytesFunction)
+	C.embedded_pairing_wkdibe_resamplekey(&sk.Data, &params.Data, &precomputed.Data, &key.Data, C._Bool(supportFurtherQualification), cryptutils.RandomBytesFunction)
 	return sk
 }
 
@@ -331,7 +255,7 @@ func ResampleKey(params *Params, precomputed *PreparedAttributeList, key *Secret
 // was generated, and cheaply converts it into a non-delegable key for a
 // different attribute set that could also be generated from the parent.
 func AdjustNonDelegable(sk *SecretKey, parent *SecretKey, from AttributeList, to AttributeList) {
-	C.embedded_pairing_wkdibe_adjust_nondelegable(&sk.data, &parent.data, convertAttributeList(from), convertAttributeList(to))
+	C.embedded_pairing_wkdibe_adjust_nondelegable(&sk.Data, &parent.Data, convertAttributeList(from), convertAttributeList(to))
 }
 
 // PrepareAttributeList performs precomputation for the provided attribute
@@ -341,46 +265,46 @@ func AdjustNonDelegable(sk *SecretKey, parent *SecretKey, from AttributeList, to
 // signatures with the same attribute list and want to speed things up.
 func PrepareAttributeList(params *Params, attrs AttributeList) *PreparedAttributeList {
 	prepared := new(PreparedAttributeList)
-	C.embedded_pairing_wkdibe_precompute(&prepared.data, &params.data, convertAttributeList(attrs))
+	C.embedded_pairing_wkdibe_precompute(&prepared.Data, &params.Data, convertAttributeList(attrs))
 	return prepared
 }
 
 // AdjustPreparedAttributeList takes as input a prepared attribute list, and
 // modifies it to correspond to a different attribute list.
 func AdjustPreparedAttributeList(prepared *PreparedAttributeList, params *Params, from AttributeList, to AttributeList) {
-	C.embedded_pairing_wkdibe_adjust_precomputed(&prepared.data, &params.data, convertAttributeList(from), convertAttributeList(to))
+	C.embedded_pairing_wkdibe_adjust_precomputed(&prepared.Data, &params.Data, convertAttributeList(from), convertAttributeList(to))
 }
 
 // Encrypt converts the provided message to ciphertext, using the provided
 // Attribute List and public parameters.
-func Encrypt(message *Encryptable, params *Params, attrs AttributeList) *Ciphertext {
+func Encrypt(message *cryptutils.Encryptable, params *Params, attrs AttributeList) *Ciphertext {
 	ciphertext := new(Ciphertext)
-	C.embedded_pairing_wkdibe_encrypt(&ciphertext.data, &message.data, &params.data, convertAttributeList(attrs), randomBytesFunction)
+	C.embedded_pairing_wkdibe_encrypt(&ciphertext.Data, (*C.embedded_pairing_wkdibe_gt_t)(unsafe.Pointer(&message.Data)), &params.Data, convertAttributeList(attrs), cryptutils.RandomBytesFunction)
 	return ciphertext
 }
 
 // EncryptPrepared encrypts the provided message, using the provided prepared
 // attribute list to speed up the process.
-func EncryptPrepared(message *Encryptable, params *Params, prepared *PreparedAttributeList) *Ciphertext {
+func EncryptPrepared(message *cryptutils.Encryptable, params *Params, prepared *PreparedAttributeList) *Ciphertext {
 	ciphertext := new(Ciphertext)
-	C.embedded_pairing_wkdibe_encrypt_precomputed(&ciphertext.data, &message.data, &params.data, &prepared.data, randomBytesFunction)
+	C.embedded_pairing_wkdibe_encrypt_precomputed(&ciphertext.Data, (*C.embedded_pairing_wkdibe_gt_t)(unsafe.Pointer(&message.Data)), &params.Data, &prepared.Data, cryptutils.RandomBytesFunction)
 	return ciphertext
 }
 
 // Decrypt recovers the original message from the provided ciphertext, using
 // the provided secret key.
-func Decrypt(ciphertext *Ciphertext, sk *SecretKey) *Encryptable {
-	message := new(Encryptable)
-	C.embedded_pairing_wkdibe_decrypt(&message.data, &ciphertext.data, &sk.data)
+func Decrypt(ciphertext *Ciphertext, sk *SecretKey) *cryptutils.Encryptable {
+	message := new(cryptutils.Encryptable)
+	C.embedded_pairing_wkdibe_decrypt((*C.embedded_pairing_wkdibe_gt_t)(unsafe.Pointer(&message.Data)), &ciphertext.Data, &sk.Data)
 	return message
 }
 
 // DecryptWithMaster is the same as Decrypt, but requires the master key to be
 // provided. It is substantially more efficient than generating a private key
 // and then calling Decrypt.
-func DecryptWithMaster(ciphertext *Ciphertext, msk *MasterKey) *Encryptable {
-	message := new(Encryptable)
-	C.embedded_pairing_wkdibe_decrypt_master(&message.data, &ciphertext.data, &msk.data)
+func DecryptWithMaster(ciphertext *Ciphertext, msk *MasterKey) *cryptutils.Encryptable {
+	message := new(cryptutils.Encryptable)
+	C.embedded_pairing_wkdibe_decrypt_master((*C.embedded_pairing_wkdibe_gt_t)(unsafe.Pointer(&message.Data)), &ciphertext.Data, &msk.Data)
 	return message
 }
 
@@ -388,9 +312,9 @@ func DecryptWithMaster(ciphertext *Ciphertext, msk *MasterKey) *Encryptable {
 // secret key. The signature may be produced on a more specialized attribute
 // list than the key; alternatively, ATTRS may be left a nil if this is not
 // needed.
-func Sign(params *Params, sk *SecretKey, attrs AttributeList, message *Signable) *Signature {
+func Sign(params *Params, sk *SecretKey, attrs AttributeList, message *cryptutils.Signable) *Signature {
 	signature := new(Signature)
-	C.embedded_pairing_wkdibe_sign(&signature.data, &params.data, &sk.data, convertAttributeList(attrs), &message.data, randomBytesFunction)
+	C.embedded_pairing_wkdibe_sign(&signature.Data, &params.Data, &sk.Data, convertAttributeList(attrs), (*C.embedded_pairing_wkdibe_scalar_t)(unsafe.Pointer(&message.Data)), cryptutils.RandomBytesFunction)
 	return signature
 }
 
@@ -398,20 +322,20 @@ func Sign(params *Params, sk *SecretKey, attrs AttributeList, message *Signable)
 // provided prepared attribute list to speed up the process. The signature may
 // be produced on a more specialized attribute list than the key; alternatively,
 // ATTRS may be left a nil if this is not needed.
-func SignPrepared(params *Params, sk *SecretKey, attrs AttributeList, prepared *PreparedAttributeList, message *Signable) *Signature {
+func SignPrepared(params *Params, sk *SecretKey, attrs AttributeList, prepared *PreparedAttributeList, message *cryptutils.Signable) *Signature {
 	signature := new(Signature)
-	C.embedded_pairing_wkdibe_sign_precomputed(&signature.data, &params.data, &sk.data, convertAttributeList(attrs), &prepared.data, &message.data, randomBytesFunction)
+	C.embedded_pairing_wkdibe_sign_precomputed(&signature.Data, &params.Data, &sk.Data, convertAttributeList(attrs), &prepared.Data, (*C.embedded_pairing_wkdibe_scalar_t)(unsafe.Pointer(&message.Data)), cryptutils.RandomBytesFunction)
 	return signature
 }
 
 // Verify verifies that the provided signature was produced using a secret key
 // corresponding to the provided attribute set.
-func Verify(params *Params, attrs AttributeList, signature *Signature, message *Signable) bool {
-	return bool(C.embedded_pairing_wkdibe_verify(&params.data, convertAttributeList(attrs), &signature.data, &message.data))
+func Verify(params *Params, attrs AttributeList, signature *Signature, message *cryptutils.Signable) bool {
+	return bool(C.embedded_pairing_wkdibe_verify(&params.Data, convertAttributeList(attrs), &signature.Data, (*C.embedded_pairing_wkdibe_scalar_t)(unsafe.Pointer(&message.Data))))
 }
 
 // VerifyPrepared verifies the provided signature, using the provided prepared
 // attribute list to speed up the process.
-func VerifyPrepared(params *Params, prepared *PreparedAttributeList, signature *Signature, message *Signable) bool {
-	return bool(C.embedded_pairing_wkdibe_verify_precomputed(&params.data, &prepared.data, &signature.data, &message.data))
+func VerifyPrepared(params *Params, prepared *PreparedAttributeList, signature *Signature, message *cryptutils.Signable) bool {
+	return bool(C.embedded_pairing_wkdibe_verify_precomputed(&params.Data, &prepared.Data, &signature.Data, (*C.embedded_pairing_wkdibe_scalar_t)(unsafe.Pointer(&message.Data))))
 }

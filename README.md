@@ -11,7 +11,7 @@ This library implements a bilinear group and pairing-based cryptographic schemes
 
 3. We provide bindings in Go, to support system developers who prefer to code in Go rather than C/C++.
 
-4. We are working on assembly optimizations for other architectures (e.g., x86-64).
+We are working on assembly optimizations for other architectures (e.g., x86-64).
 
 Building the Code
 -----------------
@@ -21,7 +21,7 @@ You can compile with either g++ or clang++, but the Makefile defaults to clang++
 
 The result of running `make` is the `pairing.a` file, which can be statically linked with your code.
 
-To build the go library, you must first build the `pairing.a` file, and then copy it into the same directory as the `.go` files. This is necessary because CGo will only look for C and C++ files in the same directory as the Go package. Unfortunately, it is not as simple as running `go get`.
+To build the go library, you must first build the `pairing.a` file. To do so, run `make`. This is necessary because CGo will only look for C and C++ files in the same directory as the Go package. Unfortunately, it is not as simple as running `go get`.
 
 Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output.
 

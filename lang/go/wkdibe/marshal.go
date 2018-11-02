@@ -45,9 +45,9 @@ import (
 // Marshal encodes a Params object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (p *Params) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_wkdibe_params_get_marshalled_length(&p.data, C._Bool(compressed))
+	length := C.embedded_pairing_wkdibe_params_get_marshalled_length(&p.Data, C._Bool(compressed))
 	marshalled := make([]byte, length)
-	C.embedded_pairing_wkdibe_params_marshal(unsafe.Pointer(&marshalled[0]), &p.data, C._Bool(compressed))
+	C.embedded_pairing_wkdibe_params_marshal(unsafe.Pointer(&marshalled[0]), &p.Data, C._Bool(compressed))
 	return marshalled
 }
 
@@ -57,33 +57,33 @@ func (p *Params) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
-	arrlength := C.embedded_pairing_wkdibe_params_set_length(&p.data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
+	arrlength := C.embedded_pairing_wkdibe_params_set_length(&p.Data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
-	/* Allocate memory and set p.data.h */
+	/* Allocate memory and set p.Data.h */
 	if arrlength == -1 {
 		return false
 	} else if arrlength == 0 {
-		if p.data.h != nil {
+		if p.Data.h != nil {
 			runtime.SetFinalizer(p, nil)
-			C.free(unsafe.Pointer(p.data.h))
-			p.data.h = nil
+			C.free(unsafe.Pointer(p.Data.h))
+			p.Data.h = nil
 		}
 	} else {
 		blocksize := C.size_t(arrlength) * C.sizeof_embedded_pairing_wkdibe_g1_t
-		if p.data.h == nil {
-			p.data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.malloc(blocksize))
+		if p.Data.h == nil {
+			p.Data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.malloc(blocksize))
 			runtime.SetFinalizer(p, func(pp *Params) {
-				C.free(unsafe.Pointer(pp.data.h))
+				C.free(unsafe.Pointer(pp.Data.h))
 			})
 		} else {
-			p.data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.realloc(unsafe.Pointer(p.data.h), blocksize))
-			if p.data.h == nil {
+			p.Data.h = (*C.embedded_pairing_wkdibe_g1_t)(C.realloc(unsafe.Pointer(p.Data.h), blocksize))
+			if p.Data.h == nil {
 				panic("out of memory")
 			}
 		}
 	}
 
-	return bool(C.embedded_pairing_wkdibe_params_unmarshal(&p.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
+	return bool(C.embedded_pairing_wkdibe_params_unmarshal(&p.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
 // Marshal encodes a Ciphertext object into a byte slice in either compressed
@@ -91,7 +91,7 @@ func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) boo
 func (c *Ciphertext) Marshal(compressed bool) []byte {
 	length := C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed))
 	marshalled := make([]byte, length)
-	C.embedded_pairing_wkdibe_ciphertext_marshal(unsafe.Pointer(&marshalled[0]), &c.data, C._Bool(compressed))
+	C.embedded_pairing_wkdibe_ciphertext_marshal(unsafe.Pointer(&marshalled[0]), &c.Data, C._Bool(compressed))
 	return marshalled
 }
 
@@ -104,7 +104,7 @@ func (c *Ciphertext) Unmarshal(marshalled []byte, compressed bool, checked bool)
 	if checked && C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
-	return bool(C.embedded_pairing_wkdibe_ciphertext_unmarshal(&c.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
+	return bool(C.embedded_pairing_wkdibe_ciphertext_unmarshal(&c.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
 // Marshal encodes a Signature object into a byte slice in either compressed
@@ -112,7 +112,7 @@ func (c *Ciphertext) Unmarshal(marshalled []byte, compressed bool, checked bool)
 func (s *Signature) Marshal(compressed bool) []byte {
 	length := C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed))
 	marshalled := make([]byte, length)
-	C.embedded_pairing_wkdibe_signature_marshal(unsafe.Pointer(&marshalled[0]), &s.data, C._Bool(compressed))
+	C.embedded_pairing_wkdibe_signature_marshal(unsafe.Pointer(&marshalled[0]), &s.Data, C._Bool(compressed))
 	return marshalled
 }
 
@@ -125,15 +125,15 @@ func (s *Signature) Unmarshal(marshalled []byte, compressed bool, checked bool) 
 	if checked && C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
-	return bool(C.embedded_pairing_wkdibe_signature_unmarshal(&s.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
+	return bool(C.embedded_pairing_wkdibe_signature_unmarshal(&s.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
 // Marshal encodes a SecretKey object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (sk *SecretKey) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_wkdibe_secretkey_get_marshalled_length(&sk.data, C._Bool(compressed))
+	length := C.embedded_pairing_wkdibe_secretkey_get_marshalled_length(&sk.Data, C._Bool(compressed))
 	marshalled := make([]byte, length)
-	C.embedded_pairing_wkdibe_secretkey_marshal(unsafe.Pointer(&marshalled[0]), &sk.data, C._Bool(compressed))
+	C.embedded_pairing_wkdibe_secretkey_marshal(unsafe.Pointer(&marshalled[0]), &sk.Data, C._Bool(compressed))
 	return marshalled
 }
 
@@ -143,33 +143,33 @@ func (sk *SecretKey) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (sk *SecretKey) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
-	arrlength := C.embedded_pairing_wkdibe_secretkey_set_length(&sk.data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
+	arrlength := C.embedded_pairing_wkdibe_secretkey_set_length(&sk.Data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
-	/* Allocate memory and set p.data.h */
+	/* Allocate memory and set p.Data.h */
 	if arrlength == -1 {
 		return false
 	} else if arrlength == 0 {
-		if sk.data.b != nil {
+		if sk.Data.b != nil {
 			runtime.SetFinalizer(sk, nil)
-			C.free(unsafe.Pointer(sk.data.b))
-			sk.data.b = nil
+			C.free(unsafe.Pointer(sk.Data.b))
+			sk.Data.b = nil
 		}
 	} else {
 		blocksize := C.size_t(arrlength) * C.sizeof_embedded_pairing_wkdibe_freeslot_t
-		if sk.data.b == nil {
-			sk.data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.malloc(blocksize))
+		if sk.Data.b == nil {
+			sk.Data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.malloc(blocksize))
 			runtime.SetFinalizer(sk, func(k *SecretKey) {
-				C.free(unsafe.Pointer(k.data.b))
+				C.free(unsafe.Pointer(k.Data.b))
 			})
 		} else {
-			sk.data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.realloc(unsafe.Pointer(sk.data.b), blocksize))
-			if sk.data.b == nil {
+			sk.Data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.realloc(unsafe.Pointer(sk.Data.b), blocksize))
+			if sk.Data.b == nil {
 				panic("out of memory")
 			}
 		}
 	}
 
-	return bool(C.embedded_pairing_wkdibe_secretkey_unmarshal(&sk.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
+	return bool(C.embedded_pairing_wkdibe_secretkey_unmarshal(&sk.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
 // Marshal encodes a MasterKey object into a byte slice in either compressed or
@@ -177,7 +177,7 @@ func (sk *SecretKey) Unmarshal(marshalled []byte, compressed bool, checked bool)
 func (msk *MasterKey) Marshal(compressed bool) []byte {
 	length := C.embedded_pairing_wkdibe_masterkey_get_marshalled_length(C._Bool(compressed))
 	marshalled := make([]byte, length)
-	C.embedded_pairing_wkdibe_masterkey_marshal(unsafe.Pointer(&marshalled[0]), &msk.data, C._Bool(compressed))
+	C.embedded_pairing_wkdibe_masterkey_marshal(unsafe.Pointer(&marshalled[0]), &msk.Data, C._Bool(compressed))
 	return marshalled
 }
 
@@ -190,5 +190,5 @@ func (msk *MasterKey) Unmarshal(marshalled []byte, compressed bool, checked bool
 	if checked && C.embedded_pairing_wkdibe_masterkey_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
-	return bool(C.embedded_pairing_wkdibe_masterkey_unmarshal(&msk.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
+	return bool(C.embedded_pairing_wkdibe_masterkey_unmarshal(&msk.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }

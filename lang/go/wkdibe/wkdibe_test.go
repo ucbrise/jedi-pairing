@@ -37,37 +37,39 @@ import (
 	"crypto/rand"
 	"math/big"
 	"testing"
+
+	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
 )
 
-func NewMessage() *Encryptable {
-	return new(Encryptable).Random()
+func NewMessage() *cryptutils.Encryptable {
+	return new(cryptutils.Encryptable).Random()
 }
 
-func NewSignatureMessage(t *testing.T) *Signable {
+func NewSignatureMessage(t *testing.T) *cryptutils.Signable {
 	buffer := make([]byte, 16)
 	if _, err := rand.Read(buffer); err != nil {
 		t.Fatal(err)
 	}
-	return new(Signable).Hash(buffer)
+	return new(cryptutils.Signable).Hash(buffer)
 }
 
-func NewSignatureMessageBenchmark(b *testing.B) *Signable {
+func NewSignatureMessageBenchmark(b *testing.B) *cryptutils.Signable {
 	buffer := make([]byte, 16)
 	if _, err := rand.Read(buffer); err != nil {
 		b.Fatal(err)
 	}
-	return new(Signable).Hash(buffer)
+	return new(cryptutils.Signable).Hash(buffer)
 }
 
-func encryptHelper(t *testing.T, params *Params, attrs AttributeList, message *Encryptable) *Ciphertext {
+func encryptHelper(t *testing.T, params *Params, attrs AttributeList, message *cryptutils.Encryptable) *Ciphertext {
 	return Encrypt(message, params, attrs)
 }
 
-func encryptPreparedHelper(t *testing.T, params *Params, precomputed *PreparedAttributeList, message *Encryptable) *Ciphertext {
+func encryptPreparedHelper(t *testing.T, params *Params, precomputed *PreparedAttributeList, message *cryptutils.Encryptable) *Ciphertext {
 	return EncryptPrepared(message, params, precomputed)
 }
 
-func verifyHelper(t *testing.T, params *Params, attrs AttributeList, signature *Signature, message *Signable) {
+func verifyHelper(t *testing.T, params *Params, attrs AttributeList, signature *Signature, message *cryptutils.Signable) {
 	correct := Verify(params, attrs, signature, message)
 	if !correct {
 		t.Fatal("Signature is invalid")
@@ -83,14 +85,14 @@ func qualifyHelper(t *testing.T, params *Params, key *SecretKey, attrs Attribute
 	return QualifyKey(params, key, attrs)
 }
 
-func decryptAndCheckHelper(t *testing.T, key *SecretKey, ciphertext *Ciphertext, message *Encryptable) {
+func decryptAndCheckHelper(t *testing.T, key *SecretKey, ciphertext *Ciphertext, message *cryptutils.Encryptable) {
 	decrypted := Decrypt(ciphertext, key)
 	if !bytes.Equal(message.Bytes(), decrypted.Bytes()) {
 		t.Fatal("Original and decrypted messages differ")
 	}
 }
 
-func signHelper(t *testing.T, params *Params, key *SecretKey, attrs AttributeList, message *Signable) *Signature {
+func signHelper(t *testing.T, params *Params, key *SecretKey, attrs AttributeList, message *cryptutils.Signable) *Signature {
 	return Sign(params, key, attrs, message)
 }
 
@@ -360,7 +362,7 @@ func EncryptBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -403,7 +405,7 @@ func EncryptCachedBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -452,7 +454,7 @@ func DecryptBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -499,7 +501,7 @@ func DecryptWithMasterBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -545,7 +547,7 @@ func NonDelegableQualifyKeyBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -593,7 +595,7 @@ func SignBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 		}
 
 		key := KeyGen(params, master, attrs)
@@ -635,7 +637,7 @@ func SignCachedBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -662,7 +664,7 @@ func VerifyBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -709,7 +711,7 @@ func VerifyCachedBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -756,7 +758,7 @@ func ResampleKeyBenchmarkHelper(b *testing.B, numAttributes int, delegable bool)
 	for i := 0; i < b.N; i++ {
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -802,7 +804,7 @@ func QualifyKeyEndBenchmarkHelper(b *testing.B, numAttributes int) {
 
 		attrs := make(AttributeList)
 		for i := 0; i != numAttributes; i++ {
-			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, GroupOrder)
+			attrs[AttributeIndex(i)], err = rand.Int(rand.Reader, cryptutils.GroupOrder)
 			if err != nil {
 				b.Fatal(err)
 			}
