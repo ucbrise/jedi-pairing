@@ -119,14 +119,14 @@ namespace embedded_pairing::wkdibe {
                 if (!attrs.attrs[k].omitFromKeys) {
                     bls12_381::wnaf_multiply(temp, params.h[i], attrs.attrs[k].id);
                     product.add(product, temp);
-                    if (sk.b[x].idx == i) {
+                    if (x != sk.l && sk.b[x].idx == i) {
                         bls12_381::wnaf_multiply(temp, sk.b[x].hexp, attrs.attrs[k].id);
                         qualified.a0.add(qualified.a0, temp);
                         x++;
                     }
                 }
                 k++;
-            } else if (sk.b[x].idx == i) {
+            } else if (x != sk.l && sk.b[x].idx == i) {
                 if (!attrs.omitAllFromKeysUnlessPresent) {
                     qualified.b[j].idx = i;
                     bls12_381::wnaf_multiply(qualified.b[j].hexp, params.h[i], wt);
@@ -187,7 +187,7 @@ namespace embedded_pairing::wkdibe {
         int j = 0; /* Index for writing to qualified.b */
         int k = 0; /* Index for reading from attrs.attrs */
         int x = 0; /* Index for reading from sk.b */
-        for (int i = 0; i != params.l; i++) {
+        for (int i = 0; x != sk.l && i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (sk.b[x].idx == i && !attrs.attrs[k].omitFromKeys) {
                     bls12_381::wnaf_multiply(temp, sk.b[x].hexp, attrs.attrs[k].id);
