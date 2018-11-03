@@ -86,6 +86,12 @@ func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) boo
 	return bool(C.embedded_pairing_wkdibe_params_unmarshal(&p.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
+// CiphertextMarshalledLength returns the length, in bytes, of a marshalled
+// ciphertext.
+func CiphertextMarshalledLength(compressed bool) int {
+	return int(C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes a Ciphertext object into a byte slice in either compressed
 // or uncompressed form, depending on the argument.
 func (c *Ciphertext) Marshal(compressed bool) []byte {
@@ -114,6 +120,12 @@ func (s *Signature) Marshal(compressed bool) []byte {
 	marshalled := make([]byte, length)
 	C.embedded_pairing_wkdibe_signature_marshal(unsafe.Pointer(&marshalled[0]), &s.Data, C._Bool(compressed))
 	return marshalled
+}
+
+// SignatureMarshalledLength returns the length, in bytes, of a marshalled
+// signature.
+func SignatureMarshalledLength(compressed bool) int {
+	return int(C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed)))
 }
 
 // Unmarshal recovers a Signature object from a byte slice, which must encode
