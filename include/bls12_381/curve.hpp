@@ -626,7 +626,7 @@ namespace embedded_pairing::bls12_381 {
         uint8_t data[size];
 
         void encode(const Affine& g);
-        bool decode(Affine& g, bool checked = true) const;
+        bool decode(Affine& g, bool checked) const;
     };
 
     constexpr uint8_t encoding_flags_compressed = 1 << 7;

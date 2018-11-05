@@ -53,6 +53,7 @@ namespace embedded_pairing::wkdibe {
         Encoding<G2Affine, compressed> g1;
         Encoding<G1Affine, compressed> g2;
         Encoding<G1Affine, compressed> g3;
+        uint8_t pairing[compressed ? 0 : sizeof(GT)];
     };
 
     template <bool compressed>
@@ -75,6 +76,10 @@ namespace embedded_pairing::wkdibe {
         G1Affine g3affine;
         g3affine.from_projective(this->g3);
         encoded->g3.encode(g3affine);
+
+        if constexpr(!compressed) {
+            memcpy(encoded->pairing, &this->pairing, sizeof(GT));
+        }
 
         Encoding<G1Affine, compressed>* h;
         if (this->signatures) {
@@ -102,37 +107,41 @@ namespace embedded_pairing::wkdibe {
         this->signatures = (encoded->signature != 0);
 
         G2Affine gaffine;
-        if (!encoded->g.decode(gaffine)) {
+        if (!encoded->g.decode(gaffine, checked)) {
             return false;
         }
         this->g.from_affine(gaffine);
 
         G2Affine g1affine;
-        if (!encoded->g1.decode(g1affine)) {
+        if (!encoded->g1.decode(g1affine, checked)) {
             return false;
         }
         this->g1.from_affine(g1affine);
 
         G1Affine g2affine;
-        if (!encoded->g2.decode(g2affine)) {
+        if (!encoded->g2.decode(g2affine, checked)) {
             return false;
         }
         this->g2.from_affine(g2affine);
 
         G1Affine g3affine;
-        if (!encoded->g3.decode(g3affine)) {
+        if (!encoded->g3.decode(g3affine, checked)) {
             return false;
         }
         this->g3.from_affine(g3affine);
 
-        bls12_381::pairing(this->pairing, g2affine, g1affine);
+        if constexpr(compressed) {
+            bls12_381::pairing(this->pairing, g2affine, g1affine);
+        } else {
+            memcpy(&this->pairing, encoded->pairing, sizeof(GT));
+        }
 
         const Encoding<G1Affine, compressed>* h;
         if (this->signatures) {
             const Encoding<G1Affine, compressed>* hsig = reinterpret_cast<const Encoding<G1Affine, compressed>*>(encoded + 1);
 
             G1Affine hsigaffine;
-            if (!hsig->decode(hsigaffine)) {
+            if (!hsig->decode(hsigaffine, checked)) {
                 return false;
             }
             this->hsig.from_affine(hsigaffine);
@@ -144,7 +153,7 @@ namespace embedded_pairing::wkdibe {
 
         for (int i = 0; i != this->l; i++) {
             G1Affine haffine;
-            if (!h[i].decode(haffine)) {
+            if (!h[i].decode(haffine, checked)) {
                 return false;
             }
             this->h[i].from_affine(haffine);
