@@ -113,8 +113,8 @@ func convertAttributeList(attrs AttributeList) *C.embedded_pairing_wkdibe_attrib
 		}
 	}
 	attrList := &C.embedded_pairing_wkdibe_attributelist_t{
-		attrs:  (*C.embedded_pairing_wkdibe_attribute_t)(attrSlice),
-		length: C.size_t(len(attrs)),
+		attrs:                        (*C.embedded_pairing_wkdibe_attribute_t)(attrSlice),
+		length:                       C.size_t(len(attrs)),
 		omitAllFromKeysUnlessPresent: false,
 	}
 	runtime.SetFinalizer(attrList, func(al *C.embedded_pairing_wkdibe_attributelist_t) {
@@ -255,6 +255,24 @@ func ResampleKey(params *Params, precomputed *PreparedAttributeList, key *Secret
 // was generated, and cheaply converts it into a non-delegable key for a
 // different attribute set that could also be generated from the parent.
 func AdjustNonDelegable(sk *SecretKey, parent *SecretKey, from AttributeList, to AttributeList) {
+	diff := len(from) - len(to)
+	if diff != 0 {
+		length := int(sk.Data.l) + diff
+		if length == 0 {
+			if sk.Data.b != nil {
+				runtime.SetFinalizer(sk, nil)
+				C.free(unsafe.Pointer(sk.Data.b))
+				sk.Data.b = nil
+			}
+		} else if sk.Data.b == nil {
+			allocateSecretKeyB(sk, length)
+		} else {
+			sk.Data.b = (*C.embedded_pairing_wkdibe_freeslot_t)(C.realloc(unsafe.Pointer(sk.Data.b), C.size_t(length)*C.sizeof_embedded_pairing_wkdibe_freeslot_t))
+			if sk.Data.b == nil {
+				panic("out of memory")
+			}
+		}
+	}
 	C.embedded_pairing_wkdibe_adjust_nondelegable(&sk.Data, &parent.Data, convertAttributeList(from), convertAttributeList(to))
 }
 

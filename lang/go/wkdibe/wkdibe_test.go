@@ -256,6 +256,14 @@ func TestAdjustNonDelegable(t *testing.T) {
 	AdjustNonDelegable(key2, key1, attrs2, attrs3)
 	ciphertext = encryptHelper(t, params, attrs3, message)
 	decryptAndCheckHelper(t, key2, ciphertext, message)
+
+	AdjustNonDelegable(key2, key1, attrs3, attrs1)
+	ciphertext = encryptHelper(t, params, attrs1, message)
+	decryptAndCheckHelper(t, key2, ciphertext, message)
+
+	key3 := QualifyKey(params, key2, attrs3)
+	ciphertext = encryptHelper(t, params, attrs3, message)
+	decryptAndCheckHelper(t, key3, ciphertext, message)
 }
 
 func TestDecryptWithMaster(t *testing.T) {

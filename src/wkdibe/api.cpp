@@ -225,6 +225,7 @@ namespace embedded_pairing::wkdibe {
         sk.l = 0;
         int j = 0;
         int k = 0;
+        int x = 0;
         for (int i = 0; i != parent.l; i++) {
             int idx = parent.b[i].idx;
             while (j != from.length && from.attrs[j].idx < idx && !from.attrs[j].omitFromKeys) {
@@ -255,7 +256,15 @@ namespace embedded_pairing::wkdibe {
                 bls12_381::wnaf_multiply(temp, parent.b[i].hexp, to.attrs[k].id);
                 sk.a0.add(sk.a0, temp);
             }
+
+            if (!add_to) {
+                sk.b[x].idx = parent.b[i].idx;
+                sk.b[x].hexp.copy(parent.b[i].hexp);
+                x++;
+            }
         }
+
+        sk.l = x;
     }
 
     void precompute(Precomputed& precomputed, const Params& params, const AttributeList& attrs) {
