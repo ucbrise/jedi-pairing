@@ -104,7 +104,7 @@ namespace embedded_pairing::wkdibe {
         template <bool compressed>
         static constexpr int unmarshalledLength(const void* marshalled, size_t marshalledLength) {
             uint8_t firstByte = *((uint8_t*) marshalled);
-            size_t withoutLength = Params::marshalledLengthMinimum<compressed> + (firstByte == 0 ? 0 : bls12_381::Encoding<G1Affine, compressed>::size);
+            size_t withoutLength = Params::marshalledLengthMinimum<compressed> + (compressed ? 0 : sizeof(GT)) + (firstByte == 0 ? 0 : bls12_381::Encoding<G1Affine, compressed>::size);
             if (marshalledLength < withoutLength) {
                 return -1;
             }
@@ -114,7 +114,7 @@ namespace embedded_pairing::wkdibe {
 
         template <bool compressed>
         static constexpr size_t marshalledLength(int length, bool signatures) {
-            return Params::marshalledLengthMinimum<compressed> + ((signatures ? 1 : 0) + length) * bls12_381::Encoding<G1Affine, compressed>::size;
+            return Params::marshalledLengthMinimum<compressed> + (compressed ? 0 : sizeof(GT)) + ((signatures ? 1 : 0) + length) * bls12_381::Encoding<G1Affine, compressed>::size;
         }
     };
 
