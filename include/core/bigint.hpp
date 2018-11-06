@@ -40,8 +40,8 @@ namespace embedded_pairing::core {
     /*
      * The union BigInt<bits> is a POD representing a big integer of
      * specified width in bits. The width in bits MUST be a multiple of the
-     * largest integer supported by the compiler, and SHOULD be a multiple
-     * of 128 bits.
+     * largest integer supported by the compiler, or the size of the second
+     * largest integer supported by the compiler
      */
     template <int bits>
     union BigInt {
@@ -189,30 +189,57 @@ namespace embedded_pairing::core {
         }
 
         bool add(const BigInt<bits>& a, const BigInt<bits>& __restrict b) {
-            uint8_t carry = 0;
-            for (int i = 0; i != word_length; i++) {
-                this->words[i] = a.words[i] + b.words[i] + carry;
-                if (carry == 0) {
-                    carry = (this->words[i] < b.words[i]) ? 1 : 0;
-                } else {
-                    carry = (this->words[i] <= b.words[i]) ? 1 : 0;
+            if constexpr(bits < dword_length * 8) {
+                uint8_t carry = 0;
+                for (int i = 0; i != word_length; i++) {
+                    this->words[i] = a.words[i] + b.words[i] + carry;
+                    if (carry == 0) {
+                        carry = (this->words[i] < b.words[i]) ? 1 : 0;
+                    } else {
+                        carry = (this->words[i] <= b.words[i]) ? 1 : 0;
+                    }
                 }
+                return (carry != 0);
+            } else {
+                uint8_t carry = 0;
+                for (int i = 0; i != dword_length; i++) {
+                    this->dwords[i] = a.dwords[i] + b.dwords[i] + carry;
+                    if (carry == 0) {
+                        carry = (this->dwords[i] < b.dwords[i]) ? 1 : 0;
+                    } else {
+                        carry = (this->dwords[i] <= b.dwords[i]) ? 1 : 0;
+                    }
+                }
+                return (carry != 0);
             }
-            return (carry != 0);
         }
 
         bool subtract(const BigInt<bits>& a, const BigInt<bits>& __restrict b) {
-            uint8_t borrow = 0;
-            for (int i = 0; i != word_length; i++) {
-                dword_t old_a_val = a.words[i];
-                this->words[i] = a.words[i] - b.words[i] - borrow;
-                if (borrow == 0) {
-                    borrow = (old_a_val < this->words[i]) ? 1 : 0;
-                } else {
-                    borrow = (old_a_val <= this->words[i]) ? 1 : 0;
+            if constexpr(bits < dword_length * 8) {
+                uint8_t borrow = 0;
+                for (int i = 0; i != word_length; i++) {
+                    dword_t old_a_val = a.words[i];
+                    this->words[i] = a.words[i] - b.words[i] - borrow;
+                    if (borrow == 0) {
+                        borrow = (old_a_val < this->words[i]) ? 1 : 0;
+                    } else {
+                        borrow = (old_a_val <= this->words[i]) ? 1 : 0;
+                    }
                 }
+                return (borrow != 0);
+            } else {
+                uint8_t borrow = 0;
+                for (int i = 0; i != dword_length; i++) {
+                    dword_t old_a_val = a.dwords[i];
+                    this->dwords[i] = a.dwords[i] - b.dwords[i] - borrow;
+                    if (borrow == 0) {
+                        borrow = (old_a_val < this->dwords[i]) ? 1 : 0;
+                    } else {
+                        borrow = (old_a_val <= this->dwords[i]) ? 1 : 0;
+                    }
+                }
+                return (borrow != 0);
             }
-            return (borrow != 0);
         }
 
         template <uint8_t amt>
