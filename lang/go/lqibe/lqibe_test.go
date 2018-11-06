@@ -30,40 +30,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_BLS12_381_FR_HPP_
-#define EMBEDDED_PAIRING_BLS12_381_FR_HPP_
+package lqibe
 
-#include <stddef.h>
+import (
+	"bytes"
+	"testing"
+)
 
-#include "core/bigint.hpp"
-#include "core/montgomeryfp.hpp"
+func TestEncryptDecrypt(t *testing.T) {
+	idbytes := []byte{1, 2, 3}
+	id := new(ID).Hash(idbytes)
 
-using embedded_pairing::core::BigInt;
-using embedded_pairing::core::MontgomeryFp;
+	pp, msk := Setup()
+	sk := KeyGen(pp, msk, id)
 
-namespace embedded_pairing::bls12_381 {
-    static constexpr int fr_bits = 256;
-    static constexpr BigInt<fr_bits> fr_modulus = {.std_words = { 0x00000001, 0xffffffff, 0xfffe5bfe, 0x53bda402, 0x09a1d805, 0x3339d808, 0x299d7d48, 0x73eda753 }};
-    static constexpr BigInt<fr_bits> fr_R = {.std_words = { 0xfffffffe, 0x00000001, 0x00034802, 0x5884b7fa, 0xecbc4ff5, 0x998c4fef, 0xacc5056f, 0x1824b159 }};
-    static constexpr BigInt<fr_bits> fr_R2 = {.std_words = { 0xf3f29c6d, 0xc999e990, 0x87925c23, 0x2b6cedcb, 0x7254398f, 0x05d31496, 0x9f59ff11, 0x0748d9d9 }};
-    static constexpr BigInt<fr_bits> fr_inv = {.std_words = { 0xffffffff, 0xfffffffe, 0xfffe5bfd, 0x53ba5bff, 0x0004ec06, 0x181b2c17, 0xd7bf2839, 0x3d443ab0 }};
+	symm1 := make([]byte, 32)
+	c := Encrypt(symm1, pp, id)
 
-    extern const BigInt<fr_bits> fr_modulus_var;
-    extern const BigInt<fr_bits> fr_R_var;
-    extern const BigInt<fr_bits> fr_R2_var;
-    extern const BigInt<fr_bits> fr_inv_var;
+	symm2 := make([]byte, 32)
+	Decrypt(c, sk, id, symm2)
 
-    struct Fr : MontgomeryFp<fr_bits, fr_modulus_var, fr_R_var, fr_R2_var, fr_inv_var> {
-        static const Fr zero;
-        static const Fr one;
-
-        void square_root(const Fr& __restrict a);
-        void random(void (*get_random_bytes)(void*, size_t));
-        bool hash_reduce(void);
-    };
-
-    constexpr Fr Fr::zero = {{{ .val = {0} }}};
-    constexpr Fr Fr::one = {{{ .val = fr_R }}};
+	if !bytes.Equal(symm1, symm2) {
+		t.Fatal("Original and decrypted symmetric keys differ")
+	}
 }
 
-#endif
+func TestBadKey(t *testing.T) {
+	id1bytes := []byte{1, 2, 3}
+	id1 := new(ID).Hash(id1bytes)
+
+	id2bytes := []byte{1, 2, 3, 4}
+	id2 := new(ID).Hash(id2bytes)
+
+	pp, msk := Setup()
+	sk := KeyGen(pp, msk, id1)
+
+	symm1 := make([]byte, 32)
+	c := Encrypt(symm1, pp, id2)
+
+	symm2 := make([]byte, 32)
+	Decrypt(c, sk, id1, symm2)
+	if !bytes.Equal(symm1, symm2) {
+		t.Fatal("Correctly decrypted with bad key")
+	}
+
+	Decrypt(c, sk, id2, symm2)
+	if !bytes.Equal(symm1, symm2) {
+		t.Fatal("Correctly decrypted with bad key")
+	}
+}

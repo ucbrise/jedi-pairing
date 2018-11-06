@@ -144,6 +144,16 @@ namespace embedded_pairing::bls12_381 {
             return ar.is_zero();
         }
 
+        void try_and_increment(const BaseField& start, bool greater) {
+            /* Taken from Sec. 1.1 of https://eprint.iacr.org/2009/226.pdf. */
+            BaseField x;
+            x.copy(start);
+
+            while (!this->get_point_from_x(x, greater, true)) {
+                x.add(x, BaseField::one);
+            }
+        }
+
         static bool equal(const Affine<BaseField, ScalarField, curve_b>& a, const Affine<BaseField, ScalarField, curve_b>& b) {
             bool x_equal = BaseField::equal(a.x, b.x);
             bool y_equal = BaseField::equal(a.y, b.y);
@@ -201,6 +211,9 @@ namespace embedded_pairing::bls12_381 {
         BaseField x;
         BaseField y;
         BaseField z;
+
+        /* Export template parameter. */
+        typedef BaseField BaseFieldType;
 
         static const Projective<BaseField> zero;
 

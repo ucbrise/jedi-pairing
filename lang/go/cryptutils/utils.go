@@ -62,9 +62,23 @@ func randomBytes(buffer unsafe.Pointer, length int) {
 	}
 }
 
+//export hashFill
+func hashFill(buffer unsafe.Pointer, bufferLength int, toHash unsafe.Pointer, toHashLength int) {
+	bufferSlice := (*[1 << 32]byte)(buffer)[:bufferLength:bufferLength]
+	toHashSlice := (*[1 << 32]byte)(toHash)[:toHashLength:toHashLength]
+
+	shake := sha3.NewShake256()
+	shake.Write(bufferSlice)
+	shake.Read(toHashSlice)
+}
+
 // RandomBytesFunction is a C function pointer that takes an array pointer as
 // input and fills the array with random bytes.
 var RandomBytesFunction = (*[0]byte)(C.go_random_bytes)
+
+// HashFillFunction is a C function pointer that takes two array pointers and
+// fills the first with the hash of the second.
+var HashFillFunction = (*[0]byte)(C.go_hash_fill)
 
 // Encryptable represents a message that can be encrypted with WKD-IBE. The
 // intended usage is to choose a random message, encrypt that message, and

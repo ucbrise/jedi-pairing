@@ -33,6 +33,9 @@
 #ifndef EMBEDDED_PAIRING_LANG_GO_WKDIBE_GO_UTILS_H_
 #define EMBEDDED_PAIRING_LANG_GO_WKDIBE_GO_UTILS_H_
 
-void go_random_bytes(void* buffer, unsigned int length);
+#include <stddef.h>
+
+void go_random_bytes(void* buffer, size_t length);
+void go_hash_fill(void* buffer, size_t bufferLength, const void* toHash, size_t toHashLength);
 
 #endif

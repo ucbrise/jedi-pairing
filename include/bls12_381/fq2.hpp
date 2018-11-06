@@ -61,6 +61,7 @@ namespace embedded_pairing::bls12_381 {
         int legendre(void) const;
         void square_root(const Fq2& __restrict a);
         void random(void (*get_random_bytes)(void*, size_t));
+        bool hash_reduce(void);
         void write_big_endian(uint8_t* buffer) const;
         void read_big_endian(const uint8_t* buffer);
 

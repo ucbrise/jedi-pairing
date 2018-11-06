@@ -19,7 +19,7 @@ ASFLAGS =
 # ASFLAGS = -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft
 # ARCHDIR = lib/src/core/arch/armv6_m
 
-PAIRING_CPP_SOURCES = $(wildcard ./src/core/*.cpp) $(wildcard ./src/bls12_381/*.cpp) $(wildcard ./src/wkdibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
+PAIRING_CPP_SOURCES = $(wildcard ./src/core/*.cpp) $(wildcard ./src/bls12_381/*.cpp) $(wildcard ./src/wkdibe/*.cpp) $(wildcard ./src/lqibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
 PAIRING_ASM_SOURCES = $(wildcard $(ARCHDIR)/*.s)
 
 CPP_SOURCES = $(PAIRING_CPP_SOURCES)

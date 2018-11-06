@@ -59,6 +59,23 @@ namespace embedded_pairing::bls12_381 {
         } while (BigInt<fq_bits>::compare(this->val, fq_modulus) >= 0);
     }
 
+    bool Fq::hash_reduce() {
+        // Discard the top three bits, as the prime modulus is 0 in those bits
+        uint8_t& top_byte = this->val.bytes[BigInt<fq_bits>::byte_length - 1];
+        bool top_bit = (top_byte >> 7) != 0;
+        top_byte &= 0x1F;
+
+        if (BigInt<fq_bits>::compare(this->val, fq_modulus) == -1) {
+#ifdef RESIST_SIDE_CHANNELS
+            this->val.subtract(this->val, BigInt<bits>::zero);
+#endif
+        } else {
+            this->val.subtract(this->val, fq_modulus);
+        }
+
+        return top_bit;
+    }
+
     void Fq::write_big_endian(uint8_t* buffer) const {
         BigInt<fq_bits> temp;
         this->get(temp);

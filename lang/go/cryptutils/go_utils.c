@@ -32,6 +32,12 @@
 
 #include "_cgo_export.h"
 
-void go_random_bytes(void* buffer, unsigned int length) {
-    randomBytes(buffer, (GoUint) length);
+#include <stddef.h>
+
+void go_random_bytes(void* buffer, size_t length) {
+    randomBytes(buffer, (GoInt) length);
+}
+
+void go_hash_fill(void* buffer, size_t bufferLength, const void* toHash, size_t toHashLength) {
+    hashFill(buffer, (GoInt) bufferLength, (void*) toHash, (GoInt) toHashLength);
 }

@@ -171,6 +171,11 @@ namespace embedded_pairing::bls12_381 {
         this->c1.random(get_random_bytes);
     }
 
+    bool Fq2::hash_reduce() {
+        this->c0.hash_reduce();
+        return this->c1.hash_reduce();
+    }
+
     void Fq2::write_big_endian(uint8_t* buffer) const {
         this->c1.write_big_endian(&buffer[0]);
         this->c0.write_big_endian(&buffer[sizeof(Fq)]);

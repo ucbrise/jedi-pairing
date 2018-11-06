@@ -93,9 +93,12 @@ namespace embedded_pairing::bls12_381 {
         } while (BigInt<fr_bits>::compare(this->val, fr_modulus) >= 0);
     }
 
-    void Fr::hash_reduce() {
+    bool Fr::hash_reduce() {
         // Discard the top bit, as the prime modulus is 0 in that bit
-        this->val.bytes[BigInt<fr_bits>::byte_length - 1] &= 0x7F;
+        uint8_t& top_byte = this->val.bytes[BigInt<fr_bits>::byte_length - 1];
+        bool top_bit = (top_byte >> 7) != 0;
+        top_byte &= 0x7F;
+
         if (BigInt<fr_bits>::compare(this->val, fr_modulus) == -1) {
 #ifdef RESIST_SIDE_CHANNELS
             this->val.subtract(this->val, BigInt<bits>::zero);
@@ -103,5 +106,7 @@ namespace embedded_pairing::bls12_381 {
         } else {
             this->val.subtract(this->val, fr_modulus);
         }
+
+        return top_bit;
     }
 }
