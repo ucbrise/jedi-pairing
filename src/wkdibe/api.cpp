@@ -222,7 +222,6 @@ namespace embedded_pairing::wkdibe {
         G1 temp;
         Scalar diff;
 
-        sk.l = 0;
         int j = 0;
         int k = 0;
         int x = 0;
