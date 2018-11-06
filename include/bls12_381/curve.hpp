@@ -164,7 +164,7 @@ namespace embedded_pairing::bls12_381 {
             return this->infinity;
         }
 
-        bool negate(const Affine<BaseField, ScalarField, curve_b>& a) {
+        void negate(const Affine<BaseField, ScalarField, curve_b>& a) {
             this->x.copy(a.x);
             this->y.negate(a.y);
             this->infinity = a.infinity;

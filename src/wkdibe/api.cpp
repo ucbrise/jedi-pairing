@@ -384,10 +384,14 @@ namespace embedded_pairing::wkdibe {
         a1affine.from_projective(sk.a1);
         a0affine.from_projective(sk.a0);
         baffine.from_projective(ciphertext.b);
-        bls12_381::pairing(message, caffine, a1affine);
-        bls12_381::pairing(denominator, a0affine, baffine);
-        denominator.inverse(denominator);
-        message.multiply(message, denominator);
+
+        a0affine.negate(a0affine);
+        bls12_381::AffinePair pairs[2];
+        pairs[0].g1 = &caffine;
+        pairs[0].g2 = &a1affine;
+        pairs[1].g1 = &a0affine;
+        pairs[1].g2 = &baffine;
+        bls12_381::pairing_product(message, pairs, 2);
         message.multiply(message, ciphertext.a);
     }
 
@@ -396,8 +400,9 @@ namespace embedded_pairing::wkdibe {
         G2Affine baffine;
         g2alphaaffine.from_projective(msk.g2alpha);
         baffine.from_projective(ciphertext.b);
+
+        g2alphaaffine.negate(g2alphaaffine);
         bls12_381::pairing(message, g2alphaaffine, baffine);
-        message.inverse(message);
         message.multiply(message, ciphertext.a);
     }
 
