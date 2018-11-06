@@ -37,6 +37,7 @@ package wkdibe
 #include "wkdibe/wkdibe.h"
 */
 import "C"
+
 import (
 	"runtime"
 	"unsafe"
@@ -57,6 +58,9 @@ func (p *Params) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
+	if len(marshalled) == 0 {
+		return false
+	}
 	arrlength := C.embedded_pairing_wkdibe_params_set_length(&p.Data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
 	/* Allocate memory and set p.Data.h */
@@ -107,7 +111,10 @@ func (c *Ciphertext) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (c *Ciphertext) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
-	if checked && C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
+	if len(marshalled) == 0 {
+		return false
+	}
+	if C.embedded_pairing_wkdibe_ciphertext_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
 	return bool(C.embedded_pairing_wkdibe_ciphertext_unmarshal(&c.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
@@ -134,7 +141,10 @@ func SignatureMarshalledLength(compressed bool) int {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (s *Signature) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
-	if checked && C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
+	if len(marshalled) == 0 {
+		return false
+	}
+	if C.embedded_pairing_wkdibe_signature_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
 	return bool(C.embedded_pairing_wkdibe_signature_unmarshal(&s.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
@@ -155,6 +165,9 @@ func (sk *SecretKey) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (sk *SecretKey) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
+	if len(marshalled) == 0 {
+		return false
+	}
 	arrlength := C.embedded_pairing_wkdibe_secretkey_set_length(&sk.Data, unsafe.Pointer(&marshalled[0]), C.size_t(len(marshalled)), C._Bool(compressed))
 
 	/* Allocate memory and set p.Data.h */
@@ -199,7 +212,10 @@ func (msk *MasterKey) Marshal(compressed bool) []byte {
 // result are skipped), but the function will not detect if the group elements
 // are not valid.
 func (msk *MasterKey) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
-	if checked && C.embedded_pairing_wkdibe_masterkey_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
+	if len(marshalled) == 0 {
+		return false
+	}
+	if C.embedded_pairing_wkdibe_masterkey_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
 	return bool(C.embedded_pairing_wkdibe_masterkey_unmarshal(&msk.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
