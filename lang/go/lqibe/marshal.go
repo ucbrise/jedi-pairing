@@ -39,12 +39,17 @@ import "C"
 
 import "unsafe"
 
+// ParamsMarshalledSize returns the size of a marshalled Params object in
+// bytes.
+func ParamsMarshalledSize(compressed bool) int {
+	return int(C.embedded_pairing_lqibe_params_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes a Params object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (p *Params) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_params_get_marshalled_length(C._Bool(compressed))
+	length := ParamsMarshalledSize(compressed)
 	marshalled := make([]byte, length)
-
 	C.embedded_pairing_lqibe_params_marshal(unsafe.Pointer(&marshalled[0]), &p.Data, C._Bool(compressed))
 	return marshalled
 }
@@ -64,10 +69,15 @@ func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) boo
 	return bool(C.embedded_pairing_lqibe_params_unmarshal(&p.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
+// IDMarshalledSize returns the size of a marshalled ID object, in bytes.
+func IDMarshalledSize(compressed bool) int {
+	return int(C.embedded_pairing_lqibe_id_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes an ID object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (id *ID) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_id_get_marshalled_length(C._Bool(compressed))
+	length := IDMarshalledSize(compressed)
 	marshalled := make([]byte, length)
 	C.embedded_pairing_lqibe_id_marshal(unsafe.Pointer(&marshalled[0]), &id.Data, C._Bool(compressed))
 	return marshalled
@@ -88,10 +98,16 @@ func (id *ID) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	return bool(C.embedded_pairing_lqibe_id_unmarshal(&id.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
+// MasterKeyMarshalledSize returns the size of a marshalled MasterKey object,
+// in bytes.
+func MasterKeyMarshalledSize(compressed bool) int {
+	return int(C.embedded_pairing_lqibe_masterkey_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes a MasterKey object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (msk *MasterKey) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_masterkey_get_marshalled_length(C._Bool(compressed))
+	length := MasterKeyMarshalledSize(compressed)
 	marshalled := make([]byte, length)
 	C.embedded_pairing_lqibe_masterkey_marshal(unsafe.Pointer(&marshalled[0]), &msk.Data, C._Bool(compressed))
 	return marshalled
@@ -112,10 +128,16 @@ func (msk *MasterKey) Unmarshal(marshalled []byte, compressed bool, checked bool
 	return bool(C.embedded_pairing_lqibe_masterkey_unmarshal(&msk.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
+// SecretKeyMarshalledSize returns the size of a marshalled SecretKey object,
+// in bytes.
+func SecretKeyMarshalledSize(compressed bool) int {
+	return int(C.embedded_pairing_lqibe_secretkey_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes a SecretKey object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (sk *SecretKey) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_secretkey_get_marshalled_length(C._Bool(compressed))
+	length := SecretKeyMarshalledSize(compressed)
 	marshalled := make([]byte, length)
 	C.embedded_pairing_lqibe_secretkey_marshal(unsafe.Pointer(&marshalled[0]), &sk.Data, C._Bool(compressed))
 	return marshalled
@@ -136,10 +158,16 @@ func (sk *SecretKey) Unmarshal(marshalled []byte, compressed bool, checked bool)
 	return bool(C.embedded_pairing_lqibe_secretkey_unmarshal(&sk.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))
 }
 
+// CiphertextMarshalledSize returns the size of a marshalled Ciphertext object,
+// in bytes.
+func CiphertextMarshalledSize(compressed bool) int {
+	return int(C.embedded_pairing_lqibe_ciphertext_get_marshalled_length(C._Bool(compressed)))
+}
+
 // Marshal encodes a Ciphertext object into a byte slice in either compressed
 // or uncompressed form, depending on the argument.
 func (c *Ciphertext) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_ciphertext_get_marshalled_length(C._Bool(compressed))
+	length := CiphertextMarshalledSize(compressed)
 	marshalled := make([]byte, length)
 	C.embedded_pairing_lqibe_ciphertext_marshal(unsafe.Pointer(&marshalled[0]), &c.Data, C._Bool(compressed))
 	return marshalled
