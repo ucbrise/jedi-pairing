@@ -34,6 +34,7 @@ package lqibe
 
 import (
 	"bytes"
+	"crypto/rand"
 	"testing"
 )
 
@@ -77,5 +78,81 @@ func TestBadKey(t *testing.T) {
 	Decrypt(c, sk, id2, symm2)
 	if bytes.Equal(symm1, symm2) {
 		t.Fatal("Correctly decrypted with bad key")
+	}
+}
+
+func BenchmarkHashID(b *testing.B) {
+	b.StopTimer()
+	idbytes := make([]byte, 16)
+	id := new(ID)
+	for i := 0; i < b.N; i++ {
+		if _, err := rand.Read(idbytes); err != nil {
+			b.Fatal(err)
+		}
+		b.StartTimer()
+		id.Hash(idbytes)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkSetup(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = Setup()
+	}
+}
+
+func BenchmarkKeyGen(b *testing.B) {
+	b.StopTimer()
+	idbytes := make([]byte, 16)
+	id := new(ID)
+	for i := 0; i < b.N; i++ {
+		if _, err := rand.Read(idbytes); err != nil {
+			b.Fatal(err)
+		}
+		id.Hash(idbytes)
+		pp, msk := Setup()
+		b.StartTimer()
+		_ = KeyGen(pp, msk, id)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkEncrypt(b *testing.B) {
+	b.StopTimer()
+	idbytes := make([]byte, 16)
+	symm := make([]byte, 32)
+	id := new(ID)
+	for i := 0; i < b.N; i++ {
+		if _, err := rand.Read(idbytes); err != nil {
+			b.Fatal(err)
+		}
+		id.Hash(idbytes)
+		pp, _ := Setup()
+		b.StartTimer()
+		_ = Encrypt(symm, pp, id)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkDecrypt(b *testing.B) {
+	b.StopTimer()
+	idbytes := make([]byte, 16)
+	symm := make([]byte, 32)
+	dsymm := make([]byte, 32)
+	id := new(ID)
+	for i := 0; i < b.N; i++ {
+		if _, err := rand.Read(idbytes); err != nil {
+			b.Fatal(err)
+		}
+		id.Hash(idbytes)
+		pp, msk := Setup()
+		sk := KeyGen(pp, msk, id)
+		c := Encrypt(symm, pp, id)
+		b.StartTimer()
+		Decrypt(c, sk, id, dsymm)
+		b.StopTimer()
+		if !bytes.Equal(symm, dsymm) {
+			b.Fatal("Original and decrypted symmetric keys differ")
+		}
 	}
 }
