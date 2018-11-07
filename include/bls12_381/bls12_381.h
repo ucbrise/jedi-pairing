@@ -62,6 +62,7 @@ typedef struct {
 typedef struct {
     embedded_pairing_bls12_381_fq_t x;
     embedded_pairing_bls12_381_fq_t y;
+    bool infinity;
 } embedded_pairing_bls12_381_g1affine_t;
 
 typedef struct {
@@ -73,6 +74,7 @@ typedef struct {
 typedef struct {
     embedded_pairing_bls12_381_fq2_t x;
     embedded_pairing_bls12_381_fq2_t y;
+    bool infinity;
 } embedded_pairing_bls12_381_g2affine_t;
 
 typedef struct {

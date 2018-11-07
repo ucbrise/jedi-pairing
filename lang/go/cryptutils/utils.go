@@ -68,8 +68,8 @@ func hashFill(buffer unsafe.Pointer, bufferLength int, toHash unsafe.Pointer, to
 	toHashSlice := (*[1 << 32]byte)(toHash)[:toHashLength:toHashLength]
 
 	shake := sha3.NewShake256()
-	shake.Write(bufferSlice)
-	shake.Read(toHashSlice)
+	shake.Write(toHashSlice)
+	shake.Read(bufferSlice)
 }
 
 // RandomBytesFunction is a C function pointer that takes an array pointer as

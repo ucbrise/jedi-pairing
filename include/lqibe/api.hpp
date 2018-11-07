@@ -79,7 +79,7 @@ namespace embedded_pairing::lqibe {
         bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
-        static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size;
+        static constexpr size_t marshalledLength = bls12_381::Encoding<G2Affine, compressed>::size;
     };
 
     struct MasterKey {

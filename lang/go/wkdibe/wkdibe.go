@@ -32,15 +32,6 @@
 
 package wkdibe
 
-import (
-	"math/big"
-	"runtime"
-	"sort"
-	"unsafe"
-
-	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
-)
-
 /*
 #cgo CFLAGS: -I ../../../include
 #cgo LDFLAGS: ${SRCDIR}/pairing.a
@@ -49,6 +40,15 @@ import (
 #include "wkdibe/wkdibe.h"
 */
 import "C"
+
+import (
+	"math/big"
+	"runtime"
+	"sort"
+	"unsafe"
+
+	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
+)
 
 // Params represents public parameters for a WKD-IBE system.
 type Params struct {

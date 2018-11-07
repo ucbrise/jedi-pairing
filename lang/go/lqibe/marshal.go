@@ -36,6 +36,7 @@ package lqibe
 #include "lqibe/lqibe.h"
 */
 import "C"
+
 import "unsafe"
 
 // Marshal encodes a Params object into a byte slice in either compressed or
@@ -43,6 +44,7 @@ import "unsafe"
 func (p *Params) Marshal(compressed bool) []byte {
 	length := C.embedded_pairing_lqibe_params_get_marshalled_length(C._Bool(compressed))
 	marshalled := make([]byte, length)
+
 	C.embedded_pairing_lqibe_params_marshal(unsafe.Pointer(&marshalled[0]), &p.Data, C._Bool(compressed))
 	return marshalled
 }
@@ -65,7 +67,7 @@ func (p *Params) Unmarshal(marshalled []byte, compressed bool, checked bool) boo
 // Marshal encodes an ID object into a byte slice in either compressed or
 // uncompressed form, depending on the argument.
 func (id *ID) Marshal(compressed bool) []byte {
-	length := C.embedded_pairing_lqibe_params_get_marshalled_length(C._Bool(compressed))
+	length := C.embedded_pairing_lqibe_id_get_marshalled_length(C._Bool(compressed))
 	marshalled := make([]byte, length)
 	C.embedded_pairing_lqibe_id_marshal(unsafe.Pointer(&marshalled[0]), &id.Data, C._Bool(compressed))
 	return marshalled
@@ -80,7 +82,7 @@ func (id *ID) Unmarshal(marshalled []byte, compressed bool, checked bool) bool {
 	if len(marshalled) == 0 {
 		return false
 	}
-	if C.embedded_pairing_lqibe_params_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
+	if C.embedded_pairing_lqibe_id_get_marshalled_length(C._Bool(compressed)) != C.size_t(len(marshalled)) {
 		return false
 	}
 	return bool(C.embedded_pairing_lqibe_id_unmarshal(&id.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)))

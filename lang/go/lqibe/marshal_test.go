@@ -133,12 +133,12 @@ func HelperTestBadKeyMarshal(t *testing.T, compressed bool) {
 
 	symm2 := make([]byte, 32)
 	Decrypt(c, sk, id1, symm2)
-	if !bytes.Equal(symm1, symm2) {
+	if bytes.Equal(symm1, symm2) {
 		t.Fatal("Correctly decrypted with bad key")
 	}
 
 	Decrypt(c, sk, id2, symm2)
-	if !bytes.Equal(symm1, symm2) {
+	if bytes.Equal(symm1, symm2) {
 		t.Fatal("Correctly decrypted with bad key")
 	}
 }

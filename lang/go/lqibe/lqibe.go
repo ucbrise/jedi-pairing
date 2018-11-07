@@ -38,6 +38,7 @@ package lqibe
 #include "lqibe/lqibe.h"
 */
 import "C"
+
 import (
 	"unsafe"
 
