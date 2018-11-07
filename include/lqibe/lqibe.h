@@ -52,16 +52,16 @@ typedef embedded_pairing_bls12_381_g2_t embedded_pairing_lqibe_g2_t;
 typedef embedded_pairing_bls12_381_fq12_t embedded_pairing_lqibe_gt_t;
 
 typedef struct {
-    uint8_t hash[sizeof(embedded_pairing_bls12_381_fq2_t)];
+    uint8_t hash[sizeof(embedded_pairing_bls12_381_fq_t)];
 } embedded_pairing_lqibe_idhash_t;
 
 typedef struct {
-    embedded_pairing_lqibe_g1_t p;
-    embedded_pairing_lqibe_g1_t sp;
+    embedded_pairing_lqibe_g2_t p;
+    embedded_pairing_lqibe_g2_t sp;
 } embedded_pairing_lqibe_params_t;
 
 typedef struct {
-    embedded_pairing_lqibe_g2_t q;
+    embedded_pairing_lqibe_g1affine_t q;
 } embedded_pairing_lqibe_id_t;
 
 typedef struct {
@@ -69,11 +69,11 @@ typedef struct {
 } embedded_pairing_lqibe_masterkey_t;
 
 typedef struct {
-    embedded_pairing_lqibe_g2affine_t sq;
+    embedded_pairing_lqibe_g1affine_t sq;
 } embedded_pairing_lqibe_secretkey_t;
 
 typedef struct {
-    embedded_pairing_lqibe_g1_t rp;
+    embedded_pairing_lqibe_g2affine_t rp;
 } embedded_pairing_lqibe_ciphertext_t;
 
 void embedded_pairing_lqibe_compute_id_from_hash(embedded_pairing_lqibe_id_t* id, const embedded_pairing_lqibe_idhash_t* hash);

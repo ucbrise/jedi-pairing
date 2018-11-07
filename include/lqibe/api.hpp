@@ -52,12 +52,12 @@ namespace embedded_pairing::lqibe {
     const core::BigInt<256> group_order = bls12_381::Fr::p_value;
 
     struct IDHash {
-        uint8_t hash[sizeof(G2::BaseFieldType)];
+        uint8_t hash[sizeof(G1::BaseFieldType)];
     };
 
     struct Params {
-        G1 p;
-        G1 sp;
+        G2 p;
+        G2 sp;
 
         template <bool compressed>
         void marshal(void* buffer) const;
@@ -66,11 +66,11 @@ namespace embedded_pairing::lqibe {
         bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
-        static constexpr size_t marshalledLength = 2 * bls12_381::Encoding<G1Affine, compressed>::size;
+        static constexpr size_t marshalledLength = 2 * bls12_381::Encoding<G2Affine, compressed>::size;
     };
 
     struct ID {
-        G2 q;
+        G1Affine q;
 
         template <bool compressed>
         void marshal(void* buffer) const;
@@ -79,7 +79,7 @@ namespace embedded_pairing::lqibe {
         bool unmarshal(const void* buffer, bool checked);
 
         template <bool compressed>
-        static constexpr size_t marshalledLength = bls12_381::Encoding<G2Affine, compressed>::size;
+        static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size;
     };
 
     struct MasterKey {
@@ -101,20 +101,7 @@ namespace embedded_pairing::lqibe {
     };
 
     struct SecretKey {
-        G2Affine sq;
-
-        template <bool compressed>
-        void marshal(void* buffer) const;
-
-        template <bool compressed>
-        bool unmarshal(const void* buffer, bool checked);
-
-        template <bool compressed>
-        static constexpr size_t marshalledLength = bls12_381::Encoding<G2Affine, compressed>::size;
-    };
-
-    struct Ciphertext {
-        G1 rp;
+        G1Affine sq;
 
         template <bool compressed>
         void marshal(void* buffer) const;
@@ -124,6 +111,19 @@ namespace embedded_pairing::lqibe {
 
         template <bool compressed>
         static constexpr size_t marshalledLength = bls12_381::Encoding<G1Affine, compressed>::size;
+    };
+
+    struct Ciphertext {
+        G2Affine rp;
+
+        template <bool compressed>
+        void marshal(void* buffer) const;
+
+        template <bool compressed>
+        bool unmarshal(const void* buffer, bool checked);
+
+        template <bool compressed>
+        static constexpr size_t marshalledLength = bls12_381::Encoding<G2Affine, compressed>::size;
     };
 
     void compute_id_from_hash(ID& id, const IDHash& hash);

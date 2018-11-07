@@ -40,13 +40,17 @@
 
 namespace embedded_pairing::lqibe {
     void compute_id_from_hash(ID& id, const IDHash& hash) {
-        G2::BaseFieldType ecx;
-        memcpy(&ecx, hash.hash, sizeof(G2::BaseFieldType));
+        G1::BaseFieldType ecx;
+        memcpy(&ecx, hash.hash, sizeof(G1::BaseFieldType));
         bool greater = ecx.hash_reduce();
 
-        G2Affine qaffine;
+        G1Affine qaffine;
         qaffine.try_and_increment(ecx, greater);
-        bls12_381::wnaf_multiply(id.q, qaffine, G2Affine::cofactor);
+
+        G1 q;
+        bls12_381::wnaf_multiply(q, qaffine, G1Affine::cofactor);
+
+        id.q.from_projective(q);
     }
 
     void setup(Params& params, MasterKey& msk, void (*get_random_bytes)(void*, size_t)) {
@@ -56,14 +60,14 @@ namespace embedded_pairing::lqibe {
     }
 
     void keygen(SecretKey& sk, const MasterKey& msk, const ID& id) {
-        G2 sq;
+        G1 sq;
         bls12_381::wnaf_multiply(sq, id.q, msk.s);
         sk.sq.from_projective(sq);
     }
 
     struct SymmetricKeyHashBuffer {
-        bls12_381::Encoding<G2Affine, true> q;
-        bls12_381::Encoding<G1Affine, true> rp;
+        bls12_381::Encoding<G1Affine, true> q;
+        bls12_381::Encoding<G2Affine, true> rp;
         uint8_t pairing[sizeof(GT)];
     };
 
@@ -74,28 +78,24 @@ namespace embedded_pairing::lqibe {
         bls12_381::WnafScalar<256, 4> wr;
         wr.from_bigint(r);
 
-        bls12_381::wnaf_multiply(ciphertext.rp, params.p, wr);
+        G2 rp;
+        bls12_381::wnaf_multiply(rp, params.p, wr);
+        ciphertext.rp.from_projective(rp);
 
-        G1 rsp;
+        G2 rsp;
         bls12_381::wnaf_multiply(rsp, params.sp, wr);
 
         SymmetricKeyHashBuffer buffer;
 
         {
-            G1Affine rspaffine;
+            G2Affine rspaffine;
             rspaffine.from_projective(rsp);
 
-            G1Affine rpaffine;
-            rpaffine.from_projective(ciphertext.rp);
-
-            G2Affine qaffine;
-            qaffine.from_projective(id.q);
-
             GT result;
-            bls12_381::pairing(result, rspaffine, qaffine);
+            bls12_381::pairing(result, id.q, rspaffine);
 
-            buffer.q.encode(qaffine);
-            buffer.rp.encode(rpaffine);
+            buffer.q.encode(id.q);
+            buffer.rp.encode(ciphertext.rp);
             memcpy(buffer.pairing, &result, sizeof(GT));
         }
 
@@ -106,17 +106,11 @@ namespace embedded_pairing::lqibe {
         SymmetricKeyHashBuffer buffer;
 
         {
-            G2Affine qaffine;
-            qaffine.from_projective(id.q);
-
-            G1Affine rpaffine;
-            rpaffine.from_projective(ciphertext.rp);
-
             GT result;
-            bls12_381::pairing(result, rpaffine, sk.sq);
+            bls12_381::pairing(result, sk.sq, ciphertext.rp);
 
-            buffer.q.encode(qaffine);
-            buffer.rp.encode(rpaffine);
+            buffer.q.encode(id.q);
+            buffer.rp.encode(ciphertext.rp);
             memcpy(buffer.pairing, &result, sizeof(GT));
         }
 

@@ -37,19 +37,19 @@
 namespace embedded_pairing::lqibe {
     template <bool compressed>
     struct ParamsMarshalled {
-        bls12_381::Encoding<G1Affine, compressed> p;
-        bls12_381::Encoding<G1Affine, compressed> sp;
+        bls12_381::Encoding<G2Affine, compressed> p;
+        bls12_381::Encoding<G2Affine, compressed> sp;
     };
 
     template <bool compressed>
     void Params::marshal(void* buffer) const {
         ParamsMarshalled<compressed>* encoded = reinterpret_cast<ParamsMarshalled<compressed>*>(buffer);
 
-        G1Affine paffine;
+        G2Affine paffine;
         paffine.from_projective(this->p);
         encoded->p.encode(paffine);
 
-        G1Affine spaffine;
+        G2Affine spaffine;
         spaffine.from_projective(this->sp);
         encoded->sp.encode(spaffine);
     }
@@ -58,13 +58,13 @@ namespace embedded_pairing::lqibe {
     bool Params::unmarshal(const void* buffer, bool checked) {
         const ParamsMarshalled<compressed>* encoded = reinterpret_cast<const ParamsMarshalled<compressed>*>(buffer);
 
-        G1Affine paffine;
+        G2Affine paffine;
         if (!encoded->p.decode(paffine, checked)) {
             return false;
         }
         this->p.from_affine(paffine);
 
-        G1Affine spaffine;
+        G2Affine spaffine;
         if (!encoded->sp.decode(spaffine, checked)) {
             return false;
         }
@@ -75,58 +75,38 @@ namespace embedded_pairing::lqibe {
 
     template <bool compressed>
     void ID::marshal(void* buffer) const {
-        bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G2Affine, compressed>*>(buffer);
-
-        G2Affine qaffine;
-        qaffine.from_projective(this->q);
-        encoded->encode(qaffine);
+        bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G1Affine, compressed>*>(buffer);
+        encoded->encode(this->q);
     }
 
     template <bool compressed>
     bool ID::unmarshal(const void* buffer, bool checked) {
-        const bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G2Affine, compressed>*>(buffer);
-
-        G2Affine qaffine;
-        if (!encoded->decode(qaffine, checked)) {
-            return false;
-        }
-        this->q.from_affine(qaffine);
-
-        return true;
+        const bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G1Affine, compressed>*>(buffer);
+        return encoded->decode(this->q, checked);
     }
 
     template <bool compressed>
     void SecretKey::marshal(void* buffer) const {
-        bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G2Affine, compressed>*>(buffer);
+        bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G1Affine, compressed>*>(buffer);
         encoded->encode(this->sq);
     }
 
     template <bool compressed>
     bool SecretKey::unmarshal(const void* buffer, bool checked) {
-        const bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G2Affine, compressed>*>(buffer);
+        const bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G1Affine, compressed>*>(buffer);
         return encoded->decode(this->sq, checked);
     }
 
     template <bool compressed>
     void Ciphertext::marshal(void* buffer) const {
-        bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G1Affine, compressed>*>(buffer);
-
-        G1Affine rpaffine;
-        rpaffine.from_projective(this->rp);
-        encoded->encode(rpaffine);
+        bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<bls12_381::Encoding<G2Affine, compressed>*>(buffer);
+        encoded->encode(this->rp);
     }
 
     template <bool compressed>
     bool Ciphertext::unmarshal(const void* buffer, bool checked) {
-        const bls12_381::Encoding<G1Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G1Affine, compressed>*>(buffer);
-
-        G1Affine rpaffine;
-        if (!encoded->decode(rpaffine, checked)) {
-            return false;
-        }
-        this->rp.from_affine(rpaffine);
-
-        return true;
+        const bls12_381::Encoding<G2Affine, compressed>* encoded = reinterpret_cast<const bls12_381::Encoding<G2Affine, compressed>*>(buffer);
+        return encoded->decode(this->rp, checked);
     }
 
     /* Explicitly instantiate the function templates. */

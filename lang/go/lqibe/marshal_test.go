@@ -43,7 +43,7 @@ func HelperTestEncryptDecryptMarshal(t *testing.T, compressed bool) {
 	idbytesm := id.Marshal(compressed)
 	id = new(ID)
 	if !id.Unmarshal(idbytesm, compressed, true) {
-		t.Fatal("Could not unmarshal private key")
+		t.Fatal("Could not unmarshal ID")
 	}
 
 	pp, msk := Setup()
@@ -90,7 +90,7 @@ func HelperTestBadKeyMarshal(t *testing.T, compressed bool) {
 	id1bytesm := id1.Marshal(compressed)
 	id1 = new(ID)
 	if !id1.Unmarshal(id1bytesm, compressed, true) {
-		t.Fatal("Could not unmarshal private key")
+		t.Fatal("Could not unmarshal ID")
 	}
 
 	id2bytes := []byte{1, 2, 3, 4}
@@ -98,7 +98,7 @@ func HelperTestBadKeyMarshal(t *testing.T, compressed bool) {
 	id2bytesm := id2.Marshal(compressed)
 	id2 = new(ID)
 	if !id2.Unmarshal(id2bytesm, compressed, true) {
-		t.Fatal("Could not unmarshal private key")
+		t.Fatal("Could not unmarshal ID")
 	}
 
 	pp, msk := Setup()
