@@ -74,7 +74,7 @@ type Ciphertext struct {
 // Hash hashes a byte slice to an ID.
 func (id *ID) Hash(data []byte) *ID {
 	idhash := new(C.embedded_pairing_lqibe_idhash_t)
-	hashSlice := (*[1 << 32]byte)(unsafe.Pointer(&idhash.hash[0]))[:C.sizeof_embedded_pairing_lqibe_idhash_t:C.sizeof_embedded_pairing_lqibe_idhash_t]
+	hashSlice := cryptutils.PointerToByteSlice(unsafe.Pointer(&idhash.hash[0]), C.sizeof_embedded_pairing_lqibe_idhash_t)
 
 	shake := sha3.NewShake256()
 	shake.Write(data)

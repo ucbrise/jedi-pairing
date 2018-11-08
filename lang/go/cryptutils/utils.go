@@ -43,6 +43,7 @@ import "C"
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"math"
 	"math/big"
 	"unsafe"
 
@@ -56,7 +57,7 @@ var GroupOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bd
 
 //export randomBytes
 func randomBytes(buffer unsafe.Pointer, length int) {
-	slice := (*[1 << 32]byte)(buffer)[:length:length]
+	slice := PointerToByteSlice(buffer, length)
 	if _, err := rand.Read(slice); err != nil {
 		panic(err)
 	}
@@ -64,8 +65,8 @@ func randomBytes(buffer unsafe.Pointer, length int) {
 
 //export hashFill
 func hashFill(buffer unsafe.Pointer, bufferLength int, toHash unsafe.Pointer, toHashLength int) {
-	bufferSlice := (*[1 << 32]byte)(buffer)[:bufferLength:bufferLength]
-	toHashSlice := (*[1 << 32]byte)(toHash)[:toHashLength:toHashLength]
+	bufferSlice := PointerToByteSlice(buffer, bufferLength)
+	toHashSlice := PointerToByteSlice(toHash, toHashLength)
 
 	shake := sha3.NewShake256()
 	shake.Write(toHashSlice)
@@ -79,6 +80,11 @@ var RandomBytesFunction = (*[0]byte)(C.go_random_bytes)
 // HashFillFunction is a C function pointer that takes two array pointers and
 // fills the first with the hash of the second.
 var HashFillFunction = (*[0]byte)(C.go_hash_fill)
+
+// PointerToByteSlice builds a byte slice around a pointer to data.
+func PointerToByteSlice(pointer unsafe.Pointer, capacity int) []byte {
+	return (*[math.MaxInt32]byte)(pointer)[:capacity:capacity]
+}
 
 // Encryptable represents a message that can be encrypted with WKD-IBE. The
 // intended usage is to choose a random message, encrypt that message, and

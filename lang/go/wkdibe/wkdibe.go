@@ -127,7 +127,7 @@ func convertScalar(result *C.embedded_pairing_wkdibe_scalar_t, scalar *big.Int) 
 	if scalar.Sign() != 1 {
 		panic("Invalid scalar: nonpositive")
 	}
-	resultSlice := (*[1 << 32]byte)(unsafe.Pointer(result))[:C.sizeof_embedded_pairing_wkdibe_scalar_t:C.sizeof_embedded_pairing_wkdibe_scalar_t]
+	resultSlice := cryptutils.PointerToByteSlice(unsafe.Pointer(result), C.sizeof_embedded_pairing_wkdibe_scalar_t)
 	scalarBytes := scalar.Bytes()
 	if len(scalarBytes) > len(resultSlice) {
 		panic("Invalid scalar: too large")
