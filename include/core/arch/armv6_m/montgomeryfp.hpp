@@ -30,31 +30,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_CORE_ARCH_THUMB_MONTGOMERYFP_HPP_
-#define EMBEDDED_PAIRING_CORE_ARCH_THUMB_MONTGOMERYFP_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_ARCH_ARMV6_M_MONTGOMERYFP_HPP_
+#define EMBEDDED_PAIRING_CORE_ARCH_ARMV6_M_MONTGOMERYFP_HPP_
 
 #include "core/montgomeryfp.hpp"
 
 extern "C" {
-    void embedded_pairing_core_arch_thumb_montgomeryfpbase_384_multiply(void* res, const void* a, const void* b, const void* p, uint32_t inv_word);
-    void embedded_pairing_core_arch_thumb_montgomeryfpbase_384_square(void* res, const void* a, const void* p, uint32_t inv_word);
-    void embedded_pairing_core_arch_thumb_montgomeryfpbase_384_montgomery_reduce(void* res, const void* a, const void* p, uint32_t inv_word);
+    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply(void* res, const void* a, const void* b, const void* p, uint32_t inv_word);
+    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square(void* res, const void* a, const void* p, uint32_t inv_word);
+    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce(void* res, const void* a, const void* p, uint32_t inv_word);
 }
 
 namespace embedded_pairing::core {
     template <>
     inline void MontgomeryFpBase<384>::multiply(const MontgomeryFpBase<384>& a, const MontgomeryFpBase<384>& b, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        embedded_pairing_core_arch_thumb_montgomeryfpbase_384_multiply(this, &a, &b, &p, inv_word);
+        embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply(this, &a, &b, &p, inv_word);
     }
 
     template <>
     inline void MontgomeryFpBase<384>::square(const MontgomeryFpBase<384>& a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        embedded_pairing_core_arch_thumb_montgomeryfpbase_384_square(this, &a, &p, inv_word);
+        embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square(this, &a, &p, inv_word);
     }
 
     template <>
     inline void MontgomeryFpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        embedded_pairing_core_arch_thumb_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
+        embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
     }
 }
 

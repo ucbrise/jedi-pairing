@@ -33,10 +33,10 @@
 #include "core/montgomeryfp.hpp"
 
 extern "C" {
-    void embedded_pairing_core_arch_thumb_montgomeryfpbase_384_reduce(void* res, const void* a, const void* p);
+    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_reduce(void* res, const void* a, const void* p);
 }
 
-void embedded_pairing_core_arch_thumb_montgomeryfpbase_384_reduce(void* res, const void* a, const void* p) {
+void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_reduce(void* res, const void* a, const void* p) {
     embedded_pairing::core::MontgomeryFpBase<384>* res_val = static_cast<embedded_pairing::core::MontgomeryFpBase<384>*>(res);
     const embedded_pairing::core::BigInt<384>* a_val = static_cast<const embedded_pairing::core::BigInt<384>*>(a);
     const embedded_pairing::core::BigInt<384>* p_val = static_cast<const embedded_pairing::core::BigInt<384>*>(p);

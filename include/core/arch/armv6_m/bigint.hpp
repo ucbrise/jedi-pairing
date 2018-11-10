@@ -30,33 +30,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_CORE_ARCH_THUMB_BIGINT_HPP_
-#define EMBEDDED_PAIRING_CORE_ARCH_THUMB_BIGINT_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_ARCH_ARMV6_M_BIGINT_HPP_
+#define EMBEDDED_PAIRING_CORE_ARCH_ARMV6_M_BIGINT_HPP_
 
 #include "core/bigint.hpp"
 
 extern "C" {
-    bool embedded_pairing_core_arch_thumb_bigint_384_add(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_thumb_bigint_768_multiply(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_thumb_bigint_768_multiply_alt(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_thumb_bigint_768_square_alt(void* res, const void* a);
+    bool embedded_pairing_core_arch_armv6_m_bigint_384_add(void* res, const void* a, const void* b);
+    bool embedded_pairing_core_arch_armv6_m_bigint_384_subtract(void* res, const void* a, const void* b);
+    uint32_t embedded_pairing_core_arch_armv6_m_bigint_384_multiply2(void* res, const void* a);
+    void embedded_pairing_core_arch_armv6_m_bigint_768_multiply(void* res, const void* a, const void* b);
+    void embedded_pairing_core_arch_armv6_m_bigint_768_square(void* res, const void* a);
 }
 
 namespace embedded_pairing::core {
     template <>
     inline bool BigInt<384>::add(const BigInt<384>& a, const BigInt<384>& __restrict b) {
-        return embedded_pairing_core_arch_thumb_bigint_384_add(this, &a, &b);
+        return embedded_pairing_core_arch_armv6_m_bigint_384_add(this, &a, &b);
+    }
+
+    template <>
+    inline bool BigInt<384>::subtract(const BigInt<384>& a, const BigInt<384>& __restrict b) {
+        return embedded_pairing_core_arch_armv6_m_bigint_384_subtract(this, &a, &b);
+    }
+
+    template <>
+    template <>
+    inline typename BigInt<384>::word_t BigInt<384>::shift_left_in_word<1>(const BigInt<384>& a) {
+        return embedded_pairing_core_arch_armv6_m_bigint_384_multiply2(this, &a);
     }
 
     template <>
     template <>
     inline void BigInt<768>::multiply(const BigInt<384>& __restrict a, const BigInt<384>& __restrict b) {
-        embedded_pairing_core_arch_thumb_bigint_768_multiply_alt(&this->words, &a.words, &b.words);
+        embedded_pairing_core_arch_armv6_m_bigint_768_multiply(&this->words, &a.words, &b.words);
     }
 
     template <>
     inline void BigInt<768>::square(const BigInt<384>& __restrict a) {
-        embedded_pairing_core_arch_thumb_bigint_768_square_alt(&this->words, &a.words);
+        embedded_pairing_core_arch_armv6_m_bigint_768_square(&this->words, &a.words);
     }
 }
 
