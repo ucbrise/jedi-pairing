@@ -343,8 +343,8 @@ namespace embedded_pairing::core {
  * Figure out the architecture of the current platform, and import the
  * appropriate headers for optimization.
  */
- #if defined(__ARM_ARCH_6M__)
- #include "./arch/armv6_m/montgomeryfp.hpp"
- #endif
+#if defined(__ARM_ARCH_6M__)
+#include "./arch/armv6_m/montgomeryfp.hpp"
+#endif
 
 #endif

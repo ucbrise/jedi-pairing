@@ -13,13 +13,13 @@ ASFLAGS =
 # ARCHDIR = lib/src/core/arch/x86_64
 
 # CXX = arm-none-eabi-g++
-# CXXFLAGS = -std=c++17 -I./include -Ofast -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -fno-threadsafe-statics
+# CXXFLAGS = -std=c++17 -I./include -Os -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -fno-threadsafe-statics
 # AR = arm-none-eabi-ar
 # AS = arm-none-eabi-as
 # ASFLAGS = -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft
-# ARCHDIR = lib/src/core/arch/armv6_m
+# ARCHDIR = src/core/arch/armv6_m
 
-PAIRING_CPP_SOURCES = $(wildcard ./src/core/*.cpp) $(wildcard ./src/bls12_381/*.cpp) $(wildcard ./src/wkdibe/*.cpp) $(wildcard ./src/lqibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
+PAIRING_CPP_SOURCES = $(wildcard src/core/*.cpp) $(wildcard src/bls12_381/*.cpp) $(wildcard src/wkdibe/*.cpp) $(wildcard src/lqibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
 PAIRING_ASM_SOURCES = $(wildcard $(ARCHDIR)/*.s)
 
 CPP_SOURCES = $(PAIRING_CPP_SOURCES)
