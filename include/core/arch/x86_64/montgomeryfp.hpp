@@ -30,45 +30,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_CORE_ARCH_x86_64_BIGINT_HPP_
-#define EMBEDDED_PAIRING_CORE_ARCH_x86_64_BIGINT_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
+#define EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
 
 extern "C" {
-    bool embedded_pairing_core_arch_x86_64_bigint_384_add(void* res, const void* a, const void* b);
-    bool embedded_pairing_core_arch_x86_64_bigint_384_subtract(void* res, const void* a, const void* b);
-    uint64_t embedded_pairing_core_arch_x86_64_bigint_384_multiply2(void* res, const void* a);
-    void embedded_pairing_core_arch_x86_64_bigint_768_multiply(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square(void* res, const void* a);
+    void embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
 }
 
 namespace embedded_pairing::core {
-    template <>
-    inline bool BigInt<384>::add(const BigInt<384>& a, const BigInt<384>& __restrict b) {
-        return embedded_pairing_core_arch_x86_64_bigint_384_add(this, &a, &b);
-    }
-
-    template <>
-    inline bool BigInt<384>::subtract(const BigInt<384>& a, const BigInt<384>& __restrict b) {
-        return embedded_pairing_core_arch_x86_64_bigint_384_subtract(this, &a, &b);
-    }
-
-    template <>
-    template <>
-    inline typename BigInt<384>::word_t BigInt<384>::shift_left_in_word<1>(const BigInt<384>& a) {
-        return embedded_pairing_core_arch_x86_64_bigint_384_multiply2(this, &a);
-    }
-
 #ifdef __BMI2__
     template <>
-    template <>
-    inline void BigInt<768>::multiply(const BigInt<384>& a, const BigInt<384>& __restrict b) {
-        return embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply(this, &a, &b);
-    }
-
-    template <>
-    inline void BigInt<768>::square(const BigInt<384>& __restrict a) {
-        return embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square(this, &a);
+    inline void MontgomeryFpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
+        embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
     }
 #endif
 }

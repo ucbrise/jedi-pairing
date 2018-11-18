@@ -37,31 +37,156 @@
 .type embedded_pairing_core_arch_x86_64_bigint_384_add, @function
 .text
 
+.macro addcarry64 offset
+    movq \offset(%rsi), %rax
+    adc \offset(%rdx), %rax
+    movq %rax, \offset(%rdi)
+.endm
+
 embedded_pairing_core_arch_x86_64_bigint_384_add:
     movq (%rsi), %rax
     add (%rdx), %rax
     movq %rax, (%rdi)
 
-    movq 8(%rsi), %rax
-    adc 8(%rdx), %rax
-    movq %rax, 8(%rdi)
+    addcarry64 8
+    addcarry64 16
+    addcarry64 24
+    addcarry64 32
+    addcarry64 40
 
-    movq 16(%rsi), %rax
-    adc 16(%rdx), %rax
-    movq %rax, 16(%rdi)
-
-    movq 24(%rsi), %rax
-    adc 24(%rdx), %rax
-    movq %rax, 24(%rdi)
-
-    movq 32(%rsi), %rax
-    adc 32(%rdx), %rax
-    movq %rax, 32(%rdi)
-
-    movq 40(%rsi), %rax
-    adc 40(%rdx), %rax
-    movq %rax, 40(%rdi)
-
-    xor %rax, %rax
+    movq $0, %rax
     adc %rax, %rax
     ret
+
+.globl embedded_pairing_core_arch_x86_64_bigint_384_subtract
+.type embedded_pairing_core_arch_x86_64_bigint_384_subtract, @function
+.text
+
+.macro subborrow64 offset
+    movq \offset(%rsi), %rax
+    sbb \offset(%rdx), %rax
+    movq %rax, \offset(%rdi)
+.endm
+
+embedded_pairing_core_arch_x86_64_bigint_384_subtract:
+    movq (%rsi), %rax
+    sub (%rdx), %rax
+    movq %rax, (%rdi)
+
+    subborrow64 8
+    subborrow64 16
+    subborrow64 24
+    subborrow64 32
+    subborrow64 40
+
+    sbb %rax, %rax
+    neg %rax
+    ret
+
+.globl embedded_pairing_core_arch_x86_64_bigint_384_multiply2
+.type embedded_pairing_core_arch_x86_64_bigint_384_multiply2, @function
+.text
+
+.macro mul2carry64 offset
+    movq \offset(%rsi), %rax
+    adc %rax, %rax
+    movq %rax, \offset(%rdi)
+.endm
+
+embedded_pairing_core_arch_x86_64_bigint_384_multiply2:
+    movq (%rsi), %rax
+    add %rax, %rax
+    movq %rax, (%rdi)
+
+    mul2carry64 8
+    mul2carry64 16
+    mul2carry64 24
+    mul2carry64 32
+    mul2carry64 40
+
+    movq $0, %rax
+    adc %rax, %rax
+    ret
+
+# .globl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add
+# .type embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add, @function
+# .text
+# 
+# # Destination pointer is in rdi
+# # Operand 1 pointer is in rsi
+# # Operand 2 pointer is in rdx
+# # Modulus pointer is in rcx
+# embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add:
+#     push %rbx
+#     push %rbp
+#     push %r8
+#     push %r9
+# 
+#     # Materialize sum in [rax, rbx, rbp, r8, r9, rsi] (little endian)
+# 
+#     movq (%rsi), %rax
+#     add (%rdx), %rax
+#     movq %rax, (%rdi)
+# 
+#     movq 8(%rsi), %rbx
+#     adc 8(%rdx), %rbx
+#     movq %rbx, 8(%rdi)
+# 
+#     movq 16(%rsi), %rbp
+#     adc 16(%rdx), %rbp
+#     movq %rbp, 16(%rdi)
+# 
+#     movq 24(%rsi), %r8
+#     adc 24(%rdx), %r8
+#     movq %r8, 24(%rdi)
+# 
+#     movq 32(%rsi), %r9
+#     adc 32(%rdx), %r9
+#     movq %r9, 32(%rdi)
+# 
+#     movq 40(%rsi), %rsi
+#     adc 40(%rdx), %rsi
+#     movq %rsi, 40(%rdi)
+# 
+#     jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+# 
+#     # Compare, and branch to either copy or subtraction
+#     cmp 40(%rcx), %rsi
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+#     jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+#     cmp 32(%rcx), %r9
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+#     jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+#     cmp 24(%rcx), %r8
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+#     jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+#     cmp 16(%rcx), %rbp
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+#     jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+#     cmp 8(%rcx), %rbx
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+#     jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+#     cmp (%rcx), %rax
+#     jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
+# 
+# embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract:
+#     sub (%rcx), %rax
+#     movq %rax, (%rdi)
+#     sbb 8(%rcx), %rbx
+#     movq %rbx, 8(%rdi)
+#     sbb 16(%rcx), %rbp
+#     movq %rbp, 16(%rdi)
+#     sbb 24(%rcx), %r8
+#     movq %r8, 24(%rdi)
+#     sbb 32(%rcx), %r9
+#     movq %r9, 32(%rdi)
+#     sbb 40(%rcx), %rsi
+#     movq %rsi, 40(%rdi)
+# 
+# embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy:
+# 
+#     pop %r9
+#     pop %r8
+#     pop %rbp
+#     pop %rbx
+#     ret

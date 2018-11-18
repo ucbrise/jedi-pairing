@@ -878,7 +878,7 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square:
 .text
 .thumb
 
-@ r0 has a pointer to the "this," the target where to store the result
+@ r0 has a pointer to the "this", the target where to store the result
 @ r1 has a pointer to the BigInt<768> to reduce
 @ r2 contains a pointer to the modulus "p"
 @ r3 contains the "inv" value for Montgomery Reduction
