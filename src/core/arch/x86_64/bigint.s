@@ -37,30 +37,72 @@
 .type embedded_pairing_core_arch_x86_64_bigint_384_add, @function
 .text
 
+.macro addcarry64 offset
+    movq \offset(%rsi), %rax
+    adc \offset(%rdx), %rax
+    movq %rax, \offset(%rdi)
+.endm
+
 embedded_pairing_core_arch_x86_64_bigint_384_add:
     movq (%rsi), %rax
     add (%rdx), %rax
     movq %rax, (%rdi)
 
-    movq 8(%rsi), %rax
-    adc 8(%rdx), %rax
-    movq %rax, 8(%rdi)
+    addcarry64 8
+    addcarry64 16
+    addcarry64 24
+    addcarry64 32
+    addcarry64 40
 
-    movq 16(%rsi), %rax
-    adc 16(%rdx), %rax
-    movq %rax, 16(%rdi)
+    xor %rax, %rax
+    adc %rax, %rax
+    ret
 
-    movq 24(%rsi), %rax
-    adc 24(%rdx), %rax
-    movq %rax, 24(%rdi)
+.globl embedded_pairing_core_arch_x86_64_bigint_384_subtract
+.type embedded_pairing_core_arch_x86_64_bigint_384_subtract, @function
+.text
 
-    movq 32(%rsi), %rax
-    adc 32(%rdx), %rax
-    movq %rax, 32(%rdi)
+.macro subborrow64 offset
+    movq \offset(%rsi), %rax
+    sbb \offset(%rdx), %rax
+    movq %rax, \offset(%rdi)
+.endm
 
-    movq 40(%rsi), %rax
-    adc 40(%rdx), %rax
-    movq %rax, 40(%rdi)
+embedded_pairing_core_arch_x86_64_bigint_384_subtract:
+    movq (%rsi), %rax
+    sub (%rdx), %rax
+    movq %rax, (%rdi)
+
+    subborrow64 8
+    subborrow64 16
+    subborrow64 24
+    subborrow64 32
+    subborrow64 40
+
+    sbb %rax, %rax
+    neg %rax
+    ret
+
+.globl embedded_pairing_core_arch_x86_64_bigint_384_multiply2
+.type embedded_pairing_core_arch_x86_64_bigint_384_multiply2, @function
+.text
+
+.macro mul2carry64 offset
+    movq \offset(%rsi), %rax
+    adc %rax, %rax
+    movq %rax, \offset(%rdi)
+.endm
+
+embedded_pairing_core_arch_x86_64_bigint_384_multiply2:
+    movq (%rsi), %rax
+    add %rax, %rax
+    movq %rax, (%rdi)
+
+    mul2carry64 8
+    mul2carry64 16
+    mul2carry64 24
+    mul2carry64 32
+    mul2carry64 40
 
     xor %rax, %rax
     adc %rax, %rax
