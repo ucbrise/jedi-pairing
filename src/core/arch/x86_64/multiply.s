@@ -132,59 +132,54 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
     movq (8*\i)(%rsi), %rdx
     muladd64_bmi2 (%rcx), \dst0, %r8
     movq \dst0, (8*\i)(%rdi)
-    muladdcarry64_bmi2 8(%rcx), \dst1, %r8, %r9
-    muladdcarry64_bmi2 16(%rcx), \dst2, %r9, %r8
-    muladdcarry64_bmi2 24(%rcx), \dst3, %r8, %r9
-    muladdcarry64_bmi2 32(%rcx), \dst4, %r9, %r8
+    muladdcarry64_bmi2 8(%rcx), \dst1, %r8, \dst0
+    muladdcarry64_bmi2 16(%rcx), \dst2, \dst0, %r8
+    muladdcarry64_bmi2 24(%rcx), \dst3, %r8, \dst0
+    muladdcarry64_bmi2 32(%rcx), \dst4, \dst0, %r8
     muladdcarry64_bmi2 40(%rcx), \dst5, %r8, \dst0
     adc $0, \dst0
 .endm
 
 embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
-    push %rbp
-    push %rbx
     push %r12
     push %r13
     push %r14
-    push %r15
 
     # Register rdx is an implicit source to mulx, so we can't use it to point
-    # to the second argument.
-    # Register r8 is used for carry
-    # Registers r10 to r15 store parts of the destination array
-
+    # to the second argument. Instead, we use rcx to point to it.
     movq %rdx, %rcx
+
+    # Register r8 is used for carry.
+    # Registers r9 to r14 store parts of the destination array.
+
     movq (%rsi), %rdx
 
     mulx (%rcx), %rax, %r8
     movq %rax, (%rdi)
 
-    mulx 8(%rcx), %r10, %r9
-    add %r8, %r10
+    mulx 8(%rcx), %r9, %r14
+    add %r8, %r9
 
-    mulcarry64_bmi2 16(%rcx), %r11, %r9, %r8
-    mulcarry64_bmi2 24(%rcx), %r12, %r8, %r9
-    mulcarry64_bmi2 32(%rcx), %r13, %r9, %r8
-    mulcarry64_bmi2 40(%rcx), %r14, %r8, %r15
-    adc $0, %r15
+    mulcarry64_bmi2 16(%rcx), %r10, %r14, %r8
+    mulcarry64_bmi2 24(%rcx), %r11, %r8, %r14
+    mulcarry64_bmi2 32(%rcx), %r12, %r14, %r8
+    mulcarry64_bmi2 40(%rcx), %r13, %r8, %r14
+    adc $0, %r14
 
-    multiplyloopiteration_bmi2 1, %r10, %r11, %r12, %r13, %r14, %r15
-    multiplyloopiteration_bmi2 2, %r11, %r12, %r13, %r14, %r15, %r10
-    multiplyloopiteration_bmi2 3, %r12, %r13, %r14, %r15, %r10, %r11
-    multiplyloopiteration_bmi2 4, %r13, %r14, %r15, %r10, %r11, %r12
-    multiplyloopiteration_bmi2 5, %r14, %r15, %r10, %r11, %r12, %r13
+    multiplyloopiteration_bmi2 1, %r9, %r10, %r11, %r12, %r13, %r14
+    multiplyloopiteration_bmi2 2, %r10, %r11, %r12, %r13, %r14, %r9
+    multiplyloopiteration_bmi2 3, %r11, %r12, %r13, %r14, %r9, %r10
+    multiplyloopiteration_bmi2 4, %r12, %r13, %r14, %r9, %r10, %r11
+    multiplyloopiteration_bmi2 5, %r13, %r14, %r9, %r10, %r11, %r12
 
-    movq %r15, 48(%rdi)
-    movq %r10, 56(%rdi)
-    movq %r11, 64(%rdi)
-    movq %r12, 72(%rdi)
-    movq %r13, 80(%rdi)
-    movq %r14, 88(%rdi)
+    movq %r14, 48(%rdi)
+    movq %r9, 56(%rdi)
+    movq %r10, 64(%rdi)
+    movq %r11, 72(%rdi)
+    movq %r12, 80(%rdi)
+    movq %r13, 88(%rdi)
 
-    pop %r15
     pop %r14
     pop %r13
     pop %r12
-    pop %rbx
-    pop %rbp
     ret
