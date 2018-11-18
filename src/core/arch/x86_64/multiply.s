@@ -108,74 +108,83 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 .text
 
 # Input carry and output carry are in rdx. src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
-.macro mulcarry64_bmi2 src2_off, dst, carry_in, carry_out
-    mulx \src2_off(%rcx), %rax, \carry_out
-    adc \carry_in, %rax
-    movq %rax, \dst
+.macro mulcarry64_bmi2 src2, dst, carry_in, carry_out
+    mulx \src2, \dst, \carry_out
+    adc \carry_in, \dst
 .endm
 
-.macro muladd64_bmi2 src2_off, dst, carry_out
-    mulx \src2_off(%rcx), %rax, \carry_out
+.macro muladd64_bmi2 src2, dst, carry_out
+    mulx \src2, %rax, \carry_out
     add %rax, \dst
 .endm
 
-.macro muladdcarry64_bmi2 src2_off, dst, carry_in, carry_out
-    mulx \src2_off(%rcx), %rax, \carry_out
+.macro muladdcarry64_bmi2 src2, dst, carry_in, carry_out
+    mulx \src2, %rax, \carry_out
+    # Carry flag was set in previous muladdcarry64_bmi2 or muladd64_bmi2
     adc \carry_in, %rax
     adc $0, \carry_out
+    # Carry flag should be zero here, so either add or adc can be used for the
+    # next instruction.
     add %rax, \dst
 .endm
 
-.macro multiplyloopiteration_bmi2 i
+.macro multiplyloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     movq (8*\i)(%rsi), %rdx
-    muladd64_bmi2 0, (8*\i)(%rdi), %r8
-    muladdcarry64_bmi2 8, (8*\i+8)(%rdi), %r8, %r9
-    muladdcarry64_bmi2 16, (8*\i+16)(%rdi), %r9, %r8
-    muladdcarry64_bmi2 24, (8*\i+24)(%rdi), %r8, %r9
-    muladdcarry64_bmi2 32, (8*\i+32)(%rdi), %r9, %r8
-    muladdcarry64_bmi2 40, (8*\i+40)(%rdi), %r8, %r9
-    adc $0, %r9
-    movq %r9, (8*\i+48)(%rdi)
+    muladd64_bmi2 (%rcx), \dst0, %r8
+    movq \dst0, (8*\i)(%rdi)
+    muladdcarry64_bmi2 8(%rcx), \dst1, %r8, %r9
+    muladdcarry64_bmi2 16(%rcx), \dst2, %r9, %r8
+    muladdcarry64_bmi2 24(%rcx), \dst3, %r8, %r9
+    muladdcarry64_bmi2 32(%rcx), \dst4, %r9, %r8
+    muladdcarry64_bmi2 40(%rcx), \dst5, %r8, \dst0
+    adc $0, \dst0
 .endm
 
 embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
-    push %rbx
     push %rbp
+    push %rbx
     push %r12
     push %r13
     push %r14
     push %r15
-    # mul writes result to rdx and rax, so we cannot use rdx as a pointer to
-    # the multiplicand. Instead, we use rcx for this purpose. Similarly, we
-    # cannot keep the carry in %rdx in-between multiplies, as it needs to be
-    # added. So, we use r8 for the carry.
+
+    # Register rdx is an implicit source to mulx, so we can't use it to point
+    # to the second argument.
+    # Register r8 is used for carry
+    # Registers r10 to r15 store parts of the destination array
+
     movq %rdx, %rcx
     movq (%rsi), %rdx
 
     mulx (%rcx), %rax, %r8
     movq %rax, (%rdi)
 
-    mulx 8(%rcx), %rax, %r9
-    add %r8, %rax
-    movq %rax, 8(%rdi)
+    mulx 8(%rcx), %r10, %r9
+    add %r8, %r10
 
-    mulcarry64_bmi2 16, 16(%rdi), %r9, %r8
-    mulcarry64_bmi2 24, 24(%rdi), %r8, %r9
-    mulcarry64_bmi2 32, 32(%rdi), %r9, %r8
-    mulcarry64_bmi2 40, 40(%rdi), %r8, %r9
-    adc $0, %r9
-    movq %r9, 48(%rdi)
+    mulcarry64_bmi2 16(%rcx), %r11, %r9, %r8
+    mulcarry64_bmi2 24(%rcx), %r12, %r8, %r9
+    mulcarry64_bmi2 32(%rcx), %r13, %r9, %r8
+    mulcarry64_bmi2 40(%rcx), %r14, %r8, %r15
+    adc $0, %r15
 
-    multiplyloopiteration_bmi2 1
-    multiplyloopiteration_bmi2 2
-    multiplyloopiteration_bmi2 3
-    multiplyloopiteration_bmi2 4
-    multiplyloopiteration_bmi2 5
+    multiplyloopiteration_bmi2 1, %r10, %r11, %r12, %r13, %r14, %r15
+    multiplyloopiteration_bmi2 2, %r11, %r12, %r13, %r14, %r15, %r10
+    multiplyloopiteration_bmi2 3, %r12, %r13, %r14, %r15, %r10, %r11
+    multiplyloopiteration_bmi2 4, %r13, %r14, %r15, %r10, %r11, %r12
+    multiplyloopiteration_bmi2 5, %r14, %r15, %r10, %r11, %r12, %r13
+
+    movq %r15, 48(%rdi)
+    movq %r10, 56(%rdi)
+    movq %r11, 64(%rdi)
+    movq %r12, 72(%rdi)
+    movq %r13, 80(%rdi)
+    movq %r14, 88(%rdi)
 
     pop %r15
     pop %r14
     pop %r13
     pop %r12
-    pop %rbp
     pop %rbx
+    pop %rbp
     ret
