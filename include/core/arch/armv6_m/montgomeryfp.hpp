@@ -38,7 +38,7 @@
 extern "C" {
     void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply(void* res, const void* a, const void* b, const void* p, uint32_t inv_word);
     void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square(void* res, const void* a, const void* p, uint32_t inv_word);
-    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce(void* res, const void* a, const void* p, uint32_t inv_word);
+    void embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint32_t inv_word);
 }
 
 namespace embedded_pairing::core {
