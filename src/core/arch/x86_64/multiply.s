@@ -249,7 +249,6 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 # inv_word is in rcx.
 embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     push %rbx
-    push %rbp
     push %r12
     push %r13
     push %r14
@@ -273,8 +272,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     movq %rcx, %rdx
     imul %r10, %rdx
     montgomeryreduceloopiterationraw_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
-    movq 48(%rsi), %rax
-    adc %rax, %r10
+    adc 48(%rsi), %r10
     adc $0, %rbx
 
     # Remaining iterations
@@ -324,7 +322,6 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_fi
     pop %r14
     pop %r13
     pop %r12
-    pop %rbp
     pop %rbx
     ret
 
@@ -340,6 +337,5 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_fi
     pop %r14
     pop %r13
     pop %r12
-    pop %rbp
     pop %rbx
     ret
