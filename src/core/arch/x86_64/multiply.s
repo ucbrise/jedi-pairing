@@ -284,12 +284,57 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     montgomeryreduceloopiteration_bmi2 4, %r14, %r15, %r10, %r11, %r12, %r13
     montgomeryreduceloopiteration_bmi2 5, %r15, %r10, %r11, %r12, %r13, %r14
 
-    movq %r10, 48(%rsi)
-    movq %r11, 56(%rsi)
-    movq %r12, 64(%rsi)
-    movq %r13, 72(%rsi)
-    movq %r14, 80(%rsi)
-    movq %r15, 88(%rsi)
+    # Now, result (sans final reduction) is in r10 to r15, with MSB in r15
+
+    # Compare, and branch to either copy or subtraction
+    cmp 40(%r8), %r15
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    cmp 32(%r8), %r14
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    cmp 24(%r8), %r13
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    cmp 16(%r8), %r12
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    cmp 8(%r8), %r11
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    cmp (%r8), %r10
+    jl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy
+    jne embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract
+
+embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_subtract:
+    sub (%r8), %r10
+    movq %r10, (%rdi)
+    sbb 8(%r8), %r11
+    movq %r11, 8(%rdi)
+    sbb 16(%r8), %r12
+    movq %r12, 16(%rdi)
+    sbb 24(%r8), %r13
+    movq %r13, 24(%rdi)
+    sbb 32(%r8), %r14
+    movq %r14, 32(%rdi)
+    sbb 40(%r8), %r15
+    movq %r15, 40(%rdi)
+
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %rbp
+    pop %rbx
+    ret
+
+embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy:
+    movq %r10, (%rdi)
+    movq %r11, 8(%rdi)
+    movq %r12, 16(%rdi)
+    movq %r13, 24(%rdi)
+    movq %r14, 32(%rdi)
+    movq %r15, 40(%rdi)
 
     pop %r15
     pop %r14
