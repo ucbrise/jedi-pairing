@@ -216,6 +216,8 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 
 # The constant u used in multiplications for this iteration should be in rdx
 # dst0 to dst5 should contain words i to i + 5 of product (total 12 words)
+# At the end, dst1 - dst5 contain words i + 1 to i + 5 of the product
+# dst0 is the carry that should be added to word (i+6) with carry bit
 .macro montgomeryreduceloopiterationraw_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     muladd64_bmi2 (%r8), \dst0, %r9
     # \dst0 is now free, so we use it for carry (along with r9)
@@ -224,10 +226,10 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     muladdcarry64_bmi2 24(%r8), \dst3, %r9, \dst0
     muladdcarry64_bmi2 32(%r8), \dst4, \dst0, %r9
     muladdcarry64_bmi2 40(%r8), \dst5, %r9, \dst0
-    adc $0, \dst0
 .endm
 
 # At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
+# Carry bit is the "+1" bit for word i+6 (in dst0).
 .macro montgomeryreduceloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     # Compute u and store it in %rdx
     movq %rcx, %rdx
@@ -236,13 +238,11 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     montgomeryreduceloopiterationraw_bmi2 \i, \dst0, \dst1, \dst2, \dst3, \dst4, \dst5
 
     # Use/store meta-carry in %rbx
-    movq (8*\i+48)(%rsi), %rax
-    xor %rbp, %rbp
-    add %rax, \dst0
-    adc $0, %rbp
-    add %rbx, \dst0
-    adc $0, %rbp
-    movq %rbp, %rbx
+    adc %rbx, \dst0
+    movq $0, %rbx
+    adc $0, %rbx
+    add (8*\i+48)(%rsi), \dst0
+    adc $0, %rbx
 .endm
 
 # Result is stored in rdi, product is in rsi, prime modulus is in rdx, and
@@ -269,8 +269,15 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     # Clear meta-carry (stored in rbx)
     xor %rbx, %rbx
 
-    # Iterations of Montgomery Reduction
-    montgomeryreduceloopiteration_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
+    # First iteration
+    movq %rcx, %rdx
+    imul %r10, %rdx
+    montgomeryreduceloopiterationraw_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
+    movq 48(%rsi), %rax
+    adc %rax, %r10
+    adc $0, %rbx
+
+    # Remaining iterations
     montgomeryreduceloopiteration_bmi2 1, %r11, %r12, %r13, %r14, %r15, %r10
     montgomeryreduceloopiteration_bmi2 2, %r12, %r13, %r14, %r15, %r10, %r11
     montgomeryreduceloopiteration_bmi2 3, %r13, %r14, %r15, %r10, %r11, %r12
