@@ -347,4 +347,8 @@ namespace embedded_pairing::core {
 #include "./arch/armv6_m/montgomeryfp.hpp"
 #endif
 
+#if defined(__x86_64__) || defined(_M_X64_)
+#include "./arch/x86_64/montgomeryfp.hpp"
+#endif
+
 #endif

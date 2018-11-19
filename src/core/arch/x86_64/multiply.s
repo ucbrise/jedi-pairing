@@ -131,7 +131,8 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 .type embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply, @function
 .text
 
-# Input carry and output carry are in rdx. src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
+# Input carry and output carry are in rdx. Extra "+1" bit stored in carry flag.
+# src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
 .macro mulcarry64_bmi2 src2, dst, carry_in, carry_out
     mulx \src2, \dst, \carry_out
     adc \carry_in, \dst
@@ -156,6 +157,7 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
     movq (8*\i)(%rsi), %rdx
     muladd64_bmi2 (%rcx), \dst0, %r8
     movq \dst0, (8*\i)(%rdi)
+    # \dst0 is now free, so we use it for carry (along with r8)
     muladdcarry64_bmi2 8(%rcx), \dst1, %r8, \dst0
     muladdcarry64_bmi2 16(%rcx), \dst2, \dst0, %r8
     muladdcarry64_bmi2 24(%rcx), \dst3, %r8, \dst0
@@ -206,4 +208,86 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     pop %r14
     pop %r13
     pop %r12
+    ret
+
+.globl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce
+.type embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce, @function
+.text
+
+# The constant u used in multiplications for this iteration should be in rdx
+# dst0 to dst5 should contain words i to i + 5 of product (total 12 words)
+.macro montgomeryreduceloopiterationraw_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
+    muladd64_bmi2 (%r8), \dst0, %r9
+    # \dst0 is now free, so we use it for carry (along with r9)
+    muladdcarry64_bmi2 8(%r8), \dst1, %r9, \dst0
+    muladdcarry64_bmi2 16(%r8), \dst2, \dst0, %r9
+    muladdcarry64_bmi2 24(%r8), \dst3, %r9, \dst0
+    muladdcarry64_bmi2 32(%r8), \dst4, \dst0, %r9
+    muladdcarry64_bmi2 40(%r8), \dst5, %r9, \dst0
+    adc $0, \dst0
+.endm
+
+# At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
+.macro montgomeryreduceloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
+    # Compute u and store it in %rdx
+    movq %rcx, %rdx
+    imul \dst0, %rdx
+
+    montgomeryreduceloopiterationraw_bmi2 \i, \dst0, \dst1, \dst2, \dst3, \dst4, \dst5
+
+    # Use/store meta-carry in %rbx
+    movq (8*\i+48)(%rsi), %rax
+    xor %rbp, %rbp
+    add %rax, \dst0
+    adc $0, %rbp
+    add %rbx, \dst0
+    adc $0, %rbp
+    movq %rbp, %rbx
+.endm
+
+# Result is stored in rdi, product is in rsi, prime modulus is in rdx, and
+# inv_word is in rcx.
+embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
+    push %rbx
+    push %rbp
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+
+    # Stash the prime modulus in r8, since rdx is used for multiplication
+    movq %rdx, %r8
+
+    # Registers r10 to r15 store parts of the product (pointer in rsi)
+    movq (%rsi), %r10
+    movq 8(%rsi), %r11
+    movq 16(%rsi), %r12
+    movq 24(%rsi), %r13
+    movq 32(%rsi), %r14
+    movq 40(%rsi), %r15
+
+    # Clear meta-carry (stored in rbx)
+    xor %rbx, %rbx
+
+    # Iterations of Montgomery Reduction
+    montgomeryreduceloopiteration_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
+    montgomeryreduceloopiteration_bmi2 1, %r11, %r12, %r13, %r14, %r15, %r10
+    montgomeryreduceloopiteration_bmi2 2, %r12, %r13, %r14, %r15, %r10, %r11
+    montgomeryreduceloopiteration_bmi2 3, %r13, %r14, %r15, %r10, %r11, %r12
+    montgomeryreduceloopiteration_bmi2 4, %r14, %r15, %r10, %r11, %r12, %r13
+    montgomeryreduceloopiteration_bmi2 5, %r15, %r10, %r11, %r12, %r13, %r14
+
+    movq %r10, 48(%rsi)
+    movq %r11, 56(%rsi)
+    movq %r12, 64(%rsi)
+    movq %r13, 72(%rsi)
+    movq %r14, 80(%rsi)
+    movq %r15, 88(%rsi)
+
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %rbp
+    pop %rbx
     ret
