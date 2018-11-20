@@ -220,12 +220,6 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     pop %r12
     ret
 
-.macro mul2carry64 x
-    movq \x, %rax
-    adc %rax, %rax
-    movq %rax, \x
-.endm
-
 .globl embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square
 .type embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square, @function
 .text
