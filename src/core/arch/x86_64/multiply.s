@@ -28,8 +28,18 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+.macro iaca_start
+    mov $111, %ebx
+    .byte 0x64, 0x67, 0x90
+.endm
+
+.macro iaca_end
+    mov $222, %ebx
+    .byte 0x64, 0x67, 0x90
+.endm
+
 # x86_64 calling convention (assuming System V ABI): rdi, rsi, rdx, rcx, r8,
-# and r9 are the arguments registers, and eax is the return value (also edx for
+# and r9 are the argument registers, and rax is the return value (also rdx for
 # larger 128-bit return values). The registers rbx, rbp, and r12-r15 must be
 # saved and restored by a function if it modifies them.
 
@@ -210,6 +220,128 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     pop %r12
     ret
 
+.macro mul2carry64 x
+    movq \x, %rax
+    adc %rax, %rax
+    movq %rax, \x
+.endm
+
+.globl embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square
+.type embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square, @function
+.text
+
+# rdi is a pointer to the destination BigInt<768>. rsi is a pointers to
+# the operand (which is a BigInt<384>).
+embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
+    push %r12
+    push %r13
+    push %r14
+
+    # First, set buffer containing result to zero
+    movq $0, (%rdi)
+    movq $0, 8(%rdi)
+    movq $0, 16(%rdi)
+    movq $0, 24(%rdi)
+    movq $0, 32(%rdi)
+    movq $0, 40(%rdi)
+    movq $0, 48(%rdi)
+    movq $0, 56(%rdi)
+    movq $0, 64(%rdi)
+    movq $0, 72(%rdi)
+    movq $0, 80(%rdi)
+    movq $0, 88(%rdi)
+
+    # Compute products below diagonal
+
+    # Iteration i = 1
+    movq 8(%rsi), %rdx
+    muladd64_bmi2 (%rsi), 8(%rdi), %r8
+    adc %r8, 16(%rdi)
+
+    # Iteration i = 2
+    movq 16(%rsi), %rdx
+    muladd64_bmi2 (%rsi), 16(%rdi), %r8
+    muladdcarry64_bmi2 8(%rsi), 24(%rdi), %r8, %r9
+    adc %r9, 32(%rdi)
+
+    # Iteration i = 3
+    movq 24(%rsi), %rdx
+    muladd64_bmi2 (%rsi), 24(%rdi), %r8
+    muladdcarry64_bmi2 8(%rsi), 32(%rdi), %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), 40(%rdi), %r9, %r8
+    adc %r8, 48(%rdi)
+
+    # Iteration i = 4
+    movq 32(%rsi), %rdx
+    muladd64_bmi2 (%rsi), 32(%rdi), %r8
+    muladdcarry64_bmi2 8(%rsi), 40(%rdi), %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), 48(%rdi), %r9, %r8
+    muladdcarry64_bmi2 24(%rsi), 56(%rdi), %r8, %r9
+    adc %r9, 64(%rdi)
+
+    # Iteration i = 5
+    movq 40(%rsi), %rdx
+    muladd64_bmi2 (%rsi), 40(%rdi), %r8
+    muladdcarry64_bmi2 8(%rsi), 48(%rdi), %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), 56(%rdi), %r9, %r8
+    muladdcarry64_bmi2 24(%rsi), 64(%rdi), %r8, %r9
+    muladdcarry64_bmi2 32(%rsi), 72(%rdi), %r9, %r8
+    adc %r8, 80(%rdi)
+
+    # Double the result so far
+    movq (%rdi), %rax
+    add %rax, %rax
+    movq %rax, (%rdi)
+
+    mul2carry64 8(%rdi)
+    mul2carry64 16(%rdi)
+    mul2carry64 24(%rdi)
+    mul2carry64 32(%rdi)
+    mul2carry64 40(%rdi)
+    mul2carry64 48(%rdi)
+    mul2carry64 56(%rdi)
+    mul2carry64 64(%rdi)
+    mul2carry64 72(%rdi)
+    mul2carry64 80(%rdi)
+    mul2carry64 88(%rdi)
+
+    # Add the diagonal
+
+    movq (%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    add %rdx, (%rdi)
+    adc %r8, 8(%rdi)
+
+    movq 8(%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    adc %rdx, 16(%rdi)
+    adc %r8, 24(%rdi)
+
+    movq 16(%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    adc %rdx, 32(%rdi)
+    adc %r8, 40(%rdi)
+
+    movq 24(%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    adc %rdx, 48(%rdi)
+    adc %r8, 56(%rdi)
+
+    movq 32(%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    adc %rdx, 64(%rdi)
+    adc %r8, 72(%rdi)
+
+    movq 40(%rsi), %rdx
+    mulx %rdx, %rdx, %r8
+    adc %rdx, 80(%rdi)
+    adc %r8, 88(%rdi)
+
+    pop %r14
+    pop %r13
+    pop %r12
+    ret
+
 .globl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce
 .type embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce, @function
 .text
@@ -253,6 +385,8 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     push %r14
     push %r15
 
+    iaca_start
+
     # Stash the prime modulus in r8, since rdx is used for multiplication
     movq %rdx, %r8
 
@@ -287,6 +421,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     add 88(%rsi), %r15
 
     # Now, result (sans final reduction) is in r10 to r15, with MSB in r15
+    iaca_end
 
     # Compare, and branch to either copy or subtraction
     cmp 40(%r8), %r15
