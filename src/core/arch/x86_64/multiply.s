@@ -233,60 +233,80 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 # rdi is a pointer to the destination BigInt<768>. rsi is a pointers to
 # the operand (which is a BigInt<384>).
 embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
+    push %rbp
+    push %rbx
     push %r12
     push %r13
     push %r14
+    push %r15
 
     # First, set buffer containing result to zero
-    movq $0, (%rdi)
-    movq $0, 8(%rdi)
-    movq $0, 16(%rdi)
-    movq $0, 24(%rdi)
-    movq $0, 32(%rdi)
-    movq $0, 40(%rdi)
-    movq $0, 48(%rdi)
-    movq $0, 56(%rdi)
-    movq $0, 64(%rdi)
-    movq $0, 72(%rdi)
-    movq $0, 80(%rdi)
-    movq $0, 88(%rdi)
+    # movq $0, (%rdi)
+    # movq $0, 8(%rdi)
+    # movq $0, 16(%rdi)
+    # movq $0, 24(%rdi)
+    # movq $0, 32(%rdi)
+    # movq $0, 40(%rdi)
+    # movq $0, 48(%rdi)
+    # movq $0, 56(%rdi)
+    # movq $0, 64(%rdi)
+    # movq $0, 72(%rdi)
+    # movq $0, 80(%rdi)
+    # movq $0, 88(%rdi)
 
-    # Compute products below diagonal
+    push %rdi
 
-    # Iteration i = 1
+    # Compute products below diagonal (words 0 and 11 implicitly zero)
+
+    # Iteration i = 1 (word 8(%rdi) in rdi, word 16(%rdi) in r10)
     movq 8(%rsi), %rdx
-    muladd64_bmi2 (%rsi), 8(%rdi), %r8
-    adc %r8, 16(%rdi)
+    mulx (%rsi), %rdi, %r10
 
-    # Iteration i = 2
+    # Iteration i = 2 (word 24(%rdi) in r11, word 32(%rdi) in r12)
     movq 16(%rsi), %rdx
-    muladd64_bmi2 (%rsi), 16(%rdi), %r8
-    muladdcarry64_bmi2 8(%rsi), 24(%rdi), %r8, %r9
-    adc %r9, 32(%rdi)
+    muladd64_bmi2 (%rsi), %r10, %r8
+    mulcarry64_bmi2 8(%rsi), %r11, %r8, %r12
+    adc $0, %r12
 
-    # Iteration i = 3
+    # Iteration i = 3 (word 40(%rdi) in r13, word 48(%rdi) in r14)
     movq 24(%rsi), %rdx
-    muladd64_bmi2 (%rsi), 24(%rdi), %r8
-    muladdcarry64_bmi2 8(%rsi), 32(%rdi), %r8, %r9
-    muladdcarry64_bmi2 16(%rsi), 40(%rdi), %r9, %r8
-    adc %r8, 48(%rdi)
+    muladd64_bmi2 (%rsi), %r11, %r8
+    muladdcarry64_bmi2 8(%rsi), %r12, %r8, %r9
+    mulcarry64_bmi2 16(%rsi), %r13, %r9, %r14
+    adc $0, %r14
 
-    # Iteration i = 4
+    # Iteration i = 4 (word 56(%rdi) in r15, word 64(%rdi) in rcx)
     movq 32(%rsi), %rdx
-    muladd64_bmi2 (%rsi), 32(%rdi), %r8
-    muladdcarry64_bmi2 8(%rsi), 40(%rdi), %r8, %r9
-    muladdcarry64_bmi2 16(%rsi), 48(%rdi), %r9, %r8
-    muladdcarry64_bmi2 24(%rsi), 56(%rdi), %r8, %r9
-    adc %r9, 64(%rdi)
+    muladd64_bmi2 (%rsi), %r12, %r8
+    muladdcarry64_bmi2 8(%rsi), %r13, %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), %r14, %r9, %r8
+    mulcarry64_bmi2 24(%rsi), %r15, %r8, %rcx
+    adc $0, %rcx
 
-    # Iteration i = 5
+    # Iteration i = 5 (word 72(%rdi) in rbp, word 80(%rdi) in rbx)
     movq 40(%rsi), %rdx
-    muladd64_bmi2 (%rsi), 40(%rdi), %r8
-    muladdcarry64_bmi2 8(%rsi), 48(%rdi), %r8, %r9
-    muladdcarry64_bmi2 16(%rsi), 56(%rdi), %r9, %r8
-    muladdcarry64_bmi2 24(%rsi), 64(%rdi), %r8, %r9
-    muladdcarry64_bmi2 32(%rsi), 72(%rdi), %r9, %r8
-    adc %r8, 80(%rdi)
+    muladd64_bmi2 (%rsi), %r13, %r8
+    muladdcarry64_bmi2 8(%rsi), %r14, %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), %r15, %r9, %r8
+    muladdcarry64_bmi2 24(%rsi), %rcx, %r8, %r9
+    mulcarry64_bmi2 32(%rsi), %rbp, %r9, %rbx
+    adc $0, %rbx
+
+    # For NOW, store result to memory
+    pop %rax
+    movq $0, (%rax)
+    movq %rdi, 8(%rax)
+    movq %r10, 16(%rax)
+    movq %r11, 24(%rax)
+    movq %r12, 32(%rax)
+    movq %r13, 40(%rax)
+    movq %r14, 48(%rax)
+    movq %r15, 56(%rax)
+    movq %rcx, 64(%rax)
+    movq %rbp, 72(%rax)
+    movq %rbx, 80(%rax)
+    movq $0, 88(%rax)
+    movq %rax, %rdi
 
     # Double the result so far
     movq (%rdi), %rax
@@ -337,9 +357,12 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     adc %rdx, 80(%rdi)
     adc %r8, 88(%rdi)
 
+    pop %r15
     pop %r14
     pop %r13
     pop %r12
+    pop %rbx
+    pop %rbp
     ret
 
 .globl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce
