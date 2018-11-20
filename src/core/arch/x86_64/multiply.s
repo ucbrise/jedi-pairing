@@ -239,8 +239,7 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 
     # Use/store meta-carry in %rbx
     adc %rbx, \dst0
-    movq $0, %rbx
-    adc $0, %rbx
+    setc %bl
     add (8*\i+48)(%rsi), \dst0
     adc $0, %rbx
 .endm
@@ -265,22 +264,27 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     movq 32(%rsi), %r14
     movq 40(%rsi), %r15
 
-    # Clear meta-carry (stored in rbx)
-    xor %rbx, %rbx
-
     # First iteration
     movq %rcx, %rdx
     imul %r10, %rdx
     montgomeryreduceloopiterationraw_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
     adc 48(%rsi), %r10
-    adc $0, %rbx
+    movq $0, %rbx
+    setc %bl
 
-    # Remaining iterations
+    # Middle iterations
     montgomeryreduceloopiteration_bmi2 1, %r11, %r12, %r13, %r14, %r15, %r10
     montgomeryreduceloopiteration_bmi2 2, %r12, %r13, %r14, %r15, %r10, %r11
     montgomeryreduceloopiteration_bmi2 3, %r13, %r14, %r15, %r10, %r11, %r12
     montgomeryreduceloopiteration_bmi2 4, %r14, %r15, %r10, %r11, %r12, %r13
-    montgomeryreduceloopiteration_bmi2 5, %r15, %r10, %r11, %r12, %r13, %r14
+
+    # Final iteration
+    movq %rcx, %rdx
+    imul %r15, %rdx
+    #mulx %r15, %rdx, %rax
+    montgomeryreduceloopiterationraw_bmi2 5, %r15, %r10, %r11, %r12, %r13, %r14
+    adc %rbx, %r15
+    add 88(%rsi), %r15
 
     # Now, result (sans final reduction) is in r10 to r15, with MSB in r15
 
@@ -338,4 +342,30 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_fi
     pop %r13
     pop %r12
     pop %rbx
+    ret
+
+.globl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_multiply
+.type embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_multiply, @function
+.text
+
+# Destination BigInt<384> pointer is in rdi, operand 1 pointer is in rsi,
+# operand 2 pointer is in rdx, prime modulus pointer is in rcx, and inv_word is
+# in r8.
+embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_multiply:
+    push %rbp
+    push %rbx
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+    sub 96, %rsp
+
+    # TODO: implement this
+
+    add 96, %rsp
+    pop %r15
+    pop %r14
+    pop %r12
+    pop %rbx
+    pop %rbp
     ret
