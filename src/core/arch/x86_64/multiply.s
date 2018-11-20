@@ -240,122 +240,96 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     push %r14
     push %r15
 
-    # First, set buffer containing result to zero
-    # movq $0, (%rdi)
-    # movq $0, 8(%rdi)
-    # movq $0, 16(%rdi)
-    # movq $0, 24(%rdi)
-    # movq $0, 32(%rdi)
-    # movq $0, 40(%rdi)
-    # movq $0, 48(%rdi)
-    # movq $0, 56(%rdi)
-    # movq $0, 64(%rdi)
-    # movq $0, 72(%rdi)
-    # movq $0, 80(%rdi)
-    # movq $0, 88(%rdi)
+    # Compute products below diagonal (words (%rdi), 88(%rdi) implicitly zero)
 
-    push %rdi
-
-    # Compute products below diagonal (words 0 and 11 implicitly zero)
-
-    # Iteration i = 1 (word 8(%rdi) in rdi, word 16(%rdi) in r10)
+    # Iteration i = 1 (word 8(%rdi) in r10, word 16(%rdi) in r11)
     movq 8(%rsi), %rdx
-    mulx (%rsi), %rdi, %r10
+    mulx (%rsi), %r10, %r11
 
-    # Iteration i = 2 (word 24(%rdi) in r11, word 32(%rdi) in r12)
+    # Iteration i = 2 (word 24(%rdi) in r12, word 32(%rdi) in r13)
     movq 16(%rsi), %rdx
-    muladd64_bmi2 (%rsi), %r10, %r8
-    mulcarry64_bmi2 8(%rsi), %r11, %r8, %r12
-    adc $0, %r12
-
-    # Iteration i = 3 (word 40(%rdi) in r13, word 48(%rdi) in r14)
-    movq 24(%rsi), %rdx
     muladd64_bmi2 (%rsi), %r11, %r8
-    muladdcarry64_bmi2 8(%rsi), %r12, %r8, %r9
-    mulcarry64_bmi2 16(%rsi), %r13, %r9, %r14
-    adc $0, %r14
+    mulcarry64_bmi2 8(%rsi), %r12, %r8, %r13
+    adc $0, %r13
 
-    # Iteration i = 4 (word 56(%rdi) in r15, word 64(%rdi) in rcx)
-    movq 32(%rsi), %rdx
+    # Iteration i = 3 (word 40(%rdi) in r14, word 48(%rdi) in r15)
+    movq 24(%rsi), %rdx
     muladd64_bmi2 (%rsi), %r12, %r8
     muladdcarry64_bmi2 8(%rsi), %r13, %r8, %r9
-    muladdcarry64_bmi2 16(%rsi), %r14, %r9, %r8
-    mulcarry64_bmi2 24(%rsi), %r15, %r8, %rcx
-    adc $0, %rcx
+    mulcarry64_bmi2 16(%rsi), %r14, %r9, %r15
+    adc $0, %r15
 
-    # Iteration i = 5 (word 72(%rdi) in rbp, word 80(%rdi) in rbx)
-    movq 40(%rsi), %rdx
+    # Iteration i = 4 (word 56(%rdi) in rcx, word 64(%rdi) in rbp)
+    movq 32(%rsi), %rdx
     muladd64_bmi2 (%rsi), %r13, %r8
     muladdcarry64_bmi2 8(%rsi), %r14, %r8, %r9
     muladdcarry64_bmi2 16(%rsi), %r15, %r9, %r8
-    muladdcarry64_bmi2 24(%rsi), %rcx, %r8, %r9
-    mulcarry64_bmi2 32(%rsi), %rbp, %r9, %rbx
-    adc $0, %rbx
+    mulcarry64_bmi2 24(%rsi), %rcx, %r8, %rbp
+    adc $0, %rbp
 
-    # For NOW, store result to memory
-    pop %rax
-    movq $0, (%rax)
-    movq %rdi, 8(%rax)
-    movq %r10, 16(%rax)
-    movq %r11, 24(%rax)
-    movq %r12, 32(%rax)
-    movq %r13, 40(%rax)
-    movq %r14, 48(%rax)
-    movq %r15, 56(%rax)
-    movq %rcx, 64(%rax)
-    movq %rbp, 72(%rax)
-    movq %rbx, 80(%rax)
-    movq $0, 88(%rax)
-    movq %rax, %rdi
+    # Iteration i = 5 (word 72(%rdi) in rbx, word 80(%rdi) in rax)
+    movq 40(%rsi), %rdx
+    muladd64_bmi2 (%rsi), %r14, %r8
+    muladdcarry64_bmi2 8(%rsi), %r15, %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), %rcx, %r9, %r8
+    muladdcarry64_bmi2 24(%rsi), %rbp, %r8, %r9
+    mulcarry64_bmi2 32(%rsi), %rbx, %r9, %rax
+    adc $0, %rax
 
-    # Double the result so far
-    movq (%rdi), %rax
-    add %rax, %rax
-    movq %rax, (%rdi)
-
-    mul2carry64 8(%rdi)
-    mul2carry64 16(%rdi)
-    mul2carry64 24(%rdi)
-    mul2carry64 32(%rdi)
-    mul2carry64 40(%rdi)
-    mul2carry64 48(%rdi)
-    mul2carry64 56(%rdi)
-    mul2carry64 64(%rdi)
-    mul2carry64 72(%rdi)
-    mul2carry64 80(%rdi)
-    mul2carry64 88(%rdi)
-
-    # Add the diagonal
+    # Double result (word 88(%rdi) in r9)
+    adc %r10, %r10
+    adc %r11, %r11
+    adc %r12, %r12
+    adc %r13, %r13
+    adc %r14, %r14
+    adc %r15, %r15
+    adc %rcx, %rcx
+    adc %rbp, %rbp
+    adc %rbx, %rbx
+    adc %rax, %rax
+    movq $0, %r9
+    adc $0, %r9
 
     movq (%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    add %rdx, (%rdi)
-    adc %r8, 8(%rdi)
+    movq %rdx, (%rdi)
+    add %r8, %r10
+    movq %r10, 8(%rdi)
 
     movq 8(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, 16(%rdi)
-    adc %r8, 24(%rdi)
+    adc %rdx, %r11
+    movq %r11, 16(%rdi)
+    adc %r8, %r12
+    movq %r12, 24(%rdi)
 
     movq 16(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, 32(%rdi)
-    adc %r8, 40(%rdi)
+    adc %rdx, %r13
+    movq %r13, 32(%rdi)
+    adc %r8, %r14
+    movq %r14, 40(%rdi)
 
     movq 24(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, 48(%rdi)
-    adc %r8, 56(%rdi)
+    adc %rdx, %r15
+    movq %r15, 48(%rdi)
+    adc %r8, %rcx
+    movq %rcx, 56(%rdi)
 
     movq 32(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, 64(%rdi)
-    adc %r8, 72(%rdi)
+    adc %rdx, %rbp
+    movq %rbp, 64(%rdi)
+    adc %r8, %rbx
+    movq %rbx, 72(%rdi)
 
     movq 40(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, 80(%rdi)
-    adc %r8, 88(%rdi)
+    adc %rdx, %rax
+    movq %rax, 80(%rdi)
+    adc %r8, %r9
+    movq %r9, 88(%rdi)
 
     pop %r15
     pop %r14
