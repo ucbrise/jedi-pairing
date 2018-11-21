@@ -249,6 +249,17 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 .type embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square, @function
 .text
 
+.macro doubleadddiagonal tosquare, todoublelo, todoublehi, storelo, storehi
+    movq \tosquare, %rdx
+    adcx \todoublelo, \todoublelo
+    mulx %rdx, %rdx, %r8
+    adox %rdx, \todoublelo
+    adcx \todoublehi, \todoublehi
+    movq \todoublelo, \storelo
+    adox %r8, \todoublehi
+    movq \todoublehi, \storehi
+.endm
+
 # rdi is a pointer to the destination BigInt<768>. rsi is a pointers to
 # the operand (which is a BigInt<384>).
 embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
@@ -306,56 +317,17 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     xor %r9, %r9
 
     movq (%rsi), %rdx
+    adcx %r10, %r10
     mulx %rdx, %rdx, %r8
     movq %rdx, (%rdi)
-    adcx %r10, %r10
     adox %r8, %r10
     movq %r10, 8(%rdi)
 
-    movq 8(%rsi), %rdx
-    mulx %rdx, %rdx, %r8
-    adcx %r11, %r11
-    adox %rdx, %r11
-    movq %r11, 16(%rdi)
-    adcx %r12, %r12
-    adox %r8, %r12
-    movq %r12, 24(%rdi)
-
-    movq 16(%rsi), %rdx
-    mulx %rdx, %rdx, %r8
-    adcx %r13, %r13
-    adox %rdx, %r13
-    movq %r13, 32(%rdi)
-    adcx %r14, %r14
-    adox %r8, %r14
-    movq %r14, 40(%rdi)
-
-    movq 24(%rsi), %rdx
-    mulx %rdx, %rdx, %r8
-    adcx %r15, %r15
-    adox %rdx, %r15
-    movq %r15, 48(%rdi)
-    adcx %rcx, %rcx
-    adox %r8, %rcx
-    movq %rcx, 56(%rdi)
-
-    movq 32(%rsi), %rdx
-    mulx %rdx, %rdx, %r8
-    adcx %rbp, %rbp
-    adox %rdx, %rbp
-    movq %rbp, 64(%rdi)
-    adcx %rbx, %rbx
-    adox %r8, %rbx
-    movq %rbx, 72(%rdi)
-
-    movq 40(%rsi), %rdx
-    mulx %rdx, %rdx, %r8
-    adcx %rax, %rax
-    adox %rdx, %rax
-    movq %rax, 80(%rdi)
-    adcx %r9, %r9
-    adox %r8, %r9
-    movq %r9, 88(%rdi)
+    doubleadddiagonal 8(%rsi), %r11, %r12, 16(%rdi), 24(%rdi)
+    doubleadddiagonal 16(%rsi), %r13, %r14, 32(%rdi), 40(%rdi)
+    doubleadddiagonal 24(%rsi), %r15, %rcx, 48(%rdi), 56(%rdi)
+    doubleadddiagonal 32(%rsi), %rbp, %rbx, 64(%rdi), 72(%rdi)
+    doubleadddiagonal 40(%rsi), %rax, %r9, 80(%rdi), 88(%rdi)
 
     pop %r15
     pop %r14
@@ -384,7 +356,7 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
 .endm
 
 # At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
-# Carry bit is the "+1" bit for word i+6 (in dst0).
+# Carry bit is the "+1" bit for word i + 6 (in dst0).
 .macro montgomeryreduceloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     # Compute u and store it in %rdx
     movq %rcx, %rdx
@@ -398,6 +370,8 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     adcx %rbp, %rbx
     adox (8*\i+48)(%rsi), \dst0
     adox %rbp, %rbx
+
+    # Now, the carry and overflow flags are both zero
 .endm
 
 # Result is stored in rdi, product is in rsi, prime modulus is in rdx, and
@@ -424,7 +398,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     # rbx is used for meta-carry. xor clears carry and overflow flags
     # rbp just contains 0
     xor %rbx, %rbx
-    xor %rbp, %rbp
+    movq $0, %rbp
 
     # First iteration
     movq %rcx, %rdx

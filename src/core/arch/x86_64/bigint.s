@@ -54,7 +54,7 @@ embedded_pairing_core_arch_x86_64_bigint_384_add:
     addcarry64 32
     addcarry64 40
 
-    xor %rax, %rax
+    movq $0, %rax
     adc %rax, %rax
     ret
 
@@ -104,6 +104,6 @@ embedded_pairing_core_arch_x86_64_bigint_384_multiply2:
     mul2carry64 32
     mul2carry64 40
 
-    xor %rax, %rax
+    movq $0, %rax
     adc %rax, %rax
     ret
