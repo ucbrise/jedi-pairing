@@ -356,7 +356,7 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
 .macro montgomeryreduceloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     # Compute u and store it in %rdx
     movq %rcx, %rdx
-    imul \dst0, %rdx
+    mulx \dst0, %rdx, %rax
 
     montgomeryreduceloopiterationraw_bmi2 \i, \dst0, \dst1, \dst2, \dst3, \dst4, \dst5
 
@@ -376,8 +376,6 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     push %r14
     push %r15
 
-    iaca_start
-
     # Stash the prime modulus in r8, since rdx is used for multiplication
     movq %rdx, %r8
 
@@ -391,7 +389,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
 
     # First iteration
     movq %rcx, %rdx
-    imul %r10, %rdx
+    mulx %r10, %rdx, %rax
     montgomeryreduceloopiterationraw_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
     adc 48(%rsi), %r10
     movq $0, %rbx
@@ -405,14 +403,12 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
 
     # Final iteration
     movq %rcx, %rdx
-    imul %r15, %rdx
-    #mulx %r15, %rdx, %rax
+    mulx %r15, %rdx, %rax
     montgomeryreduceloopiterationraw_bmi2 5, %r15, %r10, %r11, %r12, %r13, %r14
     adc %rbx, %r15
     add 88(%rsi), %r15
 
     # Now, result (sans final reduction) is in r10 to r15, with MSB in r15
-    iaca_end
 
     # Compare, and branch to either copy or subtraction
     cmp 40(%r8), %r15
