@@ -300,59 +300,59 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     movq $0, %rdx
     adcx %rdx, %rax
 
-    # Double result (word 88(%rdi) in r9)
-    add %r10, %r10
-    adc %r11, %r11
-    adc %r12, %r12
-    adc %r13, %r13
-    adc %r14, %r14
-    adc %r15, %r15
-    adc %rcx, %rcx
-    adc %rbp, %rbp
-    adc %rbx, %rbx
-    adc %rax, %rax
-    movq $0, %r9
-    adc $0, %r9
+    # Double result (word 88(%rdi) in r9) and add diagonal
+    xor %r9, %r9
 
     movq (%rsi), %rdx
     mulx %rdx, %rdx, %r8
     movq %rdx, (%rdi)
-    add %r8, %r10
+    adcx %r10, %r10
+    adox %r8, %r10
     movq %r10, 8(%rdi)
 
     movq 8(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, %r11
+    adcx %r11, %r11
+    adox %rdx, %r11
     movq %r11, 16(%rdi)
-    adc %r8, %r12
+    adcx %r12, %r12
+    adox %r8, %r12
     movq %r12, 24(%rdi)
 
     movq 16(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, %r13
+    adcx %r13, %r13
+    adox %rdx, %r13
     movq %r13, 32(%rdi)
-    adc %r8, %r14
+    adcx %r14, %r14
+    adox %r8, %r14
     movq %r14, 40(%rdi)
 
     movq 24(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, %r15
+    adcx %r15, %r15
+    adox %rdx, %r15
     movq %r15, 48(%rdi)
-    adc %r8, %rcx
+    adcx %rcx, %rcx
+    adox %r8, %rcx
     movq %rcx, 56(%rdi)
 
     movq 32(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, %rbp
+    adcx %rbp, %rbp
+    adox %rdx, %rbp
     movq %rbp, 64(%rdi)
-    adc %r8, %rbx
+    adcx %rbx, %rbx
+    adox %r8, %rbx
     movq %rbx, 72(%rdi)
 
     movq 40(%rsi), %rdx
     mulx %rdx, %rdx, %r8
-    adc %rdx, %rax
+    adcx %rax, %rax
+    adox %rdx, %rax
     movq %rax, 80(%rdi)
-    adc %r8, %r9
+    adcx %r9, %r9
+    adox %r8, %r9
     movq %r9, 88(%rdi)
 
     pop %r15
