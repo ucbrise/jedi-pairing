@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++17 -I./include -Ofast
 AR = ar
 AS = as
 ASFLAGS =
-# ARCHDIR = lib/src/core/arch/x86_64
+ARCHDIR = src/core/arch/x86_64
 
 # CXX = arm-none-eabi-g++
 # CXXFLAGS = -std=c++17 -I./include -Os -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -fno-threadsafe-statics
