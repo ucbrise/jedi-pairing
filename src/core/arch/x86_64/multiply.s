@@ -171,7 +171,6 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 .endm
 
 .macro muladd64_opt_bmi2 src2, dst, carry_out
-    xor %rax, %rax
     mulx \src2, %rax, \carry_out
     adcx %rax, \dst
 .endm
@@ -192,12 +191,13 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
     muladdcarry64_opt_bmi2 24(%rcx), \dst3, %r8, \dst0
     muladdcarry64_opt_bmi2 32(%rcx), \dst4, \dst0, %r8
     muladdcarry64_opt_bmi2 40(%rcx), \dst5, %r8, \dst0
-    movq $0, %rax
-    adcx %rax, \dst0
-    adox %rax, \dst0
+    adcx %rbx, \dst0
+    adox %rbx, \dst0
+    # At this point, the carry and overflow flags are both 0
 .endm
 
 embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
+    push %rbx
     push %r12
     push %r13
     push %r14
@@ -208,13 +208,14 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
 
     # Register r8 is used for carry.
     # Registers r9 to r14 store parts of the destination array.
+    # rbx is always zero; xor clears carry and overflow flags
+    xor %rbx, %rbx
 
     movq (%rsi), %rdx
 
     mulx (%rcx), %rax, %r8
     movq %rax, (%rdi)
 
-    xor %rax, %rax
     mulx 8(%rcx), %r9, %r14
     adcx %r8, %r9
 
@@ -222,9 +223,8 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     mulcarry64_opt_bmi2 24(%rcx), %r11, %r8, %r14
     mulcarry64_opt_bmi2 32(%rcx), %r12, %r14, %r8
     mulcarry64_opt_bmi2 40(%rcx), %r13, %r8, %r14
-    movq $0, %rax
-    adcx %rax, %r14
-    adox %rax, %r14
+    adcx %rbx, %r14
+    adox %rbx, %r14
 
     multiplyloopiteration_bmi2 1, %r9, %r10, %r11, %r12, %r13, %r14
     multiplyloopiteration_bmi2 2, %r10, %r11, %r12, %r13, %r14, %r9
@@ -242,6 +242,7 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     pop %r14
     pop %r13
     pop %r12
+    pop %rbx
     ret
 
 .globl embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square
@@ -258,9 +259,10 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
     push %r14
     push %r15
 
-    movq $0, %rbx
-
     # Compute products below diagonal (words (%rdi), 88(%rdi) implicitly zero)
+
+    # rbx contains zero until it is used. xor clears carry and overflow flags
+    xor %rbx, %rbx
 
     # Iteration i = 1 (word 8(%rdi) in r10, word 16(%rdi) in r11)
     movq 8(%rsi), %rdx
@@ -392,15 +394,16 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
 
     # Use/store meta-carry in %rbx
     adcx %rbx, \dst0
-    setc %bl
+    movq $0, %rbx
+    adcx %rbp, %rbx
     adox (8*\i+48)(%rsi), \dst0
-    movq $0, %rax
-    adox %rax, %rbx
+    adox %rbp, %rbx
 .endm
 
 # Result is stored in rdi, product is in rsi, prime modulus is in rdx, and
 # inv_word is in rcx.
 embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
+    push %rbp
     push %rbx
     push %r12
     push %r13
@@ -418,14 +421,19 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce:
     movq 32(%rsi), %r14
     movq 40(%rsi), %r15
 
+    # rbx is used for meta-carry. xor clears carry and overflow flags
+    # rbp just contains 0
+    xor %rbx, %rbx
+    xor %rbp, %rbp
+
     # First iteration
     movq %rcx, %rdx
     mulx %r10, %rdx, %rax
     montgomeryreduceloopiterationraw_bmi2 0, %r10, %r11, %r12, %r13, %r14, %r15
     adcx 48(%rsi), %r10
-    movq $0, %rbx
-    adox %rbx, %r10
-    setc %bl
+    adcx %rbp, %rbx
+    adox %rbp, %r10
+    adox %rbp, %rbx
 
     # Middle iterations
     montgomeryreduceloopiteration_bmi2 1, %r11, %r12, %r13, %r14, %r15, %r10
@@ -481,6 +489,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_fi
     pop %r13
     pop %r12
     pop %rbx
+    pop %rbp
     ret
 
 embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_final_copy:
@@ -496,6 +505,7 @@ embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce_fi
     pop %r13
     pop %r12
     pop %rbx
+    pop %rbp
     ret
 
 .globl embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_multiply
