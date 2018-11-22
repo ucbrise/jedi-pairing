@@ -38,10 +38,12 @@ extern "C" {
 }
 
 namespace embedded_pairing::core {
+#ifdef __BMI2__
     template <>
     inline void MontgomeryFpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
         embedded_pairing_core_arch_x86_64_bmi2_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
     }
+#endif
 }
 
 #endif

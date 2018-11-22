@@ -28,114 +28,114 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-.macro iaca_start
-    mov $111, %ebx
-    .byte 0x64, 0x67, 0x90
-.endm
-
-.macro iaca_end
-    mov $222, %ebx
-    .byte 0x64, 0x67, 0x90
-.endm
-
-# x86_64 calling convention (assuming System V ABI): rdi, rsi, rdx, rcx, r8,
-# and r9 are the argument registers, and rax is the return value (also rdx for
-# larger 128-bit return values). The registers rbx, rbp, and r12-r15 must be
-# saved and restored by a function if it modifies them.
-
-.globl embedded_pairing_core_arch_x86_64_bigint_768_multiply
-.type embedded_pairing_core_arch_x86_64_bigint_768_multiply, @function
-.text
-
-# Input carry and output carry are in rdx.
-.macro mulcarry64 src1, src2, dst
-    movq %rdx, %r8
-    movq \src1, %rax
-    mulq \src2
-    add %r8, %rax
-    adc $0, %rdx
-    movq %rax, \dst
-.endm
-
-.macro muladd64 src1, src2, dst
-    movq \src1, %rax
-    mulq \src2
-    add %rax, \dst
-    adc $0, %rdx
-.endm
-
-.macro muladdcarry64 src1, src2, dst
-    movq %rdx, %r8
-    movq \src1, %rax
-    mulq \src2
-    add %r8, %rax
-    adc $0, %rdx
-    add %rax, \dst
-    adc $0, %rdx
-.endm
-
-.macro multiplyloopiteration i, dst0, dst1, dst2, dst3, dst4, dst5
-    movq (8*\i)(%rsi), %r9
-    muladd64 %r9, (%rcx), \dst0
-    movq \dst0, (8*\i)(%rdi)
-    muladdcarry64 %r9, 8(%rcx), \dst1
-    muladdcarry64 %r9, 16(%rcx), \dst2
-    muladdcarry64 %r9, 24(%rcx), \dst3
-    muladdcarry64 %r9, 32(%rcx), \dst4
-    muladdcarry64 %r9, 40(%rcx), \dst5
-.endm
-
-embedded_pairing_core_arch_x86_64_bigint_768_multiply:
-    push %r12
-    push %r13
-    push %r14
-    push %r15
-
-    # mul writes result to rdx and rax, so we cannot use rdx as a pointer to
-    # the multiplicand. Instead, we use rcx for this purpose. Similarly, we
-    # cannot keep the carry in %rdx in-between multiplies, as it needs to be
-    # added. So, we use r8 for the carry.
-    movq %rdx, %rcx
-
-    # r9 is used to cache the value in the first operand for the duration of
-    # each loop.
-    movq (%rsi), %r9
-
-    # r10 - r15 are used to store parts of the destination BigInt.
-
-    movq %r9, %rax
-    mulq (%rcx)
-    movq %rax, (%rdi)
-
-    mulcarry64 %r9, 8(%rcx), %r10
-    mulcarry64 %r9, 16(%rcx), %r11
-    mulcarry64 %r9, 24(%rcx), %r12
-    mulcarry64 %r9, 32(%rcx), %r13
-    mulcarry64 %r9, 40(%rcx), %r14
-    movq %rdx, %r15
-
-    multiplyloopiteration 1, %r10, %r11, %r12, %r13, %r14, %r15
-    movq %rdx, %r10
-    multiplyloopiteration 2, %r11, %r12, %r13, %r14, %r15, %r10
-    movq %rdx, %r11
-    multiplyloopiteration 3, %r12, %r13, %r14, %r15, %r10, %r11
-    movq %rdx, %r12
-    multiplyloopiteration 4, %r13, %r14, %r15, %r10, %r11, %r12
-    movq %rdx, %r13
-    multiplyloopiteration 5, %r14, %r15, %r10, %r11, %r12, %r13
-
-    movq %r15, 48(%rdi)
-    movq %r10, 56(%rdi)
-    movq %r11, 64(%rdi)
-    movq %r12, 72(%rdi)
-    movq %r13, 80(%rdi)
-    movq %rdx, 88(%rdi)
-
-    pop %r15
-    pop %r14
-    pop %r13
-    pop %r12
-    ret
+# .macro iaca_start
+#     mov $111, %ebx
+#     .byte 0x64, 0x67, 0x90
+# .endm
+# 
+# .macro iaca_end
+#     mov $222, %ebx
+#     .byte 0x64, 0x67, 0x90
+# .endm
+# 
+# # x86_64 calling convention (assuming System V ABI): rdi, rsi, rdx, rcx, r8,
+# # and r9 are the argument registers, and rax is the return value (also rdx for
+# # larger 128-bit return values). The registers rbx, rbp, and r12-r15 must be
+# # saved and restored by a function if it modifies them.
+# 
+# .globl embedded_pairing_core_arch_x86_64_bigint_768_multiply
+# .type embedded_pairing_core_arch_x86_64_bigint_768_multiply, @function
+# .text
+# 
+# # Input carry and output carry are in rdx.
+# .macro mulcarry64 src1, src2, dst
+#     movq %rdx, %r8
+#     movq \src1, %rax
+#     mulq \src2
+#     add %r8, %rax
+#     adc $0, %rdx
+#     movq %rax, \dst
+# .endm
+# 
+# .macro muladd64 src1, src2, dst
+#     movq \src1, %rax
+#     mulq \src2
+#     add %rax, \dst
+#     adc $0, %rdx
+# .endm
+# 
+# .macro muladdcarry64 src1, src2, dst
+#     movq %rdx, %r8
+#     movq \src1, %rax
+#     mulq \src2
+#     add %r8, %rax
+#     adc $0, %rdx
+#     add %rax, \dst
+#     adc $0, %rdx
+# .endm
+# 
+# .macro multiplyloopiteration i, dst0, dst1, dst2, dst3, dst4, dst5
+#     movq (8*\i)(%rsi), %r9
+#     muladd64 %r9, (%rcx), \dst0
+#     movq \dst0, (8*\i)(%rdi)
+#     muladdcarry64 %r9, 8(%rcx), \dst1
+#     muladdcarry64 %r9, 16(%rcx), \dst2
+#     muladdcarry64 %r9, 24(%rcx), \dst3
+#     muladdcarry64 %r9, 32(%rcx), \dst4
+#     muladdcarry64 %r9, 40(%rcx), \dst5
+# .endm
+# 
+# embedded_pairing_core_arch_x86_64_bigint_768_multiply:
+#     push %r12
+#     push %r13
+#     push %r14
+#     push %r15
+# 
+#     # mul writes result to rdx and rax, so we cannot use rdx as a pointer to
+#     # the multiplicand. Instead, we use rcx for this purpose. Similarly, we
+#     # cannot keep the carry in %rdx in-between multiplies, as it needs to be
+#     # added. So, we use r8 for the carry.
+#     movq %rdx, %rcx
+# 
+#     # r9 is used to cache the value in the first operand for the duration of
+#     # each loop.
+#     movq (%rsi), %r9
+# 
+#     # r10 - r15 are used to store parts of the destination BigInt.
+# 
+#     movq %r9, %rax
+#     mulq (%rcx)
+#     movq %rax, (%rdi)
+# 
+#     mulcarry64 %r9, 8(%rcx), %r10
+#     mulcarry64 %r9, 16(%rcx), %r11
+#     mulcarry64 %r9, 24(%rcx), %r12
+#     mulcarry64 %r9, 32(%rcx), %r13
+#     mulcarry64 %r9, 40(%rcx), %r14
+#     movq %rdx, %r15
+# 
+#     multiplyloopiteration 1, %r10, %r11, %r12, %r13, %r14, %r15
+#     movq %rdx, %r10
+#     multiplyloopiteration 2, %r11, %r12, %r13, %r14, %r15, %r10
+#     movq %rdx, %r11
+#     multiplyloopiteration 3, %r12, %r13, %r14, %r15, %r10, %r11
+#     movq %rdx, %r12
+#     multiplyloopiteration 4, %r13, %r14, %r15, %r10, %r11, %r12
+#     movq %rdx, %r13
+#     multiplyloopiteration 5, %r14, %r15, %r10, %r11, %r12, %r13
+# 
+#     movq %r15, 48(%rdi)
+#     movq %r10, 56(%rdi)
+#     movq %r11, 64(%rdi)
+#     movq %r12, 72(%rdi)
+#     movq %r13, 80(%rdi)
+#     movq %rdx, 88(%rdi)
+# 
+#     pop %r15
+#     pop %r14
+#     pop %r13
+#     pop %r12
+#     ret
 
 .globl embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply
 .type embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply, @function

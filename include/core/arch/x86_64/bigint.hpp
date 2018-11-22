@@ -59,6 +59,7 @@ namespace embedded_pairing::core {
         return embedded_pairing_core_arch_x86_64_bigint_384_multiply2(this, &a);
     }
 
+#ifdef __BMI2__
     template <>
     template <>
     inline void BigInt<768>::multiply(const BigInt<384>& a, const BigInt<384>& __restrict b) {
@@ -69,6 +70,7 @@ namespace embedded_pairing::core {
     inline void BigInt<768>::square(const BigInt<384>& __restrict a) {
         return embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square(this, &a);
     }
+#endif
 }
 
 #endif
