@@ -145,37 +145,15 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 # src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
 .macro mulcarry64_bmi2 src2, dst, carry_in, carry_out
     mulx \src2, \dst, \carry_out
-    adc \carry_in, \dst
+    adcx \carry_in, \dst
 .endm
 
 .macro muladd64_bmi2 src2, dst, carry_out
     mulx \src2, %rax, \carry_out
-    add %rax, \dst
-.endm
-
-.macro muladdcarry64_bmi2 src2, dst, carry_in, carry_out
-    mulx \src2, %rax, \carry_out
-    # Carry flag was set in previous muladdcarry64_bmi2 or muladd64_bmi2
-    adc \carry_in, %rax
-    adc $0, \carry_out
-    # Carry flag should be zero here, so either add or adc can be used for the
-    # next instruction.
-    add %rax, \dst
-.endm
-
-# Input carry and output carry are in rdx. Extra "+1" bit stored in carry flag.
-# src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
-.macro mulcarry64_opt_bmi2 src2, dst, carry_in, carry_out
-    mulx \src2, \dst, \carry_out
-    adcx \carry_in, \dst
-.endm
-
-.macro muladd64_opt_bmi2 src2, dst, carry_out
-    mulx \src2, %rax, \carry_out
     adcx %rax, \dst
 .endm
 
-.macro muladdcarry64_opt_bmi2 src2, dst, carry_in, carry_out
+.macro muladdcarry64_bmi2 src2, dst, carry_in, carry_out
     mulx \src2, %rax, \carry_out
     adox \carry_in, %rax
     adcx %rax, \dst
@@ -183,14 +161,14 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 
 .macro multiplyloopiteration_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
     movq (8*\i)(%rsi), %rdx
-    muladd64_opt_bmi2 (%rcx), \dst0, %r8
+    muladd64_bmi2 (%rcx), \dst0, %r8
     movq \dst0, (8*\i)(%rdi)
     # \dst0 is now free, so we use it for carry (along with r8)
-    muladdcarry64_opt_bmi2 8(%rcx), \dst1, %r8, \dst0
-    muladdcarry64_opt_bmi2 16(%rcx), \dst2, \dst0, %r8
-    muladdcarry64_opt_bmi2 24(%rcx), \dst3, %r8, \dst0
-    muladdcarry64_opt_bmi2 32(%rcx), \dst4, \dst0, %r8
-    muladdcarry64_opt_bmi2 40(%rcx), \dst5, %r8, \dst0
+    muladdcarry64_bmi2 8(%rcx), \dst1, %r8, \dst0
+    muladdcarry64_bmi2 16(%rcx), \dst2, \dst0, %r8
+    muladdcarry64_bmi2 24(%rcx), \dst3, %r8, \dst0
+    muladdcarry64_bmi2 32(%rcx), \dst4, \dst0, %r8
+    muladdcarry64_bmi2 40(%rcx), \dst5, %r8, \dst0
     adcx %rbx, \dst0
     adox %rbx, \dst0
     # At this point, the carry and overflow flags are both 0
@@ -219,10 +197,10 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply:
     mulx 8(%rcx), %r9, %r14
     adcx %r8, %r9
 
-    mulcarry64_opt_bmi2 16(%rcx), %r10, %r14, %r8
-    mulcarry64_opt_bmi2 24(%rcx), %r11, %r8, %r14
-    mulcarry64_opt_bmi2 32(%rcx), %r12, %r14, %r8
-    mulcarry64_opt_bmi2 40(%rcx), %r13, %r8, %r14
+    mulcarry64_bmi2 16(%rcx), %r10, %r14, %r8
+    mulcarry64_bmi2 24(%rcx), %r11, %r8, %r14
+    mulcarry64_bmi2 32(%rcx), %r12, %r14, %r8
+    mulcarry64_bmi2 40(%rcx), %r13, %r8, %r14
     adcx %rbx, %r14
     adox %rbx, %r14
 
@@ -281,35 +259,35 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
 
     # Iteration i = 2 (word 24(%rdi) in r12, word 32(%rdi) in r13)
     movq 16(%rsi), %rdx
-    muladd64_opt_bmi2 (%rsi), %r11, %r8
-    mulcarry64_opt_bmi2 8(%rsi), %r12, %r8, %r13
+    muladd64_bmi2 (%rsi), %r11, %r8
+    mulcarry64_bmi2 8(%rsi), %r12, %r8, %r13
     adcx %rbx, %r13
 
     # Iteration i = 3 (word 40(%rdi) in r14, word 48(%rdi) in r15)
     movq 24(%rsi), %rdx
-    muladd64_opt_bmi2 (%rsi), %r12, %r8
-    muladdcarry64_opt_bmi2 8(%rsi), %r13, %r8, %r9
+    muladd64_bmi2 (%rsi), %r12, %r8
+    muladdcarry64_bmi2 8(%rsi), %r13, %r8, %r9
     adox %rbx, %r9
-    mulcarry64_opt_bmi2 16(%rsi), %r14, %r9, %r15
+    mulcarry64_bmi2 16(%rsi), %r14, %r9, %r15
     adcx %rbx, %r15
 
     # Iteration i = 4 (word 56(%rdi) in rcx, word 64(%rdi) in rbp)
     movq 32(%rsi), %rdx
-    muladd64_opt_bmi2 (%rsi), %r13, %r8
-    muladdcarry64_opt_bmi2 8(%rsi), %r14, %r8, %r9
-    muladdcarry64_opt_bmi2 16(%rsi), %r15, %r9, %r8
+    muladd64_bmi2 (%rsi), %r13, %r8
+    muladdcarry64_bmi2 8(%rsi), %r14, %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), %r15, %r9, %r8
     adox %rbx, %r8
-    mulcarry64_opt_bmi2 24(%rsi), %rcx, %r8, %rbp
+    mulcarry64_bmi2 24(%rsi), %rcx, %r8, %rbp
     adcx %rbx, %rbp
 
     # Iteration i = 5 (word 72(%rdi) in rbx, word 80(%rdi) in rax)
     movq 40(%rsi), %rdx
-    muladd64_opt_bmi2 (%rsi), %r14, %r8
-    muladdcarry64_opt_bmi2 8(%rsi), %r15, %r8, %r9
-    muladdcarry64_opt_bmi2 16(%rsi), %rcx, %r9, %r8
-    muladdcarry64_opt_bmi2 24(%rsi), %rbp, %r8, %r9
+    muladd64_bmi2 (%rsi), %r14, %r8
+    muladdcarry64_bmi2 8(%rsi), %r15, %r8, %r9
+    muladdcarry64_bmi2 16(%rsi), %rcx, %r9, %r8
+    muladdcarry64_bmi2 24(%rsi), %rbp, %r8, %r9
     adox %rbx, %r9
-    mulcarry64_opt_bmi2 32(%rsi), %rbx, %r9, %rax
+    mulcarry64_bmi2 32(%rsi), %rbx, %r9, %rax
     movq $0, %rdx
     adcx %rdx, %rax
 
@@ -346,13 +324,13 @@ embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square:
 # At the end, dst1 - dst5 contain words i + 1 to i + 5 of the product
 # dst0 is the carry that should be added to word (i+6) with carry bit
 .macro montgomeryreduceloopiterationraw_bmi2 i, dst0, dst1, dst2, dst3, dst4, dst5
-    muladd64_opt_bmi2 (%r8), \dst0, %r9
+    muladd64_bmi2 (%r8), \dst0, %r9
     # \dst0 is now free, so we use it for carry (along with r9)
-    muladdcarry64_opt_bmi2 8(%r8), \dst1, %r9, \dst0
-    muladdcarry64_opt_bmi2 16(%r8), \dst2, \dst0, %r9
-    muladdcarry64_opt_bmi2 24(%r8), \dst3, %r9, \dst0
-    muladdcarry64_opt_bmi2 32(%r8), \dst4, \dst0, %r9
-    muladdcarry64_opt_bmi2 40(%r8), \dst5, %r9, \dst0
+    muladdcarry64_bmi2 8(%r8), \dst1, %r9, \dst0
+    muladdcarry64_bmi2 16(%r8), \dst2, \dst0, %r9
+    muladdcarry64_bmi2 24(%r8), \dst3, %r9, \dst0
+    muladdcarry64_bmi2 32(%r8), \dst4, \dst0, %r9
+    muladdcarry64_bmi2 40(%r8), \dst5, %r9, \dst0
 .endm
 
 # At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
