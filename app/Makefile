@@ -1,5 +1,5 @@
 # CXX = g++
-# CXXFLAGS = -std=c++17 -I../include -Ofast
+# CXXFLAGS = -std=c++17 -I../include -Ofast -mbmi2
 # LDFLAGS = -Wl,--gc-sections
 # AR = ar
 # AS = as
@@ -7,7 +7,7 @@
 # ARCHDIR = lib/src/core/arch/x86_64
 
 CXX = clang++
-CXXFLAGS = -std=c++17 -I../include -mbmi2 -Ofast
+CXXFLAGS = -std=c++17 -I../include -Ofast -mbmi2
 LDFLAGS = -Wl,--gc-sections
 AR = ar
 AS = as
@@ -20,6 +20,9 @@ ARCHDIR = lib/src/core/arch/x86_64
 # AS = arm-none-eabi-as
 # ASFLAGS = -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft
 # ARCHDIR = lib/src/core/arch/armv6_m
+
+# To disable assembly optimizations, uncomment the following line (which adds -DDISABLE_ASM to CXXFLAGS)
+# CXXFLAGS += -DDISABLE_ASM
 
 PAIRING_CPP_SOURCES = $(wildcard lib/src/core/*.cpp) $(wildcard lib/src/bls12_381/*.cpp) $(wildcard lib/src/wkdibe/*.cpp) $(wildcard lib/src/lqibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
 PAIRING_ASM_SOURCES = $(wildcard $(ARCHDIR)/*.s)

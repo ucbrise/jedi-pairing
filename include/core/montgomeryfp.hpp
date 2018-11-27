@@ -339,10 +339,13 @@ namespace embedded_pairing::core {
     const MontgomeryFp<bits, p, r, r2, inv> MontgomeryFp<bits, p, r, r2, inv>::one = {{ .val = r }};
 }
 
+#ifndef DISABLE_ASM
+
 /*
  * Figure out the architecture of the current platform, and import the
  * appropriate headers for optimization.
  */
+
 #if defined(__ARM_ARCH_6M__)
 #include "./arch/armv6_m/montgomeryfp.hpp"
 #endif
@@ -350,5 +353,7 @@ namespace embedded_pairing::core {
 #if defined(__x86_64__) || defined(_M_X64_)
 #include "./arch/x86_64/montgomeryfp.hpp"
 #endif
+
+#endif /* NO_ASM */
 
 #endif

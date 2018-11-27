@@ -476,10 +476,13 @@ namespace embedded_pairing::core {
     constexpr BigInt<bits> BigInt<bits>::one = {.std_words = {1}};
 }
 
+#ifndef DISABLE_ASM
+
 /*
  * Figure out the architecture of the current platform, and import the
  * appropriate headers for optimization.
  */
+
 #if defined(__ARM_ARCH_6M__)
 #include "./arch/armv6_m/bigint.hpp"
 #endif
@@ -487,5 +490,7 @@ namespace embedded_pairing::core {
 #if defined(__x86_64__) || defined(_M_X64_)
 #include "./arch/x86_64/bigint.hpp"
 #endif
+
+#endif /* NO_ASM */
 
 #endif
