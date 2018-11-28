@@ -38,14 +38,14 @@ extern "C" {
     bool embedded_pairing_core_arch_x86_64_bigint_384_subtract(void* res, const void* a, const void* b);
     uint64_t embedded_pairing_core_arch_x86_64_bigint_384_multiply2(void* res, const void* a);
 
-    void embedded_pairing_core_arch_x86_64_bigint_768_multiply(void* res, const void* a, const void* b);
-    void embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply(void* res, const void* a, const void* b);
-
-    void embedded_pairing_core_arch_x86_64_bigint_768_square(void* res, const void* a);
-    void embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square(void* res, const void* a);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply(void* res, const void* a, const void* b);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square(void* res, const void* a);
 }
 
 namespace embedded_pairing::core {
+    extern void (*runtime_bigint_768_multiply)(void*, const void*, const void*);
+    extern void (*runtime_bigint_768_square)(void*, const void*);
+
     template <>
     inline bool BigInt<384>::add(const BigInt<384>& a, const BigInt<384>& __restrict b) {
         return embedded_pairing_core_arch_x86_64_bigint_384_add(this, &a, &b);
@@ -66,18 +66,18 @@ namespace embedded_pairing::core {
     template <>
     inline void BigInt<768>::multiply(const BigInt<384>& a, const BigInt<384>& __restrict b) {
 #ifdef __BMI2__
-        return embedded_pairing_core_arch_x86_64_bmi2_bigint_768_multiply(this, &a, &b);
+        return embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply(this, &a, &b);
 #else
-        return embedded_pairing_core_arch_x86_64_bigint_768_multiply(this, &a, &b);
+        return runtime_bigint_768_multiply(this, &a, &b);
 #endif
     }
 
     template <>
     inline void BigInt<768>::square(const BigInt<384>& __restrict a) {
 #ifdef __BMI2__
-        return embedded_pairing_core_arch_x86_64_bmi2_bigint_768_square(this, &a);
+        return embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square(this, &a);
 #else
-        return embedded_pairing_core_arch_x86_64_bigint_768_square(this, &a);
+        return runtime_bigint_768_square(this, &a);
 #endif
     }
 }

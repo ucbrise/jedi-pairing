@@ -32,24 +32,22 @@
 
 #include <stdint.h>
 
-#ifndef EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
-#define EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
-
 extern "C" {
+    bool embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx(void);
+
+    void embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
     void embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
+
+    void embedded_pairing_core_arch_x86_64_bigint_768_multiply(void* res, const void* a, const void* b);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply(void* res, const void* a, const void* b);
+
+    void embedded_pairing_core_arch_x86_64_bigint_768_square(void* res, const void* a);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square(void* res, const void* a);
 }
 
 namespace embedded_pairing::core {
-    extern void (*runtime_montgomeryfpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t);
-
-    template <>
-    inline void MontgomeryFpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-#ifdef __BMI2__
-        embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
-#else
-        runtime_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
-#endif
-    }
-}
-
-#endif
+    static bool cpu_supports_bmi2_adx = embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx();
+    void (*runtime_montgomeryfpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce : embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce;
+    void (*runtime_bigint_768_multiply)(void*, const void*, const void*) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply : embedded_pairing_core_arch_x86_64_bigint_768_multiply;
+    void (*runtime_bigint_768_square)(void*, const void*) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square : embedded_pairing_core_arch_x86_64_bigint_768_square;
+ }

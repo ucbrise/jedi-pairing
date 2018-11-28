@@ -1,5 +1,5 @@
 # CXX = g++
-# CXXFLAGS = -std=c++17 -I../include -Ofast -mbmi2
+# CXXFLAGS = -std=c++17 -I../include -Ofast
 # LDFLAGS = -Wl,--gc-sections
 # AR = ar
 # AS = as
@@ -7,7 +7,7 @@
 # ARCHDIR = lib/src/core/arch/x86_64
 
 CXX = clang++
-CXXFLAGS = -std=c++17 -I../include -Ofast -mbmi2
+CXXFLAGS = -std=c++17 -I../include -Ofast
 LDFLAGS = -Wl,--gc-sections
 AR = ar
 AS = as
