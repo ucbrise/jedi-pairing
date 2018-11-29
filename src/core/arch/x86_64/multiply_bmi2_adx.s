@@ -31,7 +31,6 @@
 .globl embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx
 .type embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx, @function
 .text
-.align 16
 
 embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx:
     push %rbx
@@ -56,43 +55,42 @@ embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx:
     pop %rbx
     ret
 
-    .globl embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply
-    .type embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply, @function
-    .text
-    .align 16
+.globl embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply
+.type embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply, @function
+.text
 
-    # Input carry and output carry are in rdx. Extra "+1" bit stored in carry flag.
-    # src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
-    .macro mulcarry64_bmi2_adx src2, dst, carry_in, carry_out
-        mulx \src2, \dst, \carry_out
-        adcx \carry_in, \dst
-    .endm
+# Input carry and output carry are in rdx. Extra "+1" bit stored in carry flag.
+# src1 is in rdx, src2 pointer is in rcx, and dst pointer is in rdi.
+.macro mulcarry64_bmi2_adx src2, dst, carry_in, carry_out
+    mulx \src2, \dst, \carry_out
+    adcx \carry_in, \dst
+.endm
 
-    .macro muladd64_bmi2_adx src2, dst, carry_out
-        mulx \src2, %rax, \carry_out
-        adcx %rax, \dst
-    .endm
+.macro muladd64_bmi2_adx src2, dst, carry_out
+    mulx \src2, %rax, \carry_out
+    adcx %rax, \dst
+.endm
 
-    .macro muladdcarry64_bmi2_adx src2, dst, carry_in, carry_out
-        mulx \src2, %rax, \carry_out
-        adox \carry_in, %rax
-        adcx %rax, \dst
-    .endm
+.macro muladdcarry64_bmi2_adx src2, dst, carry_in, carry_out
+    mulx \src2, %rax, \carry_out
+    adox \carry_in, %rax
+    adcx %rax, \dst
+.endm
 
-    .macro multiplyloopiteration_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5, zero
-        movq (8*\i)(%rsi), %rdx
-        muladd64_bmi2_adx (%rcx), \dst0, %r8
-        movq \dst0, (8*\i)(%rdi)
-        # \dst0 is now free, so we use it for carry (along with r8)
-        muladdcarry64_bmi2_adx 8(%rcx), \dst1, %r8, \dst0
-        muladdcarry64_bmi2_adx 16(%rcx), \dst2, \dst0, %r8
-        muladdcarry64_bmi2_adx 24(%rcx), \dst3, %r8, \dst0
-        muladdcarry64_bmi2_adx 32(%rcx), \dst4, \dst0, %r8
-        muladdcarry64_bmi2_adx 40(%rcx), \dst5, %r8, \dst0
-        adcx \zero, \dst0
-        adox \zero, \dst0
-        # At this point, the carry and overflow flags are both 0
-    .endm
+.macro multiplyloopiteration_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5, zero
+    movq (8*\i)(%rsi), %rdx
+    muladd64_bmi2_adx (%rcx), \dst0, %r8
+    movq \dst0, (8*\i)(%rdi)
+    # \dst0 is now free, so we use it for carry (along with r8)
+    muladdcarry64_bmi2_adx 8(%rcx), \dst1, %r8, \dst0
+    muladdcarry64_bmi2_adx 16(%rcx), \dst2, \dst0, %r8
+    muladdcarry64_bmi2_adx 24(%rcx), \dst3, %r8, \dst0
+    muladdcarry64_bmi2_adx 32(%rcx), \dst4, \dst0, %r8
+    muladdcarry64_bmi2_adx 40(%rcx), \dst5, %r8, \dst0
+    adcx \zero, \dst0
+    adox \zero, \dst0
+    # At this point, the carry and overflow flags are both 0
+.endm
 
 embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply:
     push %rbx
@@ -143,21 +141,20 @@ embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply:
     pop %rbx
     ret
 
-    .globl embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square
-    .type embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square, @function
-    .text
-    .align 16
+.globl embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square
+.type embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square, @function
+.text
 
-    .macro doubleadddiagonal_bmi2_adx tosquare, todoublelo, todoublehi, storelo, storehi
-        movq \tosquare, %rdx
-        adcx \todoublelo, \todoublelo
-        mulx %rdx, %rdx, %r8
-        adox %rdx, \todoublelo
-        adcx \todoublehi, \todoublehi
-        movq \todoublelo, \storelo
-        adox %r8, \todoublehi
-        movq \todoublehi, \storehi
-    .endm
+.macro doubleadddiagonal_bmi2_adx tosquare, todoublelo, todoublehi, storelo, storehi
+    movq \tosquare, %rdx
+    adcx \todoublelo, \todoublelo
+    mulx %rdx, %rdx, %r8
+    adox %rdx, \todoublelo
+    adcx \todoublehi, \todoublehi
+    movq \todoublelo, \storelo
+    adox %r8, \todoublehi
+    movq \todoublehi, \storehi
+.endm
 
 # rdi is a pointer to the destination BigInt<768>. rsi is a pointer to
 # the operand (which is a BigInt<384>).
@@ -236,43 +233,42 @@ embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square:
     pop %rbp
     ret
 
-    .globl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce
-    .type embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce, @function
-    .text
-    .align 16
+.globl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce
+.type embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce, @function
+.text
 
-    # The constant u used in multiplications for this iteration should be in rdx
-    # dst0 to dst5 should contain words i to i + 5 of product (total 12 words)
-    # At the end, dst1 - dst5 contain words i + 1 to i + 5 of the product
-    # dst0 is the carry that should be added to word (i+6) with carry bit
-    .macro montgomeryreduceloopiterationraw_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5
-        muladd64_bmi2_adx (%r8), \dst0, %r9
-        # \dst0 is now free, so we use it for carry (along with r9)
-        muladdcarry64_bmi2_adx 8(%r8), \dst1, %r9, \dst0
-        muladdcarry64_bmi2_adx 16(%r8), \dst2, \dst0, %r9
-        muladdcarry64_bmi2_adx 24(%r8), \dst3, %r9, \dst0
-        muladdcarry64_bmi2_adx 32(%r8), \dst4, \dst0, %r9
-        muladdcarry64_bmi2_adx 40(%r8), \dst5, %r9, \dst0
-    .endm
+# The constant u used in multiplications for this iteration should be in rdx
+# dst0 to dst5 should contain words i to i + 5 of product (total 12 words)
+# At the end, dst1 - dst5 contain words i + 1 to i + 5 of the product
+# dst0 is the carry that should be added to word (i+6) with carry bit
+.macro montgomeryreduceloopiterationraw_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5
+    muladd64_bmi2_adx (%r8), \dst0, %r9
+    # \dst0 is now free, so we use it for carry (along with r9)
+    muladdcarry64_bmi2_adx 8(%r8), \dst1, %r9, \dst0
+    muladdcarry64_bmi2_adx 16(%r8), \dst2, \dst0, %r9
+    muladdcarry64_bmi2_adx 24(%r8), \dst3, %r9, \dst0
+    muladdcarry64_bmi2_adx 32(%r8), \dst4, \dst0, %r9
+    muladdcarry64_bmi2_adx 40(%r8), \dst5, %r9, \dst0
+.endm
 
-    # At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
-    # Carry bit is the "+1" bit for word i + 6 (in dst0).
-    .macro montgomeryreduceloopiteration_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5
-        # Compute u and store it in %rdx
-        movq %rcx, %rdx
-        mulx \dst0, %rdx, %rax
+# At the end, dst1 - dst5, dst0 contain words i + 1 to i + 6 of the product
+# Carry bit is the "+1" bit for word i + 6 (in dst0).
+.macro montgomeryreduceloopiteration_bmi2_adx i, dst0, dst1, dst2, dst3, dst4, dst5
+    # Compute u and store it in %rdx
+    movq %rcx, %rdx
+    mulx \dst0, %rdx, %rax
 
-        montgomeryreduceloopiterationraw_bmi2_adx \i, \dst0, \dst1, \dst2, \dst3, \dst4, \dst5
+    montgomeryreduceloopiterationraw_bmi2_adx \i, \dst0, \dst1, \dst2, \dst3, \dst4, \dst5
 
-        # Use/store meta-carry in %rbx
-        adox (8*\i+48)(%rsi), \dst0
-        adcx %rbx, \dst0
-        movq $0, %rbx
-        adox %rbp, %rbx
-        adcx %rbp, %rbx
+    # Use/store meta-carry in %rbx
+    adox (8*\i+48)(%rsi), \dst0
+    adcx %rbx, \dst0
+    movq $0, %rbx
+    adox %rbp, %rbx
+    adcx %rbp, %rbx
 
-        # Now, the carry and overflow flags are both zero
-    .endm
+    # Now, the carry and overflow flags are both zero
+.endm
 
 # Result is stored in rdi, product is in rsi, prime modulus is in rdx, and
 # inv_word is in rcx.
@@ -326,23 +322,8 @@ embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduc
 
     # Compare, and branch to either copy or subtraction
     cmp 40(%r8), %r15
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 32(%r8), %r14
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 24(%r8), %r13
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 16(%r8), %r12
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 8(%r8), %r11
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp (%r8), %r10
-    jl embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    jb embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy
+    je embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract_compare
 
 embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract:
     sub (%r8), %r10
@@ -366,6 +347,22 @@ embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduc
     pop %rbp
     ret
 
+embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_subtract_compare:
+    movq %r10, (%rdi)
+    sub (%r8), %r10
+    movq %r11, 8(%rdi)
+    sbb 8(%r8), %r11
+    movq %r12, 16(%rdi)
+    sbb 16(%r8), %r12
+    movq %r13, 24(%rdi)
+    sbb 24(%r8), %r13
+    movq %r14, 32(%rdi)
+    sbb 32(%r8), %r14
+    movq %r15, 40(%rdi)
+    sbb 40(%r8), %r15
+
+    jc embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_return
+
 embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_copy:
     movq %r10, (%rdi)
     movq %r11, 8(%rdi)
@@ -374,6 +371,7 @@ embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduc
     movq %r14, 32(%rdi)
     movq %r15, 40(%rdi)
 
+embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce_final_return:
     pop %r15
     pop %r14
     pop %r13

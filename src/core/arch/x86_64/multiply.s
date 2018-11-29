@@ -28,15 +28,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-#.macro iaca_start
-#    mov $111, %ebx
-#    .byte 0x64, 0x67, 0x90
-#.endm
-#.macro iaca_end
-#    mov $222, %ebx
-#    .byte 0x64, 0x67, 0x90
-#.endm
-
 # x86_64 calling convention (assuming System V ABI): rdi, rsi, rdx, rcx, r8,
 # and r9 are the argument registers, and rax is the return value (also rdx for
 # larger 128-bit return values). The registers rbx, rbp, and r12-r15 must be
@@ -45,7 +36,6 @@
 .globl embedded_pairing_core_arch_x86_64_bigint_768_multiply
 .type embedded_pairing_core_arch_x86_64_bigint_768_multiply, @function
 .text
-.align 16
 
 # Input carry and output carry are in rdx.
 .macro mulcarry64 src1, src2, dst, scratch
@@ -140,7 +130,6 @@ embedded_pairing_core_arch_x86_64_bigint_768_multiply:
 .globl embedded_pairing_core_arch_x86_64_bigint_768_square
 .type embedded_pairing_core_arch_x86_64_bigint_768_square, @function
 .text
-.align 16
 
 .macro adddiagonal tosquare, addlo, addhi
     movq \tosquare, %rax
@@ -257,7 +246,6 @@ embedded_pairing_core_arch_x86_64_bigint_768_square:
 .globl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce
 .type embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce, @function
 .text
-.align 16
 
 # The constant u used in multiplications for this iteration should be in r9.
 # dst0 to dst5 should contain words i to i + 5 of product (total 12 words)
@@ -337,25 +325,10 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce:
 
     # Compare, and branch to either copy or subtraction
     cmp 40(%r8), %r15
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 32(%r8), %r14
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 24(%r8), %r13
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 16(%r8), %r12
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp 8(%r8), %r11
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
-    cmp (%r8), %r10
-    jl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
-    jne embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
+    jb embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy
+    je embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract:
+embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract_compare:
     sub (%r8), %r10
     movq %r10, (%rdi)
     sbb 8(%r8), %r11
@@ -377,6 +350,22 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_s
     pop %rbp
     ret
 
+embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_subtract:
+    movq %r10, (%rdi)
+    sub (%r8), %r10
+    movq %r11, 8(%rdi)
+    sbb 8(%r8), %r11
+    movq %r12, 16(%rdi)
+    sbb 16(%r8), %r12
+    movq %r13, 24(%rdi)
+    sbb 24(%r8), %r13
+    movq %r14, 32(%rdi)
+    sbb 32(%r8), %r14
+    movq %r15, 40(%rdi)
+    sbb 40(%r8), %r15
+
+    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_return
+
 embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_copy:
     movq %r10, (%rdi)
     movq %r11, 8(%rdi)
@@ -385,6 +374,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_c
     movq %r14, 32(%rdi)
     movq %r15, 40(%rdi)
 
+embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce_final_return:
     pop %r15
     pop %r14
     pop %r13

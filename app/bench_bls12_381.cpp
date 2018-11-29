@@ -404,5 +404,5 @@ void run_benchmarks(void) {
     benchmark_time("Fq12 Exponentiate", bench_fq12_exp, default_duration);
     benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_cyclotomic, default_duration);
     benchmark_time("Fq12 Random GT", bench_fq12_random_gt, default_duration);
-    benchmark_time("Pairing (Affine)", bench_fq12_exp, default_duration);
+    benchmark_time("Pairing (Affine)", bench_pairing, default_duration);
 }

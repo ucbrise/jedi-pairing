@@ -217,7 +217,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add:
     movq 40(%rcx), %rdx
     cmp %rdx, %rsi
     jb embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
-    jz embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_subtract_compare
+    je embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_subtract_compare
 
 embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract:
     sub (%rcx), %rax
