@@ -78,7 +78,7 @@ namespace embedded_pairing::wkdibe {
         encoded->g3.encode(g3affine);
 
         if constexpr(!compressed) {
-            memcpy(encoded->pairing, &this->pairing, sizeof(GT));
+            this->pairing.write_big_endian(encoded->pairing);
         }
 
         Encoding<G1Affine, compressed>* h;
@@ -133,7 +133,7 @@ namespace embedded_pairing::wkdibe {
         if constexpr(compressed) {
             bls12_381::pairing(this->pairing, g2affine, g1affine);
         } else {
-            memcpy(&this->pairing, encoded->pairing, sizeof(GT));
+            this->pairing.read_big_endian(encoded->pairing);
         }
 
         const Encoding<G1Affine, compressed>* h;
@@ -172,7 +172,7 @@ namespace embedded_pairing::wkdibe {
     template <bool compressed>
     void Ciphertext::marshal(void* buffer) const {
         CiphertextMarshalled<compressed>* encoded = static_cast<CiphertextMarshalled<compressed>*>(buffer);
-        memcpy(encoded->a, &this->a, sizeof(GT));
+        this->a.write_big_endian(encoded->a);
 
         G2Affine baffine;
         baffine.from_projective(this->b);
@@ -186,7 +186,7 @@ namespace embedded_pairing::wkdibe {
     template <bool compressed>
     bool Ciphertext::unmarshal(const void* buffer, bool checked) {
         const CiphertextMarshalled<compressed>* encoded = reinterpret_cast<const CiphertextMarshalled<compressed>*>(buffer);
-        memcpy(&this->a, encoded->a, sizeof(GT));
+        this->a.read_big_endian(encoded->a);
 
         G2Affine baffine;
         if (!encoded->b.decode(baffine, checked)) {

@@ -200,6 +200,16 @@ namespace embedded_pairing::bls12_381 {
         this->c1.random(get_random_bytes);
     }
 
+    void Fq12::write_big_endian(uint8_t* buffer) const {
+        this->c1.write_big_endian(&buffer[0]);
+        this->c0.write_big_endian(&buffer[sizeof(Fq6)]);
+    }
+
+    void Fq12::read_big_endian(const uint8_t* buffer) {
+        this->c0.read_big_endian(&buffer[sizeof(Fq6)]);
+        this->c1.read_big_endian(&buffer[0]);
+    }
+
     bool Fq12::equal(const Fq12& a, const Fq12& b) {
         bool c0_equal = Fq6::equal(a.c0, b.c0);
         bool c1_equal = Fq6::equal(a.c1, b.c1);

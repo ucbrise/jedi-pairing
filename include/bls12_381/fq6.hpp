@@ -60,6 +60,8 @@ namespace embedded_pairing::bls12_381 {
         void multiply_by_c1(const Fq6& a, const Fq2& __restrict c1);
         void multiply_by_c01(const Fq6& a, const Fq2& __restrict c0, const Fq2& __restrict c1);
         void random(void (*get_random_bytes)(void*, size_t));
+        void write_big_endian(uint8_t* buffer) const;
+        void read_big_endian(const uint8_t* buffer);
 
         static bool equal(const Fq6& a, const Fq6& b);
     };

@@ -1,2 +1,6 @@
-*.a
-bin
+/bin
+/pairing.a
+
+/app/pairing.a
+/app/test
+/app/bin

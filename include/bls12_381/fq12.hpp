@@ -59,6 +59,8 @@ namespace embedded_pairing::bls12_381 {
         void multiply_by_c014(const Fq12& a, const Fq2& __restrict c0, const Fq2& __restrict c1, const Fq2& __restrict c4);
         void conjugate(const Fq12& a);
         void random(void (*get_random_bytes)(void*, size_t));
+        void write_big_endian(uint8_t* buffer) const;
+        void read_big_endian(const uint8_t* buffer);
 
         /*
          * Faster functions for the pairing target group GT, which is a
