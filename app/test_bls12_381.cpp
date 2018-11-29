@@ -284,7 +284,7 @@ const char* test_fr_inverse(void) {
         Fr tmp1;
         Fr tmp2;
 
-        montgomeryfp_inverse(tmp2, a);
+        fp_inverse(tmp2, a);
         tmp1.multiply(a, tmp2);
 
         if (!Fr::equal(tmp1, Fr::one)) {
@@ -701,7 +701,7 @@ const char* test_fq_inverse(void) {
         Fq tmp1;
         Fq tmp2;
 
-        montgomeryfp_inverse(tmp2, a);
+        fp_inverse(tmp2, a);
         tmp1.multiply(a, tmp2);
 
         if (!Fq::equal(tmp1, Fq::one)) {

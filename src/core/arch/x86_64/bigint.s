@@ -108,14 +108,14 @@ embedded_pairing_core_arch_x86_64_bigint_384_multiply2:
     adc %rax, %rax
     ret
 
-.globl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2
-.type embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2, @function
+.globl embedded_pairing_core_arch_x86_64_fpbase_384_multiply2
+.type embedded_pairing_core_arch_x86_64_fpbase_384_multiply2, @function
 .text
 
 # Destination pointer is in rdi
 # Operand 1 pointer is in rsi
 # Modulus pointer is in rdx
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2:
+embedded_pairing_core_arch_x86_64_fpbase_384_multiply2:
     push %rbx
 
     # Materialize sum in [rax, rbx, rcx, r8, r9, rsi] (little endian)
@@ -132,14 +132,14 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2:
     movq 40(%rsi), %rsi
     adc %rsi, %rsi
 
-    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_subtract
+    jc embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_subtract
 
     # Try to decide early
     cmp 40(%rdx), %rsi
-    jb embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_copy
-    jz embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_subtract_compare
+    jb embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_copy
+    jz embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_subtract_compare
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_subtract:
+embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_subtract:
     sub (%rdx), %rax
     movq %rax, (%rdi)
     sbb 8(%rdx), %rbx
@@ -156,7 +156,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_subtract:
     pop %rbx
     ret
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_subtract_compare:
+embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_subtract_compare:
     movq %rax, (%rdi)
     sub (%rdx), %rax
     movq %rbx, 8(%rdi)
@@ -170,9 +170,9 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_subtract_compar
     movq %rsi, 40(%rdi)
     sbb 40(%rdx), %rsi
 
-    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_return
+    jc embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_return
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_copy:
+embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_copy:
     movq %rax, (%rdi)
     movq %rbx, 8(%rdi)
     movq %rcx, 16(%rdi)
@@ -180,20 +180,20 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_copy:
     movq %r9, 32(%rdi)
     movq %rsi, 40(%rdi)
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2_final_return:
+embedded_pairing_core_arch_x86_64_fpbase_384_multiply2_final_return:
     pop %rbx
     ret
 
 
-.globl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add
-.type embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add, @function
+.globl embedded_pairing_core_arch_x86_64_fpbase_384_add
+.type embedded_pairing_core_arch_x86_64_fpbase_384_add, @function
 .text
 
 # Destination pointer is in rdi
 # Operand 1 pointer is in rsi
 # Operand 2 pointer is in rdx
 # Modulus pointer is in rcx
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add:
+embedded_pairing_core_arch_x86_64_fpbase_384_add:
     push %rbx
     push %rbp
 
@@ -211,15 +211,15 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add:
     movq 40(%rsi), %rsi
     adc 40(%rdx), %rsi
 
-    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract
+    jc embedded_pairing_core_arch_x86_64_fpbase_384_add_final_subtract
 
     # Try to decide early
     movq 40(%rcx), %rdx
     cmp %rdx, %rsi
-    jb embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy
-    je embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_subtract_compare
+    jb embedded_pairing_core_arch_x86_64_fpbase_384_add_final_copy
+    je embedded_pairing_core_arch_x86_64_fpbase_384_add_subtract_compare
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract:
+embedded_pairing_core_arch_x86_64_fpbase_384_add_final_subtract:
     sub (%rcx), %rax
     movq %rax, (%rdi)
     sbb 8(%rcx), %rbx
@@ -237,7 +237,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_subtract:
     pop %rbx
     ret
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_subtract_compare:
+embedded_pairing_core_arch_x86_64_fpbase_384_add_subtract_compare:
     movq %rax, (%rdi)
     sub (%rcx), %rax
     movq %rbx, 8(%rdi)
@@ -251,9 +251,9 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_subtract_compare:
     movq %rsi, 40(%rdi)
     sbb %rdx, %rsi
 
-    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_return
+    jc embedded_pairing_core_arch_x86_64_fpbase_384_add_final_return
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy:
+embedded_pairing_core_arch_x86_64_fpbase_384_add_final_copy:
     movq %rax, (%rdi)
     movq %rbx, 8(%rdi)
     movq %rbp, 16(%rdi)
@@ -261,20 +261,20 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_copy:
     movq %r9, 32(%rdi)
     movq %rsi, 40(%rdi)
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add_final_return:
+embedded_pairing_core_arch_x86_64_fpbase_384_add_final_return:
     pop %rbp
     pop %rbx
     ret
 
-.globl embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract
-.type embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract, @function
+.globl embedded_pairing_core_arch_x86_64_fpbase_384_subtract
+.type embedded_pairing_core_arch_x86_64_fpbase_384_subtract, @function
 .text
 
 # Destination pointer is in rdi
 # Operand 1 pointer is in rsi
 # Operand 2 pointer is in rdx
 # Modulus pointer is in rcx
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract:
+embedded_pairing_core_arch_x86_64_fpbase_384_subtract:
     push %rbx
     push %rbp
 
@@ -292,7 +292,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract:
     movq 40(%rsi), %rsi
     sbb 40(%rdx), %rsi
 
-    jc embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract_final_add
+    jc embedded_pairing_core_arch_x86_64_fpbase_384_subtract_final_add
 
     movq %rax, (%rdi)
     movq %rbx, 8(%rdi)
@@ -305,7 +305,7 @@ embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract:
     pop %rbx
     ret
 
-embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract_final_add:
+embedded_pairing_core_arch_x86_64_fpbase_384_subtract_final_add:
     add (%rcx), %rax
     movq %rax, (%rdi)
     adc 8(%rcx), %rbx

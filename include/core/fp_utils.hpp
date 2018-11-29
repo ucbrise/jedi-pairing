@@ -30,11 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_CORE_MONTGOMERYFP_UTILS_HPP_
-#define EMBEDDED_PAIRING_CORE_MONTGOMERYFP_UTILS_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_FP_UTILS_HPP_
+#define EMBEDDED_PAIRING_CORE_FP_UTILS_HPP_
 
 #include "./bigint.hpp"
-#include "./montgomeryfp.hpp"
+#include "./fp.hpp"
 
 namespace embedded_pairing::core {
     /*
@@ -96,39 +96,39 @@ namespace embedded_pairing::core {
      * We define these as separate functions for reason #2 above
      * (reason #1 does not apply here).
      */
-    template <typename MontgomeryFp>
-    void montgomeryfp_inverse(MontgomeryFp& res, const MontgomeryFp& a) {
+    template <typename Fp>
+    void fp_inverse(Fp& res, const Fp& a) {
         /* Algorithm below will not terminate for a = 0, so check if it is. */
         if (a.is_zero()) {
             res.set_zero();
             return;
         }
 
-        MontgomeryFp b;
-        b.copy(MontgomeryFp::r2_value);
+        Fp b;
+        b.copy(Fp::r2_value);
 
-        MontgomeryFp c;
+        Fp c;
         c.set_zero();
 
-        BigInt<MontgomeryFp::bits_value> u = a.val;
-        BigInt<MontgomeryFp::bits_value> v = MontgomeryFp::p_value;
+        BigInt<Fp::bits_value> u = a.val;
+        BigInt<Fp::bits_value> v = Fp::p_value;
 
         while (!u.is_one() && !v.is_one()) {
             while (u.is_even()) {
                 u.template shift_right_in_word<1>(u);
                 if (b.val.is_odd()) {
-                    b.val.add(b.val, MontgomeryFp::p_value);
+                    b.val.add(b.val, Fp::p_value);
                 }
                 b.val.template shift_right_in_word<1>(b.val);
             }
             while (v.is_even()) {
                 v.template shift_right_in_word<1>(v);
                 if (c.val.is_odd()) {
-                    c.val.add(c.val, MontgomeryFp::p_value);
+                    c.val.add(c.val, Fp::p_value);
                 }
                 c.val.template shift_right_in_word<1>(c.val);
             }
-            if (BigInt<MontgomeryFp::bits_value>::compare(v, u) == -1) {
+            if (BigInt<Fp::bits_value>::compare(v, u) == -1) {
                 u.subtract(u, v);
                 b.subtract(b, c);
             } else {

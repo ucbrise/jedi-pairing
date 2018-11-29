@@ -30,21 +30,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EMBEDDED_PAIRING_CORE_MONTGOMERYFP_HPP_
-#define EMBEDDED_PAIRING_CORE_MONTGOMERYFP_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_FP_HPP_
+#define EMBEDDED_PAIRING_CORE_FP_HPP_
 
 #include "./bigint.hpp"
-#include "./montgomeryfp_utils.hpp"
+#include "./fp_utils.hpp"
 
 namespace embedded_pairing::core {
     /*
-     * Normally you would use the struct MontgomeryFp, which inherits from this
+     * Normally you would use the struct Fp, which inherits from this
      * struct, rather than using this one directly. This base class contains
-     * the parts of MontgomeryFp that lend themselves to architecture-specific
+     * the parts of Fp that lend themselves to architecture-specific
      * optimizations.
      */
     template <int bits>
-    struct MontgomeryFpBase {
+    struct FpBase {
         /*
          * Export template parameters so it is accessible in function
          * templates that just get an opaque type.
@@ -54,7 +54,7 @@ namespace embedded_pairing::core {
         /* The only element of this struct. */
         BigInt<bits> val;
 
-        void add(const MontgomeryFpBase<bits>& a, const MontgomeryFpBase<bits>& __restrict b, const BigInt<bits>& __restrict p) {
+        void add(const FpBase<bits>& a, const FpBase<bits>& __restrict b, const BigInt<bits>& __restrict p) {
 #ifdef RESIST_SIDE_CHANNELS
             BigInt<bits> tmp;
 #endif
@@ -68,7 +68,7 @@ namespace embedded_pairing::core {
             }
         }
 
-        void multiply2(const MontgomeryFpBase<bits>& a, const BigInt<bits>& __restrict p) {
+        void multiply2(const FpBase<bits>& a, const BigInt<bits>& __restrict p) {
 #ifdef RESIST_SIDE_CHANNELS
             BigInt<bits> tmp;
 #endif
@@ -83,7 +83,7 @@ namespace embedded_pairing::core {
             }
         }
 
-        void subtract(const MontgomeryFpBase<bits>& a, const MontgomeryFpBase<bits>& __restrict b, const BigInt<bits>& __restrict p) {
+        void subtract(const FpBase<bits>& a, const FpBase<bits>& __restrict b, const BigInt<bits>& __restrict p) {
 #ifdef RESIST_SIDE_CHANNELS
             BigInt<bits> tmp;
 #endif
@@ -97,7 +97,7 @@ namespace embedded_pairing::core {
             }
         }
 
-        void negate(const MontgomeryFpBase<bits>& a, const BigInt<bits>& __restrict p) {
+        void negate(const FpBase<bits>& a, const BigInt<bits>& __restrict p) {
             if (a.val.is_zero()) {
 #ifdef RESIST_SIDE_CHANNELS
                 this->val.subtract(a.val, BigInt<bits>::zero);
@@ -158,13 +158,13 @@ namespace embedded_pairing::core {
             this->reduce(*reinterpret_cast<BigInt<bits>*>(&a.bytes[bits/8]), p);
         }
 
-        void multiply(const MontgomeryFpBase<bits>& a, const MontgomeryFpBase<bits>& b, const BigInt<bits>& __restrict p, typename BigInt<bits>::word_t inv_word) {
+        void multiply(const FpBase<bits>& a, const FpBase<bits>& b, const BigInt<bits>& __restrict p, typename BigInt<bits>::word_t inv_word) {
             BigInt<2*bits> tmp;
             tmp.multiply(a.val, b.val);
             this->montgomery_reduce(tmp, p, inv_word);
         }
 
-        void square(const MontgomeryFpBase<bits>& a, const BigInt<bits>& __restrict p, typename BigInt<bits>::word_t inv_word) {
+        void square(const FpBase<bits>& a, const BigInt<bits>& __restrict p, typename BigInt<bits>::word_t inv_word) {
             BigInt<2*bits> tmp;
             tmp.square(a.val);
             this->montgomery_reduce(tmp, p, inv_word);
@@ -172,7 +172,7 @@ namespace embedded_pairing::core {
     };
 
     /*
-     * The struct MontgomeryFp<bits, p, r, r2, mpinv> is a POD representing
+     * The struct Fp<bits, p, r, r2, mpinv> is a POD representing
      * an integer in Fp in Montgomery form. An integer x in [0, p-1] is
      * represented as x * r mod p, for some conveniently chosen r that
      * makes reduction modulo p efficient after multiplication.
@@ -184,7 +184,7 @@ namespace embedded_pairing::core {
      * used for montgomery reduction with n = 1.
      */
     template <int bits, const BigInt<bits>& p, const BigInt<bits>& r, const BigInt<bits>& r2, const BigInt<bits>& inv>
-    struct MontgomeryFp : MontgomeryFpBase<bits> {
+    struct Fp : FpBase<bits> {
         /*
          * Export template parameters so they are accessible in function
          * templates that just get an opaque type.
@@ -196,8 +196,8 @@ namespace embedded_pairing::core {
         static const constexpr BigInt<bits>& inv_value = inv;
 
         /* Constants for zero and one. */
-        static const MontgomeryFp<bits, p, r, r2, inv> zero;
-        static const MontgomeryFp<bits, p, r, r2, inv> one;
+        static const Fp<bits, p, r, r2, inv> zero;
+        static const Fp<bits, p, r, r2, inv> one;
 
         void set_zero(void) {
             memset(this, 0x00, sizeof(*this));
@@ -207,7 +207,7 @@ namespace embedded_pairing::core {
             return this->val.is_zero();
         }
 
-        void copy(const MontgomeryFpBase<bits>& a) {
+        void copy(const FpBase<bits>& a) {
             this->val.copy(a.val);
         }
 
@@ -215,7 +215,7 @@ namespace embedded_pairing::core {
             this->val.copy(a);
         }
 
-        static bool equal(const MontgomeryFpBase<bits>& a, const MontgomeryFpBase<bits>& b) {
+        static bool equal(const FpBase<bits>& a, const FpBase<bits>& b) {
             return BigInt<bits>::equal(a.val, b.val);
         }
 
@@ -224,9 +224,9 @@ namespace embedded_pairing::core {
         }
 
         void set(const BigInt<bits>& integer) {
-            const MontgomeryFpBase<bits>* a = reinterpret_cast<const MontgomeryFpBase<bits>*>(&integer);
-            const MontgomeryFpBase<bits>* b = reinterpret_cast<const MontgomeryFpBase<bits>*>(&r2);
-            this->MontgomeryFpBase<bits>::multiply(*a, *b, p, inv.words[0]);
+            const FpBase<bits>* a = reinterpret_cast<const FpBase<bits>*>(&integer);
+            const FpBase<bits>* b = reinterpret_cast<const FpBase<bits>*>(&r2);
+            this->FpBase<bits>::multiply(*a, *b, p, inv.words[0]);
         }
 
         /*
@@ -236,42 +236,42 @@ namespace embedded_pairing::core {
          * this method.
          */
         void into_montgomery_form(void) {
-            const MontgomeryFpBase<bits>* b = reinterpret_cast<const MontgomeryFpBase<bits>*>(&r2);
-            this->MontgomeryFpBase<bits>::multiply(*this, *b, p, inv.words[0]);
+            const FpBase<bits>* b = reinterpret_cast<const FpBase<bits>*>(&r2);
+            this->FpBase<bits>::multiply(*this, *b, p, inv.words[0]);
         }
 
         void get(BigInt<bits>& integer) const {
             BigInt<2*bits> tmp;
             tmp.copy(this->val);
 
-            MontgomeryFp<bits, p, r, r2, inv>* target;
-            target = reinterpret_cast<MontgomeryFp<bits, p, r, r2, inv>*>(&integer);
+            Fp<bits, p, r, r2, inv>* target;
+            target = reinterpret_cast<Fp<bits, p, r, r2, inv>*>(&integer);
             target->montgomery_reduce(tmp);
         }
 
-        void add(const MontgomeryFp<bits, p, r, r2, inv>& a, const MontgomeryFp<bits, p, r, r2, inv>& __restrict b) {
-            this->MontgomeryFpBase<bits>::add(a, b, p);
+        void add(const Fp<bits, p, r, r2, inv>& a, const Fp<bits, p, r, r2, inv>& __restrict b) {
+            this->FpBase<bits>::add(a, b, p);
         }
 
-        void multiply2(const MontgomeryFp<bits, p, r, r2, inv>& a) {
-            this->MontgomeryFpBase<bits>::multiply2(a, p);
+        void multiply2(const Fp<bits, p, r, r2, inv>& a) {
+            this->FpBase<bits>::multiply2(a, p);
         }
 
-        void subtract(const MontgomeryFp<bits, p, r, r2, inv>& a, const MontgomeryFp<bits, p, r, r2, inv>& __restrict b) {
-            this->MontgomeryFpBase<bits>::subtract(a, b, p);
+        void subtract(const Fp<bits, p, r, r2, inv>& a, const Fp<bits, p, r, r2, inv>& __restrict b) {
+            this->FpBase<bits>::subtract(a, b, p);
         }
 
-        void negate(const MontgomeryFp<bits, p, r, r2, inv>& a) {
-            this->MontgomeryFpBase<bits>::negate(a, p);
+        void negate(const Fp<bits, p, r, r2, inv>& a) {
+            this->FpBase<bits>::negate(a, p);
         }
 
         void reduce(const BigInt<bits>& __restrict a) {
-            this->MontgomeryFpBase<bits>::reduce(a, p);
+            this->FpBase<bits>::reduce(a, p);
         }
 
         /*
          * It's an open question whether montgomery_reduce and multiply should
-         * really be methods, or if they need to go in montgomeryfp_utils.hpp.
+         * really be methods, or if they need to go in fp_utils.hpp.
          * On the one hand, they belong here since they operate on BigInts
          * directly. On the other hand, they call internal functions, which may
          * be assembly-optimized in a subclass. My guess is that an
@@ -291,15 +291,15 @@ namespace embedded_pairing::core {
         // }
 
         void montgomery_reduce(BigInt<2*bits>& __restrict a) {
-            this->MontgomeryFpBase<bits>::montgomery_reduce(a, p, inv.words[0]);
+            this->FpBase<bits>::montgomery_reduce(a, p, inv.words[0]);
         }
 
-        void __attribute__((noinline)) multiply(const MontgomeryFp<bits, p, r, r2, inv>& a, const MontgomeryFp<bits, p, r, r2, inv>& b) {
-            this->MontgomeryFpBase<bits>::multiply(a, b, p, inv.words[0]);
+        void __attribute__((noinline)) multiply(const Fp<bits, p, r, r2, inv>& a, const Fp<bits, p, r, r2, inv>& b) {
+            this->FpBase<bits>::multiply(a, b, p, inv.words[0]);
         }
 
-        void __attribute__((noinline)) square(const MontgomeryFp<bits, p, r, r2, inv>& a) {
-            this->MontgomeryFpBase<bits>::square(a, p, inv.words[0]);
+        void __attribute__((noinline)) square(const Fp<bits, p, r, r2, inv>& a) {
+            this->FpBase<bits>::square(a, p, inv.words[0]);
         }
 
         int legendre(void) const {
@@ -309,7 +309,7 @@ namespace embedded_pairing::core {
              * symbol at runtime anyway.
              *
              * If we cared about optimizing performance, we may want to
-             * consider putting this in montgomeryfp_utils.hpp as a function
+             * consider putting this in fp_utils.hpp as a function
              * template, to make sure that we instantiate the exponentiate
              * function template according to the appropriate subclass of this
              * template, as the subclass may have optimized methods.
@@ -318,7 +318,7 @@ namespace embedded_pairing::core {
             pminusoneovertwo.subtract(p, BigInt<bits>::one);
             pminusoneovertwo.template shift_right_in_word<1>(pminusoneovertwo);
 
-            MontgomeryFp<bits, p, r, r2, inv> tmp;
+            Fp<bits, p, r, r2, inv> tmp;
             exponentiate(tmp, *this, pminusoneovertwo);
 
             if (tmp.is_zero()) {
@@ -332,11 +332,11 @@ namespace embedded_pairing::core {
     };
 
     template <int bits, const BigInt<bits>& p, const BigInt<bits>& r, const BigInt<bits>& r2, const BigInt<bits>& inv>
-    constexpr MontgomeryFp<bits, p, r, r2, inv> MontgomeryFp<bits, p, r, r2, inv>::zero = {{ .val = BigInt<bits>::zero }};
+    constexpr Fp<bits, p, r, r2, inv> Fp<bits, p, r, r2, inv>::zero = {{ .val = BigInt<bits>::zero }};
 
     /* TODO: Figure out how to make this definition constexpr. */
     template <int bits, const BigInt<bits>& p, const BigInt<bits>& r, const BigInt<bits>& r2, const BigInt<bits>& inv>
-    const MontgomeryFp<bits, p, r, r2, inv> MontgomeryFp<bits, p, r, r2, inv>::one = {{ .val = r }};
+    const Fp<bits, p, r, r2, inv> Fp<bits, p, r, r2, inv>::one = {{ .val = r }};
 }
 
 #ifndef DISABLE_ASM
@@ -347,11 +347,11 @@ namespace embedded_pairing::core {
  */
 
 #if defined(__ARM_ARCH_6M__)
-#include "./arch/armv6_m/montgomeryfp.hpp"
+#include "./arch/armv6_m/fp.hpp"
 #endif
 
 #if defined(__x86_64__) || defined(_M_X64_)
-#include "./arch/x86_64/montgomeryfp.hpp"
+#include "./arch/x86_64/fp.hpp"
 #endif
 
 #endif /* NO_ASM */

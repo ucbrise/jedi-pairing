@@ -35,11 +35,11 @@
 
 #include <stdint.h>
 #include "core/bigint.hpp"
-#include "core/montgomeryfp.hpp"
-#include "core/montgomeryfp_utils.hpp"
+#include "core/fp.hpp"
+#include "core/fp_utils.hpp"
 
 using embedded_pairing::core::BigInt;
-using embedded_pairing::core::MontgomeryFp;
+using embedded_pairing::core::Fp;
 
 namespace embedded_pairing::bls12_381 {
     static constexpr int fq_bits = 384;
@@ -61,7 +61,7 @@ namespace embedded_pairing::bls12_381 {
     extern const BigInt<fq_bits> fq_R2_var;
     extern const BigInt<fq_bits> fq_inv_var;
 
-    struct Fq : MontgomeryFp<fq_bits, fq_modulus_var, fq_R_var, fq_R2_var, fq_inv_var> {
+    struct Fq : Fp<fq_bits, fq_modulus_var, fq_R_var, fq_R2_var, fq_inv_var> {
         static const Fq zero;
         static const Fq one;
         static const Fq negative_one;
@@ -70,7 +70,7 @@ namespace embedded_pairing::bls12_381 {
             return BigInt<fq_bits>::compare(a.val, b.val);
         }
         inline void inverse(const Fq& a) {
-            montgomeryfp_inverse(*this, a);
+            fp_inverse(*this, a);
         }
         void square_root(const Fq& a);
         void random(void (*get_random_bytes)(void*, size_t));

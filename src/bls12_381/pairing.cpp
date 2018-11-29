@@ -315,9 +315,8 @@ namespace embedded_pairing::bls12_381 {
     }
 
     /*
-     * Unlike the "exponentiate" function in montgomeryfp_utils.hpp, we don't
-     * have to be constant time in the exponent, since "bls_x" is assumed to be
-     * publicly known.
+     * There is no benefit to being constant time in the exponent, since
+     * "bls_x" is assumed to be publicly known.
      */
     template <unsigned int right_shift, bool square_at_end>
     static inline void exp_by_x_restrict(Fq12& result, const Fq12& a) {

@@ -31,14 +31,14 @@
  */
 
 #include "core/bigint.hpp"
-#include "core/montgomeryfp.hpp"
-#include "core/montgomeryfp_utils.hpp"
+#include "core/fp.hpp"
+#include "core/fp_utils.hpp"
 #include "bls12_381/fq.hpp"
 
 #include <stddef.h>
 
 namespace embedded_pairing::bls12_381 {
-    /* Constants for instantiating the MontgomeryFp class template for Fq. */
+    /* Constants for instantiating the Fp class template for Fq. */
     extern constexpr BigInt<fq_bits> fq_modulus_var = fq_modulus;
     extern constexpr BigInt<fq_bits> fq_R_var = fq_R;
     extern constexpr BigInt<fq_bits> fq_R2_var = fq_R2;

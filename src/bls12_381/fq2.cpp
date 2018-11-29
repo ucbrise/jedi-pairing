@@ -85,7 +85,7 @@ namespace embedded_pairing::bls12_381 {
         t1.square(a.c1);
         t0.add(t0, t1);
 
-        montgomeryfp_inverse(t1, t0);
+        fp_inverse(t1, t0);
         this->c0.multiply(a.c0, t1);
         this->c1.multiply(a.c1, t1);
         this->c1.negate(this->c1);

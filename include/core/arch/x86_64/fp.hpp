@@ -32,40 +32,40 @@
 
 #include <stdint.h>
 
-#ifndef EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
-#define EMBEDDED_PAIRING_CORE_ARCH_X86_64_MONTGOMERYFP_HPP_
+#ifndef EMBEDDED_PAIRING_CORE_ARCH_X86_64_FP_HPP_
+#define EMBEDDED_PAIRING_CORE_ARCH_X86_64_FP_HPP_
 
 extern "C" {
-    void embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
-    void embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add(void* res, const void* a, const void* b, const void* p);
-    void embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract(void* res, const void* a, const void* b, const void* p);
-    void embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2(void* res, const void* a, const void* p);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_fpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
+    void embedded_pairing_core_arch_x86_64_fpbase_384_add(void* res, const void* a, const void* b, const void* p);
+    void embedded_pairing_core_arch_x86_64_fpbase_384_subtract(void* res, const void* a, const void* b, const void* p);
+    void embedded_pairing_core_arch_x86_64_fpbase_384_multiply2(void* res, const void* a, const void* p);
 }
 
 namespace embedded_pairing::core {
-    extern void (*runtime_montgomeryfpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t);
+    extern void (*runtime_fpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t);
 
     template <>
-    inline void MontgomeryFpBase<384>::add(const MontgomeryFpBase<384>& a, const MontgomeryFpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
-        embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_add(this, &a, &b, &p);
+    inline void FpBase<384>::add(const FpBase<384>& a, const FpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
+        embedded_pairing_core_arch_x86_64_fpbase_384_add(this, &a, &b, &p);
     }
 
     template <>
-    inline void MontgomeryFpBase<384>::subtract(const MontgomeryFpBase<384>& a, const MontgomeryFpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
-        embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_subtract(this, &a, &b, &p);
+    inline void FpBase<384>::subtract(const FpBase<384>& a, const FpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
+        embedded_pairing_core_arch_x86_64_fpbase_384_subtract(this, &a, &b, &p);
     }
 
     template <>
-    inline void MontgomeryFpBase<384>::multiply2(const MontgomeryFpBase<384>& a, const BigInt<384>& __restrict p) {
-        embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_multiply2(this, &a, &p);
+    inline void FpBase<384>::multiply2(const FpBase<384>& a, const BigInt<384>& __restrict p) {
+        embedded_pairing_core_arch_x86_64_fpbase_384_multiply2(this, &a, &p);
     }
 
     template <>
-    inline void MontgomeryFpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
+    inline void FpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
 #ifdef __BMI2__
-        embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
+        embedded_pairing_core_arch_x86_64_bmi2_adx_fpbase_384_montgomery_reduce(this, &a, &p, inv_word);
 #else
-        runtime_montgomeryfpbase_384_montgomery_reduce(this, &a, &p, inv_word);
+        runtime_fpbase_384_montgomery_reduce(this, &a, &p, inv_word);
 #endif
     }
 }

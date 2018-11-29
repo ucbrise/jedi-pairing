@@ -36,10 +36,10 @@
 #include <stddef.h>
 
 #include "core/bigint.hpp"
-#include "core/montgomeryfp.hpp"
+#include "core/fp.hpp"
 
 using embedded_pairing::core::BigInt;
-using embedded_pairing::core::MontgomeryFp;
+using embedded_pairing::core::Fp;
 
 namespace embedded_pairing::bls12_381 {
     static constexpr int fr_bits = 256;
@@ -53,7 +53,7 @@ namespace embedded_pairing::bls12_381 {
     extern const BigInt<fr_bits> fr_R2_var;
     extern const BigInt<fr_bits> fr_inv_var;
 
-    struct Fr : MontgomeryFp<fr_bits, fr_modulus_var, fr_R_var, fr_R2_var, fr_inv_var> {
+    struct Fr : Fp<fr_bits, fr_modulus_var, fr_R_var, fr_R2_var, fr_inv_var> {
         static const Fr zero;
         static const Fr one;
 

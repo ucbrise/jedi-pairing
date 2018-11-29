@@ -34,7 +34,6 @@
 
 #include <stddef.h>
 
-#include "core/montgomeryfp_utils.hpp"
 #include "bls12_381/pairing.hpp"
 #include "bls12_381/wnaf.hpp"
 

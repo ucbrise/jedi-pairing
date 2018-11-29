@@ -32,8 +32,8 @@
 @ r4 to r12 must be saved if modified. Arguments are r0 to r3, and return
 @ value goes in r0.
 
-.globl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply
-.type embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply, %function
+.globl embedded_pairing_core_arch_armv6_m_fpbase_384_multiply
+.type embedded_pairing_core_arch_armv6_m_fpbase_384_multiply, %function
 .text
 .thumb
 
@@ -467,7 +467,7 @@ embedded_pairing_core_arch_armv6_m_bigint_768_multiply:
 @ r2 contains a pointer to operand "b"
 @ r3 contains a pointer to the modulus "p"
 @ First element on stack is the "inv" value for Montgomery Reduction
-embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply:
+embedded_pairing_core_arch_armv6_m_fpbase_384_multiply:
     @ Save registers
     push {r4, r5, r6, r7, lr}
     mov r4, r8
@@ -500,7 +500,7 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_multiply:
     mov r0, r11
     mov r2, r1
     add r1, sp, #48
-    bl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_reduce
+    bl embedded_pairing_core_arch_armv6_m_fpbase_384_reduce
 
     @ Deallocate space for temporary BigInt<768> "tmp"
     add sp, sp, #96
@@ -816,8 +816,8 @@ embedded_pairing_core_arch_armv6_m_bigint_768_square:
     pop {r4, r5, r6, r7}
     bx lr
 
-.globl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square
-.type embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square, %function
+.globl embedded_pairing_core_arch_armv6_m_fpbase_384_square
+.type embedded_pairing_core_arch_armv6_m_fpbase_384_square, %function
 .text
 .thumb
 
@@ -825,7 +825,7 @@ embedded_pairing_core_arch_armv6_m_bigint_768_square:
 @ r1 contains a pointer to operand "a"
 @ r2 contains a pointer to the modulus "p"
 @ r3 contains the "inv" value for Montgomery Reduction
-embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square:
+embedded_pairing_core_arch_armv6_m_fpbase_384_square:
     @ Save registers
     push {r4, r5, r6, r7, lr}
     mov r4, r8
@@ -860,7 +860,7 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square:
     mov r0, r11
     mov r2, r1
     add r1, sp, #48
-    bl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_reduce
+    bl embedded_pairing_core_arch_armv6_m_fpbase_384_reduce
 
     @ Deallocate space for temporary BigInt<768> "tmp"
     add sp, sp, #96
@@ -873,8 +873,8 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square:
     mov r8, r4
     pop {r4, r5, r6, r7, pc}
 
-.globl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce
-.type embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce, %function
+.globl embedded_pairing_core_arch_armv6_m_fpbase_384_montgomery_reduce
+.type embedded_pairing_core_arch_armv6_m_fpbase_384_montgomery_reduce, %function
 .text
 .thumb
 
@@ -882,7 +882,7 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_square:
 @ r1 has a pointer to the BigInt<768> to reduce
 @ r2 contains a pointer to the modulus "p"
 @ r3 contains the "inv" value for Montgomery Reduction
-embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce:
+embedded_pairing_core_arch_armv6_m_fpbase_384_montgomery_reduce:
     @ Save registers
     push {r4, r5, r6, r7, lr}
     mov r4, r8
@@ -918,7 +918,7 @@ embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_montgomery_reduce:
     mov r0, r11
     mov r2, r1
     add r1, sp, #48
-    bl embedded_pairing_core_arch_armv6_m_montgomeryfpbase_384_reduce
+    bl embedded_pairing_core_arch_armv6_m_fpbase_384_reduce
 
     @ Deallocate space for temporary BigInt<768> "tmp"
     add sp, sp, #96

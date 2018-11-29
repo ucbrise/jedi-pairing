@@ -31,11 +31,11 @@
  */
 
 #include "core/bigint.hpp"
-#include "core/montgomeryfp.hpp"
+#include "core/fp.hpp"
 #include "bls12_381/fr.hpp"
 
 namespace embedded_pairing::bls12_381 {
-    /* Constants for instantiating the MontgomeryFp class template for Fq. */
+    /* Constants for instantiating the Fp class template for Fq. */
     extern constexpr BigInt<fr_bits> fr_modulus_var = fr_modulus;
     extern constexpr BigInt<fr_bits> fr_R_var = fr_R;
     extern constexpr BigInt<fr_bits> fr_R2_var = fr_R2;

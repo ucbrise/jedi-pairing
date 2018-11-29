@@ -35,8 +35,8 @@
 extern "C" {
     bool embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx(void);
 
-    void embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
-    void embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
+    void embedded_pairing_core_arch_x86_64_fpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
+    void embedded_pairing_core_arch_x86_64_bmi2_adx_fpbase_384_montgomery_reduce(void* res, void* a, const void* p, uint64_t inv_word);
 
     void embedded_pairing_core_arch_x86_64_bigint_768_multiply(void* res, const void* a, const void* b);
     void embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply(void* res, const void* a, const void* b);
@@ -47,7 +47,7 @@ extern "C" {
 
 namespace embedded_pairing::core {
     static bool cpu_supports_bmi2_adx = embedded_pairing_core_arch_x86_64_cpu_supports_bmi2_adx();
-    void (*runtime_montgomeryfpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_montgomeryfpbase_384_montgomery_reduce : embedded_pairing_core_arch_x86_64_montgomeryfpbase_384_montgomery_reduce;
+    void (*runtime_fpbase_384_montgomery_reduce)(void*, void*, const void*, uint64_t) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_fpbase_384_montgomery_reduce : embedded_pairing_core_arch_x86_64_fpbase_384_montgomery_reduce;
     void (*runtime_bigint_768_multiply)(void*, const void*, const void*) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_multiply : embedded_pairing_core_arch_x86_64_bigint_768_multiply;
     void (*runtime_bigint_768_square)(void*, const void*) = cpu_supports_bmi2_adx ? embedded_pairing_core_arch_x86_64_bmi2_adx_bigint_768_square : embedded_pairing_core_arch_x86_64_bigint_768_square;
  }
