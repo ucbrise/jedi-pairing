@@ -17,7 +17,7 @@ extern "C" {
     uint64_t current_time_nanos(void);
 }
 
-#ifdef __thumb__
+#if defined(__ARM_ARCH_6M__)
 constexpr int few_iters = 3;
 constexpr int std_iters = 100;
 constexpr int many_iters = 1000;
