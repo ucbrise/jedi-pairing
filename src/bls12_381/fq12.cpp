@@ -135,7 +135,7 @@ namespace embedded_pairing::bls12_381 {
         this->c0.frobenius_map(a.c0, power);
         this->c1.frobenius_map(a.c1, power);
 
-        unsigned int coeff_idx = power % 12;
+        unsigned int coeff_idx = power < 12 ? power : power % 12;
         this->c1.c0.multiply(this->c1.c0, fq12_frobenius_coeff_c1[coeff_idx]);
         this->c1.c1.multiply(this->c1.c1, fq12_frobenius_coeff_c1[coeff_idx]);
         this->c1.c2.multiply(this->c1.c2, fq12_frobenius_coeff_c1[coeff_idx]);

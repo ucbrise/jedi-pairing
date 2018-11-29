@@ -17,7 +17,7 @@ extern "C" {
     uint64_t current_time_nanos(void);
 }
 
-const uint64_t default_duration = 10000000000ull;
+const uint64_t default_duration = 1000000000ull;
 
 void benchmark_time(const char* name, uint64_t (*function)(void), uint64_t duration) {
     printf("%s...\t", name);
@@ -53,6 +53,32 @@ uint64_t bench_fq_add(void) {
     uint64_t start = current_time_nanos();
     for (int i = 0; i != 1000; i++) {
         ce.add(ce, a);
+    }
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
+uint64_t bench_fq_subtract(void) {
+    Fq a;
+    a.random(random_bytes);
+    ce.random(random_bytes);
+
+    uint64_t start = current_time_nanos();
+    for (int i = 0; i != 1000; i++) {
+        ce.subtract(ce, a);
+    }
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
+uint64_t bench_fq_multiply2(void) {
+    Fq a;
+    a.random(random_bytes);
+    ce.random(random_bytes);
+
+    uint64_t start = current_time_nanos();
+    for (int i = 0; i != 1000; i++) {
+        ce.multiply2(a);
     }
     uint64_t end = current_time_nanos();
     return end - start;
@@ -346,6 +372,8 @@ extern "C" {
 
 void run_benchmarks(void) {
     benchmark_time("1000 * Fq Addition", bench_fq_add, default_duration);
+    benchmark_time("1000 * Fq Subtraction", bench_fq_subtract, default_duration);
+    benchmark_time("1000 * Fq Double", bench_fq_multiply2, default_duration);
     benchmark_time("1000 * Fq Montgomery", bench_fq_montgomery, default_duration);
     benchmark_time("1000 * Fq Multiply", bench_fq_mul, default_duration);
     benchmark_time("1000 * Fq Square", bench_fq_square, default_duration);
@@ -374,7 +402,7 @@ void run_benchmarks(void) {
     printf("\n");
     benchmark_time("Fq12 Multiply", bench_fq12_mult, default_duration);
     benchmark_time("Fq12 Exponentiate", bench_fq12_exp, default_duration);
-    benchmark_time("Fq12 Exponentiate Cyclotomic", bench_fq12_exp_cyclotomic, default_duration);
+    benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_cyclotomic, default_duration);
     benchmark_time("Fq12 Random GT", bench_fq12_random_gt, default_duration);
     benchmark_time("Pairing (Affine)", bench_fq12_exp, default_duration);
 }
