@@ -34,13 +34,27 @@ package bls12381
 
 import (
 	"crypto/rand"
+	"flag"
 	"math/big"
+	"os"
 	"testing"
 )
 
+var testStdIters = 1000
+var testFewIters = 100
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		testStdIters = 30
+		testFewIters = 10
+	}
+	os.Exit(m.Run())
+}
+
 func TestHashToZp(t *testing.T) {
 	hashes := []*big.Int{}
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		buffer := make([]byte, 128)
 		if _, err := rand.Read(buffer); err != nil {
 			t.Fatal(err)
@@ -72,7 +86,7 @@ func TestG1Zero(t *testing.T) {
 }
 
 func TestG1AffineConversion(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G1).Random()
 		b := new(G1Affine).FromProjective(a)
 		c := new(G1).FromAffine(b)
@@ -83,7 +97,7 @@ func TestG1AffineConversion(t *testing.T) {
 }
 
 func TestG1Double(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G1).Random()
 		b := new(G1).Double(a)
 		c := new(G1).Copy(a)
@@ -95,7 +109,7 @@ func TestG1Double(t *testing.T) {
 }
 
 func TestG1AffineDouble(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G1).Random()
 		b := new(G1).Double(a)
 		c := new(G1Affine).FromProjective(a)
@@ -107,7 +121,7 @@ func TestG1AffineDouble(t *testing.T) {
 }
 
 func TestG1Negate(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G1).Random()
 		b := new(G1).Negate(a)
 		a.Add(a, b)
@@ -118,7 +132,7 @@ func TestG1Negate(t *testing.T) {
 }
 
 func TestG1AffineNegate(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G1).Random()
 		b := new(G1Affine).FromProjective(a)
 		b.Negate(b)
@@ -133,7 +147,7 @@ func TestG1Multiply(t *testing.T) {
 	for i := 0; i != 100; i++ {
 		a := new(G1).Random()
 		curr := new(G1).Copy(G1Zero)
-		for j := 0; j != 1000; j++ {
+		for j := 0; j != testStdIters; j++ {
 			result := new(G1).Multiply(a, big.NewInt(int64(j)))
 			if !G1Equal(result, curr) {
 				t.Fatal("Multiplication does not match repeated addition")
@@ -148,7 +162,7 @@ func TestG1AffineMultiply(t *testing.T) {
 		a := new(G1).Random()
 		b := new(G1Affine).FromProjective(a)
 		curr := new(G1).Copy(G1Zero)
-		for j := 0; j != 1000; j++ {
+		for j := 0; j != testStdIters; j++ {
 			result := new(G1).MultiplyAffine(b, big.NewInt(int64(j)))
 			if !G1Equal(result, curr) {
 				t.Fatal("Multiplication does not match repeated addition")
@@ -160,7 +174,7 @@ func TestG1AffineMultiply(t *testing.T) {
 
 func TestG1AffineHash(t *testing.T) {
 	hashes := []*G1Affine{}
-	for i := 0; i != 100; i++ {
+	for i := 0; i != testFewIters; i++ {
 		buffer := make([]byte, 128)
 		if _, err := rand.Read(buffer); err != nil {
 			t.Fatal(err)
@@ -189,7 +203,7 @@ func TestG2Zero(t *testing.T) {
 }
 
 func TestG2AffineConversion(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G2).Random()
 		b := new(G2Affine).FromProjective(a)
 		c := new(G2).FromAffine(b)
@@ -200,7 +214,7 @@ func TestG2AffineConversion(t *testing.T) {
 }
 
 func TestG2Double(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G2).Random()
 		b := new(G2).Double(a)
 		c := new(G2).Copy(a)
@@ -212,7 +226,7 @@ func TestG2Double(t *testing.T) {
 }
 
 func TestG2AffineDouble(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G2).Random()
 		b := new(G2).Double(a)
 		c := new(G2Affine).FromProjective(a)
@@ -224,7 +238,7 @@ func TestG2AffineDouble(t *testing.T) {
 }
 
 func TestG2Negate(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G2).Random()
 		b := new(G2).Negate(a)
 		a.Add(a, b)
@@ -235,7 +249,7 @@ func TestG2Negate(t *testing.T) {
 }
 
 func TestG2AffineNegate(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a := new(G2).Random()
 		b := new(G2Affine).FromProjective(a)
 		b.Negate(b)
@@ -250,7 +264,7 @@ func TestG2Multiply(t *testing.T) {
 	for i := 0; i != 100; i++ {
 		a := new(G2).Random()
 		curr := new(G2).Copy(G2Zero)
-		for j := 0; j != 1000; j++ {
+		for j := 0; j != testStdIters; j++ {
 			result := new(G2).Multiply(a, big.NewInt(int64(j)))
 			if !G2Equal(result, curr) {
 				t.Fatal("Multiplication does not match repeated addition")
@@ -265,7 +279,7 @@ func TestG2AffineMultiply(t *testing.T) {
 		a := new(G2).Random()
 		b := new(G2Affine).FromProjective(a)
 		curr := new(G2).Copy(G2Zero)
-		for j := 0; j != 1000; j++ {
+		for j := 0; j != testStdIters; j++ {
 			result := new(G2).MultiplyAffine(b, big.NewInt(int64(j)))
 			if !G2Equal(result, curr) {
 				t.Fatal("Multiplication does not match repeated addition")
@@ -277,7 +291,7 @@ func TestG2AffineMultiply(t *testing.T) {
 
 func TestG2AffineHash(t *testing.T) {
 	hashes := []*G2Affine{}
-	for i := 0; i != 100; i++ {
+	for i := 0; i != testFewIters; i++ {
 		buffer := make([]byte, 128)
 		if _, err := rand.Read(buffer); err != nil {
 			t.Fatal(err)
@@ -297,7 +311,7 @@ func TestG2AffineHash(t *testing.T) {
 }
 
 func TestGTRandom(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		b, s := new(GT).Random(a)
 		c := new(GT).Multiply(a, s)
@@ -308,7 +322,7 @@ func TestGTRandom(t *testing.T) {
 }
 
 func TestGTDouble(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		b := new(GT).Double(a)
 		c := new(GT).Copy(a)
@@ -320,7 +334,7 @@ func TestGTDouble(t *testing.T) {
 }
 
 func TestGTNegate(t *testing.T) {
-	for i := 0; i != 1000; i++ {
+	for i := 0; i != testStdIters; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		b := new(GT).Negate(a)
 		a.Add(a, b)
@@ -334,7 +348,7 @@ func TestGTMultiply(t *testing.T) {
 	for i := 0; i != 100; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		curr := new(GT).Copy(GTZero)
-		for j := 0; j != 1000; j++ {
+		for j := 0; j != testStdIters; j++ {
 			result := new(GT).Multiply(a, big.NewInt(int64(j)))
 			if !GTEqual(result, curr) {
 				t.Fatal("Multiplication does not match repeated addition")
@@ -352,7 +366,7 @@ func TestGeneratorBilinearity(t *testing.T) {
 }
 
 func TestBilinearity(t *testing.T) {
-	for i := 0; i != 100; i++ {
+	for i := 0; i != testFewIters; i++ {
 		a := new(G1).Random()
 		b := new(G2).Random()
 
@@ -374,7 +388,7 @@ func TestBilinearity(t *testing.T) {
 }
 
 func TestPairingSum(t *testing.T) {
-	for i := 0; i != 100; i++ {
+	for i := 0; i != testFewIters; i++ {
 		a := new(G1Affine).FromProjective(new(G1).Random())
 		b := new(G2Affine).FromProjective(new(G2).Random())
 
@@ -395,6 +409,9 @@ func TestPairingSum(t *testing.T) {
 
 func BenchmarkG1Add(b *testing.B) {
 	b.StopTimer()
+	if testing.Short() {
+		b.SkipNow()
+	}
 	for i := 0; i < b.N; i++ {
 		a := new(G1).Random()
 		c := new(G1).Random()
@@ -407,6 +424,9 @@ func BenchmarkG1Add(b *testing.B) {
 
 func BenchmarkG1AddMixed(b *testing.B) {
 	b.StopTimer()
+	if testing.Short() {
+		b.SkipNow()
+	}
 	for i := 0; i < b.N; i++ {
 		a := new(G1).Random()
 		c := new(G1Affine).FromProjective(new(G1).Random())
@@ -431,6 +451,9 @@ func BenchmarkG1Multiply(b *testing.B) {
 
 func BenchmarkG2Add(b *testing.B) {
 	b.StopTimer()
+	if testing.Short() {
+		b.SkipNow()
+	}
 	for i := 0; i < b.N; i++ {
 		a := new(G2).Random()
 		c := new(G2).Random()
@@ -443,6 +466,9 @@ func BenchmarkG2Add(b *testing.B) {
 
 func BenchmarkG2AddMixed(b *testing.B) {
 	b.StopTimer()
+	if testing.Short() {
+		b.SkipNow()
+	}
 	for i := 0; i < b.N; i++ {
 		a := new(G2).Random()
 		c := new(G2Affine).FromProjective(new(G2).Random())
@@ -467,6 +493,9 @@ func BenchmarkG2Multiply(b *testing.B) {
 
 func BenchmarkGTAdd(b *testing.B) {
 	b.StopTimer()
+	if testing.Short() {
+		b.SkipNow()
+	}
 	for i := 0; i < b.N; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		c, _ := new(GT).Random(GTGenerator)
