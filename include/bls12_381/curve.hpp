@@ -154,6 +154,14 @@ namespace embedded_pairing::bls12_381 {
             }
         }
 
+        /* Size of hash is sizeof(BaseField). */
+        void from_hash(const uint8_t* hash) {
+            BaseField start;
+            start.read_big_endian(hash);
+            bool greater = start.hash_reduce();
+            this->try_and_increment(start, greater);
+        }
+
         static bool equal(const Affine<BaseField, ScalarField, curve_b>& a, const Affine<BaseField, ScalarField, curve_b>& b) {
             bool x_equal = BaseField::equal(a.x, b.x);
             bool y_equal = BaseField::equal(a.y, b.y);

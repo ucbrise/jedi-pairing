@@ -40,12 +40,8 @@
 
 namespace embedded_pairing::lqibe {
     void compute_id_from_hash(ID& id, const IDHash& hash) {
-        G1::BaseFieldType ecx;
-        memcpy(&ecx, hash.hash, sizeof(G1::BaseFieldType));
-        bool greater = ecx.hash_reduce();
-
         G1Affine qaffine;
-        qaffine.try_and_increment(ecx, greater);
+        qaffine.from_hash(hash.hash);
 
         G1 q;
         bls12_381::wnaf_multiply(q, qaffine, G1Affine::cofactor);
@@ -96,7 +92,7 @@ namespace embedded_pairing::lqibe {
 
             buffer.q.encode(id.q);
             buffer.rp.encode(ciphertext.rp);
-            memcpy(buffer.pairing, &result, sizeof(GT));
+            result.write_big_endian(buffer.pairing);
         }
 
         hash_fill(symmetric, symmetric_length, &buffer, sizeof(buffer));
@@ -111,7 +107,7 @@ namespace embedded_pairing::lqibe {
 
             buffer.q.encode(id.q);
             buffer.rp.encode(ciphertext.rp);
-            memcpy(buffer.pairing, &result, sizeof(GT));
+            result.write_big_endian(buffer.pairing);
         }
 
         hash_fill(symmetric, symmetric_length, &buffer, sizeof(buffer));

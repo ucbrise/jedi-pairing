@@ -37,54 +37,19 @@ package cryptutils
 #cgo LDFLAGS: ${SRCDIR}/pairing.a
 #include <string.h>
 #include "wkdibe/wkdibe.h"
-#include "go_utils.h"
 */
 import "C"
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"math"
 	"math/big"
 	"unsafe"
 
 	"golang.org/x/crypto/sha3"
+
+	"github.com/samkumar/embedded-pairing/lang/go/bls12381"
+	"github.com/samkumar/embedded-pairing/lang/go/internal"
 )
-
-// GroupOrder is the order of the bilinear group on which this implementation
-// is based. Signables and elements of attribute lists must have a value
-// strictly less than this and strictly greater than 0.
-var GroupOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
-
-//export randomBytes
-func randomBytes(buffer unsafe.Pointer, length int) {
-	slice := PointerToByteSlice(buffer, length)
-	if _, err := rand.Read(slice); err != nil {
-		panic(err)
-	}
-}
-
-//export hashFill
-func hashFill(buffer unsafe.Pointer, bufferLength int, toHash unsafe.Pointer, toHashLength int) {
-	bufferSlice := PointerToByteSlice(buffer, bufferLength)
-	toHashSlice := PointerToByteSlice(toHash, toHashLength)
-
-	shake := sha3.NewShake256()
-	shake.Write(toHashSlice)
-	shake.Read(bufferSlice)
-}
-
-// RandomBytesFunction is a C function pointer that takes an array pointer as
-// input and fills the array with random bytes.
-var RandomBytesFunction = (*[0]byte)(C.go_random_bytes)
-
-// HashFillFunction is a C function pointer that takes two array pointers and
-// fills the first with the hash of the second.
-var HashFillFunction = (*[0]byte)(C.go_hash_fill)
-
-// PointerToByteSlice builds a byte slice around a pointer to data.
-func PointerToByteSlice(pointer unsafe.Pointer, capacity int) []byte {
-	return (*[math.MaxInt32]byte)(pointer)[:capacity:capacity]
-}
 
 // Encryptable represents a message that can be encrypted with WKD-IBE. The
 // intended usage is to choose a random message, encrypt that message, and
@@ -96,7 +61,7 @@ type Encryptable struct {
 // Random sets the message to a random valid message and returns a pointer to
 // the message on which it was invoked.
 func (m *Encryptable) Random() *Encryptable {
-	C.embedded_pairing_wkdibe_random_gt(&m.Data, RandomBytesFunction)
+	C.embedded_pairing_wkdibe_random_gt(&m.Data, internal.RandomBytesFunction)
 	return m
 }
 
@@ -173,11 +138,16 @@ func (m *Signable) Set(data []byte) *Signable {
 	return m
 }
 
+// RandomZp returns a random element in Zp.
+func RandomZp() *big.Int {
+	return new(big.Int).Rand(rand.Reader, bls12381.GroupOrder)
+}
+
 // HashToZp hashes a byte slice to an integer in Zp*.
 func HashToZp(bytestring []byte) *big.Int {
 	digest := sha256.Sum256(bytestring)
 	bigint := new(big.Int).SetBytes(digest[:])
-	bigint.Mod(bigint, new(big.Int).Add(GroupOrder, big.NewInt(-1)))
+	bigint.Mod(bigint, new(big.Int).Add(bls12381.GroupOrder, big.NewInt(-1)))
 	bigint.Add(bigint, big.NewInt(1))
 	return bigint
 }

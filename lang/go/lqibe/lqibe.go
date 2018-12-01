@@ -42,7 +42,7 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
+	"github.com/samkumar/embedded-pairing/lang/go/internal"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -74,7 +74,7 @@ type Ciphertext struct {
 // Hash hashes a byte slice to an ID.
 func (id *ID) Hash(data []byte) *ID {
 	idhash := new(C.embedded_pairing_lqibe_idhash_t)
-	hashSlice := cryptutils.PointerToByteSlice(unsafe.Pointer(&idhash.hash[0]), C.sizeof_embedded_pairing_lqibe_idhash_t)
+	hashSlice := internal.PointerToByteSlice(unsafe.Pointer(&idhash.hash[0]), C.sizeof_embedded_pairing_lqibe_idhash_t)
 
 	shake := sha3.NewShake256()
 	shake.Write(data)
@@ -89,7 +89,7 @@ func (id *ID) Hash(data []byte) *ID {
 func Setup() (*Params, *MasterKey) {
 	pp := new(Params)
 	msk := new(MasterKey)
-	C.embedded_pairing_lqibe_setup(&pp.Data, &msk.Data, cryptutils.RandomBytesFunction)
+	C.embedded_pairing_lqibe_setup(&pp.Data, &msk.Data, internal.RandomBytesFunction)
 	return pp, msk
 }
 
@@ -106,13 +106,13 @@ func KeyGen(params *Params, msk *MasterKey, id *ID) *SecretKey {
 // can be of any length, but the underlying entropy is only 256 bits.
 func Encrypt(symmetric []byte, params *Params, id *ID) *Ciphertext {
 	c := new(Ciphertext)
-	C.embedded_pairing_lqibe_encrypt(&c.Data, unsafe.Pointer(&symmetric[0]), C.size_t(len(symmetric)), &params.Data, &id.Data, cryptutils.HashFillFunction, cryptutils.RandomBytesFunction)
+	C.embedded_pairing_lqibe_encrypt(&c.Data, unsafe.Pointer(&symmetric[0]), C.size_t(len(symmetric)), &params.Data, &id.Data, internal.HashFillFunction, internal.RandomBytesFunction)
 	return c
 }
 
 // Decrypt fills the specified buffer with the symmetric key encoded in the
 // provided ciphertext. It returns the same buffer passed in as an argument.
 func Decrypt(ciphertext *Ciphertext, sk *SecretKey, id *ID, symmetric []byte) []byte {
-	C.embedded_pairing_lqibe_decrypt(unsafe.Pointer(&symmetric[0]), C.size_t(len(symmetric)), &ciphertext.Data, &sk.Data, &id.Data, cryptutils.HashFillFunction)
+	C.embedded_pairing_lqibe_decrypt(unsafe.Pointer(&symmetric[0]), C.size_t(len(symmetric)), &ciphertext.Data, &sk.Data, &id.Data, internal.HashFillFunction)
 	return symmetric
 }

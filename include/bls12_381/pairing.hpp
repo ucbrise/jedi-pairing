@@ -34,7 +34,10 @@
 #define EMBEDDED_PAIRING_BLS12_381_PAIRING_HPP_
 
 #include "core/bigint.hpp"
+#include "bls12_381/fq.hpp"
 #include "bls12_381/fq2.hpp"
+#include "bls12_381/fq6.hpp"
+#include "bls12_381/fq12.hpp"
 #include "bls12_381/curve.hpp"
 
 using embedded_pairing::core::BigInt;
