@@ -52,6 +52,14 @@ extern "C" {
 
     const embedded_pairing_bls12_381_fq12_t* embedded_pairing_bls12_381_gt_zero = (const embedded_pairing_bls12_381_fq12_t*) &Fq12::one;
     const embedded_pairing_bls12_381_fq12_t* embedded_pairing_bls12_381_gt_generator = (const embedded_pairing_bls12_381_fq12_t*) &generator_pairing;
+
+    const size_t embedded_pairing_bls12_381_g1_marshalled_compressed_size = Encoding<G1Affine, true>::size;
+    const size_t embedded_pairing_bls12_381_g1_marshalled_uncompressed_size = Encoding<G1Affine, false>::size;
+
+    const size_t embedded_pairing_bls12_381_g2_marshalled_compressed_size = Encoding<G2Affine, true>::size;
+    const size_t embedded_pairing_bls12_381_g2_marshalled_uncompressed_size = Encoding<G2Affine, false>::size;
+
+    const size_t embedded_pairing_bls12_381_gt_marshalled_size = sizeof(Fq12);
 }
 
 void embedded_pairing_bls12_381_zp_random(embedded_pairing_core_bigint_256_t* result, void (*get_random_bytes)(void*, size_t)) {
@@ -199,4 +207,52 @@ void embedded_pairing_bls12_381_pairing(embedded_pairing_bls12_381_fq12_t* resul
 
 void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_pair_t* pairs, size_t num_pairs) {
     pairing_product(*reinterpret_cast<Fq12*>(result), reinterpret_cast<AffinePair*>(pairs), num_pairs);
+}
+
+void embedded_pairing_bls12_381_g1_marshal(void* buffer, const embedded_pairing_bls12_381_g1affine_t* a, bool compressed) {
+    if (compressed) {
+        Encoding<G1Affine, true>* encoding = static_cast<Encoding<G1Affine, true>*>(buffer);
+        encoding->encode(*reinterpret_cast<const G1Affine*>(a));
+    } else {
+        Encoding<G1Affine, false>* encoding = static_cast<Encoding<G1Affine, false>*>(buffer);
+        encoding->encode(*reinterpret_cast<const G1Affine*>(a));
+    }
+}
+
+bool embedded_pairing_bls12_381_g1_unmarshal(embedded_pairing_bls12_381_g1affine_t* a, const void* buffer, bool compressed, bool checked) {
+    if (compressed) {
+        const Encoding<G1Affine, true>* encoding = static_cast<const Encoding<G1Affine, true>*>(buffer);
+        return encoding->decode(*reinterpret_cast<G1Affine*>(a), checked);
+    } else {
+        const Encoding<G1Affine, false>* encoding = static_cast<const Encoding<G1Affine, false>*>(buffer);
+        return encoding->decode(*reinterpret_cast<G1Affine*>(a), checked);
+    }
+}
+
+void embedded_pairing_bls12_381_g2_marshal(void* buffer, const embedded_pairing_bls12_381_g2affine_t* a, bool compressed) {
+    if (compressed) {
+        Encoding<G2Affine, true>* encoding = static_cast<Encoding<G2Affine, true>*>(buffer);
+        encoding->encode(*reinterpret_cast<const G2Affine*>(a));
+    } else {
+        Encoding<G2Affine, false>* encoding = static_cast<Encoding<G2Affine, false>*>(buffer);
+        encoding->encode(*reinterpret_cast<const G2Affine*>(a));
+    }
+}
+
+bool embedded_pairing_bls12_381_g2_unmarshal(embedded_pairing_bls12_381_g2affine_t* a, const void* buffer, bool compressed, bool checked) {
+    if (compressed) {
+        const Encoding<G2Affine, true>* encoding = static_cast<const Encoding<G2Affine, true>*>(buffer);
+        return encoding->decode(*reinterpret_cast<G2Affine*>(a), checked);
+    } else {
+        const Encoding<G2Affine, false>* encoding = static_cast<const Encoding<G2Affine, false>*>(buffer);
+        return encoding->decode(*reinterpret_cast<G2Affine*>(a), checked);
+    }
+}
+
+void embedded_pairing_bls12_381_gt_marshal(void* buffer, const embedded_pairing_bls12_381_fq12_t* a) {
+    reinterpret_cast<const Fq12*>(a)->write_big_endian(static_cast<uint8_t*>(buffer));
+}
+
+void embedded_pairing_bls12_381_gt_unmarshal(embedded_pairing_bls12_381_fq12_t* a, const void* buffer) {
+    reinterpret_cast<Fq12*>(a)->read_big_endian(static_cast<const uint8_t*>(buffer));
 }

@@ -120,7 +120,6 @@ void embedded_pairing_bls12_381_g1affine_negate(embedded_pairing_bls12_381_g1aff
 void embedded_pairing_bls12_381_g1affine_from_hash(embedded_pairing_bls12_381_g1affine_t* result, const void* hash);
 bool embedded_pairing_bls12_381_g1affine_equal(const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_bls12_381_g1affine_t* b);
 
-
 void embedded_pairing_bls12_381_g2_add(embedded_pairing_bls12_381_g2_t* result, const embedded_pairing_bls12_381_g2_t* a, const embedded_pairing_bls12_381_g2_t* b);
 void embedded_pairing_bls12_381_g2_add_mixed(embedded_pairing_bls12_381_g2_t* result, const embedded_pairing_bls12_381_g2_t* a, const embedded_pairing_bls12_381_g2affine_t* b);
 void embedded_pairing_bls12_381_g2_negate(embedded_pairing_bls12_381_g2_t* result, const embedded_pairing_bls12_381_g2_t* a);
@@ -145,6 +144,21 @@ bool embedded_pairing_bls12_381_gt_equal(const embedded_pairing_bls12_381_fq12_t
 
 void embedded_pairing_bls12_381_pairing(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_bls12_381_g2affine_t* b);
 void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_pair_t* pairs, size_t num_pairs);
+
+extern const size_t embedded_pairing_bls12_381_g1_marshalled_compressed_size;
+extern const size_t embedded_pairing_bls12_381_g1_marshalled_uncompressed_size;
+extern const size_t embedded_pairing_bls12_381_g2_marshalled_compressed_size;
+extern const size_t embedded_pairing_bls12_381_g2_marshalled_uncompressed_size;
+extern const size_t embedded_pairing_bls12_381_gt_marshalled_size;
+
+void embedded_pairing_bls12_381_g1_marshal(void* buffer, const embedded_pairing_bls12_381_g1affine_t* a, bool compressed);
+bool embedded_pairing_bls12_381_g1_unmarshal(embedded_pairing_bls12_381_g1affine_t* a, const void* buffer, bool compressed, bool checked);
+
+void embedded_pairing_bls12_381_g2_marshal(void* buffer, const embedded_pairing_bls12_381_g2affine_t* a, bool compressed);
+bool embedded_pairing_bls12_381_g2_unmarshal(embedded_pairing_bls12_381_g2affine_t* a, const void* buffer, bool compressed, bool checked);
+
+void embedded_pairing_bls12_381_gt_marshal(void* buffer, const embedded_pairing_bls12_381_fq12_t* a);
+void embedded_pairing_bls12_381_gt_unmarshal(embedded_pairing_bls12_381_fq12_t* a, const void* buffer);
 
 #ifdef __cplusplus
 }
