@@ -36,6 +36,7 @@
 
 #include "bls12_381/curve.hpp"
 #include "bls12_381/pairing.hpp"
+#include "bls12_381/wnaf.hpp"
 
 using namespace embedded_pairing::bls12_381;
 using embedded_pairing::core::BigInt;
@@ -80,11 +81,11 @@ void embedded_pairing_bls12_381_g1_double(embedded_pairing_bls12_381_g1_t* resul
 }
 
 void embedded_pairing_bls12_381_g1_multiply(embedded_pairing_bls12_381_g1_t* result, const embedded_pairing_bls12_381_g1_t* a, const embedded_pairing_core_bigint_256_t* scalar) {
-    reinterpret_cast<G1*>(result)->multiply(*reinterpret_cast<const G1*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
+    wnaf_multiply(*reinterpret_cast<G1*>(result), *reinterpret_cast<const G1*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
 }
 
 void embedded_pairing_bls12_381_g1_multiply_affine(embedded_pairing_bls12_381_g1_t* result, const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_core_bigint_256_t* scalar) {
-    reinterpret_cast<G1*>(result)->multiply(*reinterpret_cast<const G1Affine*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
+    wnaf_multiply(*reinterpret_cast<G1*>(result), *reinterpret_cast<const G1Affine*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
 }
 
 void embedded_pairing_bls12_381_g1_random(embedded_pairing_bls12_381_g1_t* result, void (*get_random_bytes)(void*, size_t)) {
@@ -132,11 +133,11 @@ void embedded_pairing_bls12_381_g2_double(embedded_pairing_bls12_381_g2_t* resul
 }
 
 void embedded_pairing_bls12_381_g2_multiply(embedded_pairing_bls12_381_g2_t* result, const embedded_pairing_bls12_381_g2_t* a, const embedded_pairing_core_bigint_256_t* scalar) {
-    reinterpret_cast<G2*>(result)->multiply(*reinterpret_cast<const G2*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
+    wnaf_multiply(*reinterpret_cast<G2*>(result), *reinterpret_cast<const G2*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
 }
 
 void embedded_pairing_bls12_381_g2_multiply_affine(embedded_pairing_bls12_381_g2_t* result, const embedded_pairing_bls12_381_g2affine_t* a, const embedded_pairing_core_bigint_256_t* scalar) {
-    reinterpret_cast<G2*>(result)->multiply(*reinterpret_cast<const G2Affine*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
+    wnaf_multiply(*reinterpret_cast<G2*>(result), *reinterpret_cast<const G2Affine*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
 }
 
 void embedded_pairing_bls12_381_g2_random(embedded_pairing_bls12_381_g2_t* result, void (*get_random_bytes)(void*, size_t)) {

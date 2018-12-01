@@ -392,3 +392,140 @@ func TestPairingSum(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkG1Add(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1).Random()
+		c := new(G1).Random()
+		d := new(G1)
+		b.StartTimer()
+		d.Add(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG1AddMixed(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1).Random()
+		c := new(G1Affine).FromProjective(new(G1).Random())
+		d := new(G1)
+		b.StartTimer()
+		d.AddMixed(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG1Multiply(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1).Random()
+		c := new(G1)
+		s := RandomZp(new(big.Int))
+		b.StartTimer()
+		c.Multiply(a, s)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG2Add(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G2).Random()
+		c := new(G2).Random()
+		d := new(G2)
+		b.StartTimer()
+		d.Add(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG2AddMixed(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G2).Random()
+		c := new(G2Affine).FromProjective(new(G2).Random())
+		d := new(G2)
+		b.StartTimer()
+		d.AddMixed(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG2Multiply(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G2).Random()
+		c := new(G2)
+		s := RandomZp(new(big.Int))
+		b.StartTimer()
+		c.Multiply(a, s)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkGTAdd(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a, _ := new(GT).Random(GTGenerator)
+		c, _ := new(GT).Random(GTGenerator)
+		d := new(GT)
+		b.StartTimer()
+		d.Add(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkGTMultiply(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a, _ := new(GT).Random(GTGenerator)
+		c := new(GT)
+		s := RandomZp(new(big.Int))
+		b.StartTimer()
+		c.Multiply(a, s)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkGTRandom(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a, _ := new(GT).Random(GTGenerator)
+		c := new(GT)
+		b.StartTimer()
+		_, _ = c.Random(a)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkPairing(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1Affine).FromProjective(new(G1).Random())
+		c := new(G2Affine).FromProjective(new(G2).Random())
+		eac := new(GT)
+		b.StartTimer()
+		eac.Pairing(a, c)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkPairingSum4(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1Affine).FromProjective(new(G1).Random())
+		c := new(G2Affine).FromProjective(new(G2).Random())
+		d := new(G1Affine).FromProjective(new(G1).Random())
+		f := new(G2Affine).FromProjective(new(G2).Random())
+		g := new(G1Affine).FromProjective(new(G1).Random())
+		h := new(G2Affine).FromProjective(new(G2).Random())
+		k := new(G1Affine).FromProjective(new(G1).Random())
+		m := new(G2Affine).FromProjective(new(G2).Random())
+		eac := new(GT)
+		b.StartTimer()
+		eac.PairingSum([]*G1Affine{a, d, g, k}, []*G2Affine{c, f, h, m})
+		b.StopTimer()
+	}
+}
