@@ -83,13 +83,15 @@ func PointerToByteSlice(pointer unsafe.Pointer, capacity int) []byte {
 // BigIntToC converts from a Golang big.Int to a BigInt of the appropriate
 // length.
 func BigIntToC(result unsafe.Pointer, resultSize int, scalar *big.Int) {
-	if scalar.Sign() != 1 {
-		panic("Invalid scalar: nonpositive")
+	if scalar.Sign() == 0 {
+		C.memset(result, 0x00, C.size_t(resultSize))
+	} else if scalar.Sign() != 1 {
+		panic("Invalid BigInt: negative")
 	}
 	resultSlice := PointerToByteSlice(result, resultSize)
 	scalarBytes := scalar.Bytes()
 	if len(scalarBytes) > len(resultSlice) {
-		panic("Invalid scalar: too large")
+		panic("Invalid BigInt: too large")
 	}
 	j := 0
 	for j != len(scalarBytes) {

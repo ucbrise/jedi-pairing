@@ -104,11 +104,30 @@ type GT struct {
 	data C.embedded_pairing_bls12_381_fq12_t
 }
 
-// G1AffineGenerator is the generator of group G1.
+// G1Zero is the zero (identity) element of group G1, in projective
+// representation.
+var G1Zero = (*G1)(unsafe.Pointer(C.embedded_pairing_bls12_381_g1_zero))
+
+// G1ZeroAffine is the zero (identity) element of group G1, in affine
+// representation.
+var G1ZeroAffine = (*G1Affine)(unsafe.Pointer(C.embedded_pairing_bls12_381_g1affine_zero))
+
+// G1GeneratorAffine is a generator of group G1, in affine representation.
 var G1GeneratorAffine = (*G1Affine)(unsafe.Pointer(C.embedded_pairing_bls12_381_g1affine_generator))
 
-// G2AffineGenerator is the generator of group G2.
+// G2Zero is the zero (identity) element of group G2, in projective
+// representation.
+var G2Zero = (*G2)(unsafe.Pointer(C.embedded_pairing_bls12_381_g2_zero))
+
+// G2ZeroAffine is the zero (identity) element of group G2, in affine
+// representation.
+var G2ZeroAffine = (*G2Affine)(unsafe.Pointer(C.embedded_pairing_bls12_381_g2affine_zero))
+
+// G2GeneratorAffine is a generator of group G2, in affine representation.
 var G2GeneratorAffine = (*G2Affine)(unsafe.Pointer(C.embedded_pairing_bls12_381_g2affine_generator))
+
+// GTZero is the zero (identity) element of group GT.
+var GTZero = (*GT)(unsafe.Pointer(C.embedded_pairing_bls12_381_gt_zero))
 
 // GTGenerator is the generator of group GT.
 var GTGenerator = (*GT)(unsafe.Pointer(C.embedded_pairing_bls12_381_gt_generator))
@@ -165,6 +184,11 @@ func (result *G1) Copy(a *G1) *G1 {
 	return result
 }
 
+// G1Equal tests whether two elements of G1 are equal.
+func G1Equal(a *G1, b *G1) bool {
+	return bool(C.embedded_pairing_bls12_381_g1_equal(&a.data, &b.data))
+}
+
 // FromAffine computes result := a.
 func (result *G1) FromAffine(a *G1Affine) *G1 {
 	C.embedded_pairing_bls12_381_g1_from_affine(&result.data, &a.data)
@@ -200,6 +224,11 @@ func (result *G1Affine) Hash(buffer []byte) *G1Affine {
 func (result *G1Affine) Copy(a *G1Affine) *G1Affine {
 	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g1affine_t)
 	return result
+}
+
+// G1AffineEqual tests whether two elements of G1 are equal.
+func G1AffineEqual(a *G1Affine, b *G1Affine) bool {
+	return bool(C.embedded_pairing_bls12_381_g1affine_equal(&a.data, &b.data))
 }
 
 // Add computes result := a + b.
@@ -254,6 +283,11 @@ func (result *G2) Copy(a *G2) *G2 {
 	return result
 }
 
+// G2Equal tests whether two elements of G2 are equal.
+func G2Equal(a *G2, b *G2) bool {
+	return bool(C.embedded_pairing_bls12_381_g2_equal(&a.data, &b.data))
+}
+
 // FromAffine computes result := a.
 func (result *G2) FromAffine(a *G2Affine) *G2 {
 	C.embedded_pairing_bls12_381_g2_from_affine(&result.data, &a.data)
@@ -289,6 +323,11 @@ func (result *G2Affine) Hash(buffer []byte) *G2Affine {
 func (result *G2Affine) Copy(a *G2Affine) *G2Affine {
 	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g2affine_t)
 	return result
+}
+
+// G2AffineEqual tests whether two elements of G2 are equal.
+func G2AffineEqual(a *G2Affine, b *G2Affine) bool {
+	return bool(C.embedded_pairing_bls12_381_g2affine_equal(&a.data, &b.data))
 }
 
 // Add computes result := a + b.
@@ -333,6 +372,11 @@ func (result *GT) Random(a *GT) (*GT, *big.Int) {
 func (result *GT) Copy(a *GT) *GT {
 	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_fq12_t)
 	return result
+}
+
+// GTEqual test whether two elements of GT are equal.
+func GTEqual(a *GT, b *GT) bool {
+	return bool(C.embedded_pairing_bls12_381_gt_equal(&a.data, &b.data))
 }
 
 // Pairing computes result := e(a, b).
