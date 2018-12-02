@@ -1,6 +1,6 @@
 /bin
 /pairing.a
 
-/app/pairing.a
-/app/test
-/app/bin
+/tests/pairing.a
+/tests/test
+/tests/bin
