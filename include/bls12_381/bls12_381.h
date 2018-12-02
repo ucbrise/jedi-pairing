@@ -106,6 +106,8 @@ typedef struct {
     size_t _coeff_idx;
 } embedded_pairing_bls12_381_prepared_pair_t;
 
+extern const embedded_pairing_core_bigint_256_t* embedded_pairing_bls12_381_group_order;
+
 extern const embedded_pairing_bls12_381_g1_t* embedded_pairing_bls12_381_g1_zero;
 extern const embedded_pairing_bls12_381_g1affine_t* embedded_pairing_bls12_381_g1affine_zero;
 extern const embedded_pairing_bls12_381_g1affine_t* embedded_pairing_bls12_381_g1affine_generator;

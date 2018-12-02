@@ -62,7 +62,7 @@ func (g *G1Affine) Marshal(into []byte, compressed bool) []byte {
 	if len(into) < size {
 		return nil
 	}
-	C.embedded_pairing_bls12_381_g1_marshal(unsafe.Pointer(&into[0]), &g.data, C._Bool(compressed))
+	C.embedded_pairing_bls12_381_g1_marshal(unsafe.Pointer(&into[0]), &g.Data, C._Bool(compressed))
 	return into
 }
 
@@ -78,7 +78,7 @@ func (g *G1Affine) Unmarshal(marshalled []byte, compressed bool, checked bool) *
 	} else {
 		size = G1MarshalledUncompressedSize
 	}
-	if len(marshalled) < size || !C.embedded_pairing_bls12_381_g1_unmarshal(&g.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)) {
+	if len(marshalled) < size || !C.embedded_pairing_bls12_381_g1_unmarshal(&g.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)) {
 		return nil
 	}
 	return g
@@ -97,7 +97,7 @@ func (g *G2Affine) Marshal(into []byte, compressed bool) []byte {
 	if len(into) < size {
 		return nil
 	}
-	C.embedded_pairing_bls12_381_g2_marshal(unsafe.Pointer(&into[0]), &g.data, C._Bool(compressed))
+	C.embedded_pairing_bls12_381_g2_marshal(unsafe.Pointer(&into[0]), &g.Data, C._Bool(compressed))
 	return into
 }
 
@@ -113,7 +113,7 @@ func (g *G2Affine) Unmarshal(marshalled []byte, compressed bool, checked bool) *
 	} else {
 		size = G2MarshalledUncompressedSize
 	}
-	if len(marshalled) < size || !C.embedded_pairing_bls12_381_g2_unmarshal(&g.data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)) {
+	if len(marshalled) < size || !C.embedded_pairing_bls12_381_g2_unmarshal(&g.Data, unsafe.Pointer(&marshalled[0]), C._Bool(compressed), C._Bool(checked)) {
 		return nil
 	}
 	return g
@@ -125,7 +125,7 @@ func (g *GT) Marshal(into []byte) []byte {
 	if len(into) < GTMarshalledSize {
 		return nil
 	}
-	C.embedded_pairing_bls12_381_gt_marshal(unsafe.Pointer(&into[0]), &g.data)
+	C.embedded_pairing_bls12_381_gt_marshal(unsafe.Pointer(&into[0]), &g.Data)
 	return into
 }
 
@@ -134,6 +134,6 @@ func (g *GT) Unmarshal(marshalled []byte) *GT {
 	if len(marshalled) < GTMarshalledSize {
 		return nil
 	}
-	C.embedded_pairing_bls12_381_gt_unmarshal(&g.data, unsafe.Pointer(&marshalled[0]))
+	C.embedded_pairing_bls12_381_gt_unmarshal(&g.Data, unsafe.Pointer(&marshalled[0]))
 	return g
 }

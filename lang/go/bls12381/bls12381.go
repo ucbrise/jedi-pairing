@@ -49,66 +49,42 @@ import (
 )
 
 // GroupOrder is a 255-bit prime number that is the order of G1, G2, and GT.
-var GroupOrder, _ = new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
-
-// RandomZp samples a random element of Zp and stores it in the provided
-// big.Int. The provided big.Int is then returned.
-func RandomZp(result *big.Int) *big.Int {
-	var x C.embedded_pairing_core_bigint_256_t
-	C.embedded_pairing_bls12_381_zp_random(&x, internal.RandomBytesFunction)
-	internal.BigIntFromC(result, unsafe.Pointer(&x), C.sizeof_embedded_pairing_core_bigint_256_t)
-	return result
-}
-
-// HashToZp samples a random element of Zp and stores it in the provided
-// big.Int. The provided big.Int is then returned.
-func HashToZp(result *big.Int, buffer []byte) *big.Int {
-	var x C.embedded_pairing_core_bigint_256_t
-	var hash [C.sizeof_embedded_pairing_core_bigint_256_t]byte
-
-	shake := sha3.NewShake256()
-	shake.Write(buffer)
-	shake.Read(hash[:])
-
-	C.embedded_pairing_bls12_381_zp_from_hash(&x, unsafe.Pointer(&hash[0]))
-	internal.BigIntFromC(result, unsafe.Pointer(&x), C.sizeof_embedded_pairing_core_bigint_256_t)
-	return result
-}
+var GroupOrder = internal.BigIntFromC(new(big.Int), unsafe.Pointer(C.embedded_pairing_bls12_381_group_order), 32)
 
 // G1 is an element of G1, the smaller and faster source group of the BLS12-381
 // pairing, in projective representation.
 type G1 struct {
-	data C.embedded_pairing_bls12_381_g1_t
+	Data C.embedded_pairing_bls12_381_g1_t
 }
 
 // G1Affine is an element of G1, the smaller and faster source group of the
 // BLS12-381 pairing, in affine representation.
 type G1Affine struct {
-	data C.embedded_pairing_bls12_381_g1affine_t
+	Data C.embedded_pairing_bls12_381_g1affine_t
 }
 
 // G2 is an element of G2, the larger and slower source group of the BLS12-381
 // pairing, in projective representation.
 type G2 struct {
-	data C.embedded_pairing_bls12_381_g2_t
+	Data C.embedded_pairing_bls12_381_g2_t
 }
 
 // G2Affine is an element of G2, the larger and slower source group of the
 // BLS12-381 pairing, in affine representation.
 type G2Affine struct {
-	data C.embedded_pairing_bls12_381_g2affine_t
+	Data C.embedded_pairing_bls12_381_g2affine_t
 }
 
 // G2Prepared represents a precomputed value derived from an element of G2 that
 // accelerates pairing computations involving that element. Note that this is
 // large (~20 KB) compared to other structures in this library.
 type G2Prepared struct {
-	data C.embedded_pairing_bls12_381_g2prepared_t
+	Data C.embedded_pairing_bls12_381_g2prepared_t
 }
 
 // GT represents an element of GT, the target group of the BLS12-381 pairing.
 type GT struct {
-	data C.embedded_pairing_bls12_381_fq12_t
+	Data C.embedded_pairing_bls12_381_fq12_t
 }
 
 // G1Zero is the zero (identity) element of group G1, in projective
@@ -141,25 +117,25 @@ var GTGenerator = (*GT)(unsafe.Pointer(C.embedded_pairing_bls12_381_gt_generator
 
 // Add computes result := a + b.
 func (result *G1) Add(a *G1, b *G1) *G1 {
-	C.embedded_pairing_bls12_381_g1_add(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_g1_add(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // AddMixed computes result := a + b.
 func (result *G1) AddMixed(a *G1, b *G1Affine) *G1 {
-	C.embedded_pairing_bls12_381_g1_add_mixed(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_g1_add_mixed(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // Negate computes result := -a.
 func (result *G1) Negate(a *G1) *G1 {
-	C.embedded_pairing_bls12_381_g1_negate(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g1_negate(&result.Data, &a.Data)
 	return result
 }
 
 // Double computes result := 2 * a.
 func (result *G1) Double(a *G1) *G1 {
-	C.embedded_pairing_bls12_381_g1_double(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g1_double(&result.Data, &a.Data)
 	return result
 }
 
@@ -167,7 +143,7 @@ func (result *G1) Double(a *G1) *G1 {
 func (result *G1) Multiply(a *G1, scalar *big.Int) *G1 {
 	var s C.embedded_pairing_core_bigint_256_t
 	internal.BigIntToC(unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t, scalar)
-	C.embedded_pairing_bls12_381_g1_multiply(&result.data, &a.data, &s)
+	C.embedded_pairing_bls12_381_g1_multiply(&result.Data, &a.Data, &s)
 	return result
 }
 
@@ -175,42 +151,42 @@ func (result *G1) Multiply(a *G1, scalar *big.Int) *G1 {
 func (result *G1) MultiplyAffine(a *G1Affine, scalar *big.Int) *G1 {
 	var s C.embedded_pairing_core_bigint_256_t
 	internal.BigIntToC(unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t, scalar)
-	C.embedded_pairing_bls12_381_g1_multiply_affine(&result.data, &a.data, &s)
+	C.embedded_pairing_bls12_381_g1_multiply_affine(&result.Data, &a.Data, &s)
 	return result
 }
 
 // Random samples an element of G1 uniformly at random and stores it in result.
 func (result *G1) Random() *G1 {
-	C.embedded_pairing_bls12_381_g1_random(&result.data, internal.RandomBytesFunction)
+	C.embedded_pairing_bls12_381_g1_random(&result.Data, internal.RandomBytesFunction)
 	return result
 }
 
 // Copy computes result := a.
 func (result *G1) Copy(a *G1) *G1 {
-	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g1_t)
+	C.memcpy(unsafe.Pointer(&result.Data), unsafe.Pointer(&a.Data), C.sizeof_embedded_pairing_bls12_381_g1_t)
 	return result
 }
 
 // G1Equal tests whether two elements of G1 are equal.
 func G1Equal(a *G1, b *G1) bool {
-	return bool(C.embedded_pairing_bls12_381_g1_equal(&a.data, &b.data))
+	return bool(C.embedded_pairing_bls12_381_g1_equal(&a.Data, &b.Data))
 }
 
 // FromAffine computes result := a.
 func (result *G1) FromAffine(a *G1Affine) *G1 {
-	C.embedded_pairing_bls12_381_g1_from_affine(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g1_from_affine(&result.Data, &a.Data)
 	return result
 }
 
 // FromProjective computes result := a.
 func (result *G1Affine) FromProjective(a *G1) *G1Affine {
-	C.embedded_pairing_bls12_381_g1affine_from_projective(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g1affine_from_projective(&result.Data, &a.Data)
 	return result
 }
 
 // Negate computes result := -a.
 func (result *G1Affine) Negate(a *G1Affine) *G1Affine {
-	C.embedded_pairing_bls12_381_g1affine_negate(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g1affine_negate(&result.Data, &a.Data)
 	return result
 }
 
@@ -223,42 +199,42 @@ func (result *G1Affine) Hash(buffer []byte) *G1Affine {
 	shake.Write(buffer)
 	shake.Read(hash[:])
 
-	C.embedded_pairing_bls12_381_g1affine_from_hash(&result.data, unsafe.Pointer(&hash[0]))
+	C.embedded_pairing_bls12_381_g1affine_from_hash(&result.Data, unsafe.Pointer(&hash[0]))
 	return result
 }
 
 // Copy computes result := a.
 func (result *G1Affine) Copy(a *G1Affine) *G1Affine {
-	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g1affine_t)
+	C.memcpy(unsafe.Pointer(&result.Data), unsafe.Pointer(&a.Data), C.sizeof_embedded_pairing_bls12_381_g1affine_t)
 	return result
 }
 
 // G1AffineEqual tests whether two elements of G1 are equal.
 func G1AffineEqual(a *G1Affine, b *G1Affine) bool {
-	return bool(C.embedded_pairing_bls12_381_g1affine_equal(&a.data, &b.data))
+	return bool(C.embedded_pairing_bls12_381_g1affine_equal(&a.Data, &b.Data))
 }
 
 // Add computes result := a + b.
 func (result *G2) Add(a *G2, b *G2) *G2 {
-	C.embedded_pairing_bls12_381_g2_add(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_g2_add(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // AddMixed computes result := a + b.
 func (result *G2) AddMixed(a *G2, b *G2Affine) *G2 {
-	C.embedded_pairing_bls12_381_g2_add_mixed(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_g2_add_mixed(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // Negate computes result := -a.
 func (result *G2) Negate(a *G2) *G2 {
-	C.embedded_pairing_bls12_381_g2_negate(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2_negate(&result.Data, &a.Data)
 	return result
 }
 
 // Double computes result := 2 * a.
 func (result *G2) Double(a *G2) *G2 {
-	C.embedded_pairing_bls12_381_g2_double(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2_double(&result.Data, &a.Data)
 	return result
 }
 
@@ -266,7 +242,7 @@ func (result *G2) Double(a *G2) *G2 {
 func (result *G2) Multiply(a *G2, scalar *big.Int) *G2 {
 	var s C.embedded_pairing_core_bigint_256_t
 	internal.BigIntToC(unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t, scalar)
-	C.embedded_pairing_bls12_381_g2_multiply(&result.data, &a.data, &s)
+	C.embedded_pairing_bls12_381_g2_multiply(&result.Data, &a.Data, &s)
 	return result
 }
 
@@ -274,42 +250,42 @@ func (result *G2) Multiply(a *G2, scalar *big.Int) *G2 {
 func (result *G2) MultiplyAffine(a *G2Affine, scalar *big.Int) *G2 {
 	var s C.embedded_pairing_core_bigint_256_t
 	internal.BigIntToC(unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t, scalar)
-	C.embedded_pairing_bls12_381_g2_multiply_affine(&result.data, &a.data, &s)
+	C.embedded_pairing_bls12_381_g2_multiply_affine(&result.Data, &a.Data, &s)
 	return result
 }
 
 // Random samples an element of G2 uniformly at random and stores it in result.
 func (result *G2) Random() *G2 {
-	C.embedded_pairing_bls12_381_g2_random(&result.data, internal.RandomBytesFunction)
+	C.embedded_pairing_bls12_381_g2_random(&result.Data, internal.RandomBytesFunction)
 	return result
 }
 
 // Copy computes result := a.
 func (result *G2) Copy(a *G2) *G2 {
-	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g2_t)
+	C.memcpy(unsafe.Pointer(&result.Data), unsafe.Pointer(&a.Data), C.sizeof_embedded_pairing_bls12_381_g2_t)
 	return result
 }
 
 // G2Equal tests whether two elements of G2 are equal.
 func G2Equal(a *G2, b *G2) bool {
-	return bool(C.embedded_pairing_bls12_381_g2_equal(&a.data, &b.data))
+	return bool(C.embedded_pairing_bls12_381_g2_equal(&a.Data, &b.Data))
 }
 
 // FromAffine computes result := a.
 func (result *G2) FromAffine(a *G2Affine) *G2 {
-	C.embedded_pairing_bls12_381_g2_from_affine(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2_from_affine(&result.Data, &a.Data)
 	return result
 }
 
 // FromProjective computes result := a.
 func (result *G2Affine) FromProjective(a *G2) *G2Affine {
-	C.embedded_pairing_bls12_381_g2affine_from_projective(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2affine_from_projective(&result.Data, &a.Data)
 	return result
 }
 
 // Negate computes result := -a.
 func (result *G2Affine) Negate(a *G2Affine) *G2Affine {
-	C.embedded_pairing_bls12_381_g2affine_negate(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2affine_negate(&result.Data, &a.Data)
 	return result
 }
 
@@ -322,43 +298,43 @@ func (result *G2Affine) Hash(buffer []byte) *G2Affine {
 	shake.Write(buffer)
 	shake.Read(hash[:])
 
-	C.embedded_pairing_bls12_381_g2affine_from_hash(&result.data, unsafe.Pointer(&hash[0]))
+	C.embedded_pairing_bls12_381_g2affine_from_hash(&result.Data, unsafe.Pointer(&hash[0]))
 	return result
 }
 
 // Copy computes result := a.
 func (result *G2Affine) Copy(a *G2Affine) *G2Affine {
-	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_g2affine_t)
+	C.memcpy(unsafe.Pointer(&result.Data), unsafe.Pointer(&a.Data), C.sizeof_embedded_pairing_bls12_381_g2affine_t)
 	return result
 }
 
 // G2AffineEqual tests whether two elements of G2 are equal.
 func G2AffineEqual(a *G2Affine, b *G2Affine) bool {
-	return bool(C.embedded_pairing_bls12_381_g2affine_equal(&a.data, &b.data))
+	return bool(C.embedded_pairing_bls12_381_g2affine_equal(&a.Data, &b.Data))
 }
 
 // Prepare precomputes a value that can be used to accelerate future pairing
 // computations using a (see PreparedPairing), and store it in result.
 func (result *G2Prepared) Prepare(a *G2Affine) *G2Prepared {
-	C.embedded_pairing_bls12_381_g2prepared_prepare(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_g2prepared_prepare(&result.Data, &a.Data)
 	return result
 }
 
 // Add computes result := a + b.
 func (result *GT) Add(a *GT, b *GT) *GT {
-	C.embedded_pairing_bls12_381_gt_add(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_gt_add(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // Negate computes result := -a.
 func (result *GT) Negate(a *GT) *GT {
-	C.embedded_pairing_bls12_381_gt_negate(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_gt_negate(&result.Data, &a.Data)
 	return result
 }
 
 // Double computes result := 2 * a.
 func (result *GT) Double(a *GT) *GT {
-	C.embedded_pairing_bls12_381_gt_double(&result.data, &a.data)
+	C.embedded_pairing_bls12_381_gt_double(&result.Data, &a.Data)
 	return result
 }
 
@@ -366,7 +342,7 @@ func (result *GT) Double(a *GT) *GT {
 func (result *GT) Multiply(a *GT, scalar *big.Int) *GT {
 	var s C.embedded_pairing_core_bigint_256_t
 	internal.BigIntToC(unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t, scalar)
-	C.embedded_pairing_bls12_381_gt_multiply(&result.data, &a.data, &s)
+	C.embedded_pairing_bls12_381_gt_multiply(&result.Data, &a.Data, &s)
 	return result
 }
 
@@ -375,7 +351,7 @@ func (result *GT) Multiply(a *GT, scalar *big.Int) *GT {
 // sampling a random scalar in Zp and then calling Multiply().
 func (result *GT) Random(a *GT) (*GT, *big.Int) {
 	var s C.embedded_pairing_core_bigint_256_t
-	C.embedded_pairing_bls12_381_gt_multiply_random(&result.data, &s, &a.data, internal.RandomBytesFunction)
+	C.embedded_pairing_bls12_381_gt_multiply_random(&result.Data, &s, &a.Data, internal.RandomBytesFunction)
 
 	scalar := new(big.Int)
 	internal.BigIntFromC(scalar, unsafe.Pointer(&s), C.sizeof_embedded_pairing_core_bigint_256_t)
@@ -384,24 +360,24 @@ func (result *GT) Random(a *GT) (*GT, *big.Int) {
 
 // Copy computes result := a.
 func (result *GT) Copy(a *GT) *GT {
-	C.memcpy(unsafe.Pointer(&result.data), unsafe.Pointer(&a.data), C.sizeof_embedded_pairing_bls12_381_fq12_t)
+	C.memcpy(unsafe.Pointer(&result.Data), unsafe.Pointer(&a.Data), C.sizeof_embedded_pairing_bls12_381_fq12_t)
 	return result
 }
 
 // GTEqual test whether two elements of GT are equal.
 func GTEqual(a *GT, b *GT) bool {
-	return bool(C.embedded_pairing_bls12_381_gt_equal(&a.data, &b.data))
+	return bool(C.embedded_pairing_bls12_381_gt_equal(&a.Data, &b.Data))
 }
 
 // Pairing computes result := e(a, b).
 func (result *GT) Pairing(a *G1Affine, b *G2Affine) *GT {
-	C.embedded_pairing_bls12_381_pairing(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_pairing(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
 // PreparedPairing computes result := e(a, b).
 func (result *GT) PreparedPairing(a *G1Affine, b *G2Prepared) *GT {
-	C.embedded_pairing_bls12_381_prepared_pairing(&result.data, &a.data, &b.data)
+	C.embedded_pairing_bls12_381_prepared_pairing(&result.Data, &a.Data, &b.Data)
 	return result
 }
 
@@ -420,8 +396,8 @@ func (result *GT) PairingSum(a []*G1Affine, b []*G2Affine, c []*G1Affine, d []*G
 		affinePairs = (*C.embedded_pairing_bls12_381_affine_pair_t)(affinePairsPointer)
 		for i := range a {
 			pair := (*C.embedded_pairing_bls12_381_affine_pair_t)(unsafe.Pointer(uintptr(affinePairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_affine_pair_t))
-			pair.g1 = &a[i].data
-			pair.g2 = &b[i].data
+			pair.g1 = &a[i].Data
+			pair.g2 = &b[i].Data
 		}
 	}
 
@@ -434,11 +410,11 @@ func (result *GT) PairingSum(a []*G1Affine, b []*G2Affine, c []*G1Affine, d []*G
 		preparedPairs = (*C.embedded_pairing_bls12_381_prepared_pair_t)(preparedPairsPointer)
 		for i := range c {
 			pair := (*C.embedded_pairing_bls12_381_prepared_pair_t)(unsafe.Pointer(uintptr(preparedPairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_prepared_pair_t))
-			pair.g1 = &c[i].data
-			pair.g2 = &d[i].data
+			pair.g1 = &c[i].Data
+			pair.g2 = &d[i].Data
 		}
 	}
 
-	C.embedded_pairing_bls12_381_pairing_sum(&result.data, affinePairs, numAffinePairs, preparedPairs, numPreparedPairs)
+	C.embedded_pairing_bls12_381_pairing_sum(&result.Data, affinePairs, numAffinePairs, preparedPairs, numPreparedPairs)
 	return result
 }

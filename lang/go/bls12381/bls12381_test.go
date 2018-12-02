@@ -38,6 +38,8 @@ import (
 	"math/big"
 	"os"
 	"testing"
+
+	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
 )
 
 var testStdIters = 1000
@@ -52,27 +54,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestHashToZp(t *testing.T) {
-	hashes := []*big.Int{}
-	for i := 0; i != testStdIters; i++ {
-		buffer := make([]byte, 128)
-		if _, err := rand.Read(buffer); err != nil {
-			t.Fatal(err)
-		}
-		a := HashToZp(new(big.Int), buffer)
-		b := HashToZp(new(big.Int), buffer)
-		if a.Cmp(b) != 0 {
-			t.Fatal("Hash is not deterministic")
-		}
-		for _, hash := range hashes {
-			if a.Cmp(hash) == 0 {
-				t.Fatal("Hash is not collision-resistant")
-			}
-		}
-		if a.Sign() == -1 || a.Cmp(GroupOrder) != -1 {
-			t.Fatal("Hash is outside of the valid range")
-		}
-		hashes = append(hashes, a)
+func TestGroupOrder(t *testing.T) {
+	p, _ := new(big.Int).SetString("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16)
+	if p.Cmp(GroupOrder) != 0 {
+		t.Fatal("GroupOrder is incorrect")
 	}
 }
 
@@ -370,8 +355,8 @@ func TestBilinearity(t *testing.T) {
 		a := new(G1).Random()
 		b := new(G2).Random()
 
-		x := RandomZp(new(big.Int))
-		y := RandomZp(new(big.Int))
+		x := cryptutils.RandomZp(new(big.Int))
+		y := cryptutils.RandomZp(new(big.Int))
 
 		xa := new(G1).Multiply(a, x)
 		yb := new(G2).Multiply(b, y)
@@ -465,7 +450,7 @@ func BenchmarkG1Multiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a := new(G1).Random()
 		c := new(G1)
-		s := RandomZp(new(big.Int))
+		s := cryptutils.RandomZp(new(big.Int))
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()
@@ -507,7 +492,7 @@ func BenchmarkG2Multiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a := new(G2).Random()
 		c := new(G2)
-		s := RandomZp(new(big.Int))
+		s := cryptutils.RandomZp(new(big.Int))
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()
@@ -534,7 +519,7 @@ func BenchmarkGTMultiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		c := new(GT)
-		s := RandomZp(new(big.Int))
+		s := cryptutils.RandomZp(new(big.Int))
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()

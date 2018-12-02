@@ -36,7 +36,6 @@ package internal
 #cgo CFLAGS: -I ../../../include
 #cgo LDFLAGS: ${SRCDIR}/pairing.a
 #include <string.h>
-#include "wkdibe/wkdibe.h"
 #include "go_utils.h"
 */
 import "C"
@@ -82,7 +81,7 @@ func PointerToByteSlice(pointer unsafe.Pointer, capacity int) []byte {
 
 // BigIntToC converts from a Golang big.Int to a BigInt of the appropriate
 // length.
-func BigIntToC(result unsafe.Pointer, resultSize int, scalar *big.Int) {
+func BigIntToC(result unsafe.Pointer, resultSize int, scalar *big.Int) unsafe.Pointer {
 	if scalar.Sign() == 0 {
 		C.memset(result, 0x00, C.size_t(resultSize))
 	} else if scalar.Sign() != 1 {
@@ -102,14 +101,16 @@ func BigIntToC(result unsafe.Pointer, resultSize int, scalar *big.Int) {
 		resultSlice[j] = 0
 		j++
 	}
+	return result
 }
 
 // BigIntFromC converts a BigInt of the given length to a Golang big.Int.
-func BigIntFromC(result *big.Int, bigInt unsafe.Pointer, bigIntSize int) {
+func BigIntFromC(result *big.Int, bigInt unsafe.Pointer, bigIntSize int) *big.Int {
 	bigIntSlice := PointerToByteSlice(bigInt, bigIntSize)
 	bigEndianSlice := make([]byte, bigIntSize)
 	for i := range bigEndianSlice {
 		bigEndianSlice[i] = bigIntSlice[bigIntSize-i-1]
 	}
 	result.SetBytes(bigEndianSlice)
+	return result
 }

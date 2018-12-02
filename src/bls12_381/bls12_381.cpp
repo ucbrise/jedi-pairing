@@ -42,6 +42,8 @@ using namespace embedded_pairing::bls12_381;
 using embedded_pairing::core::BigInt;
 
 extern "C" {
+    const embedded_pairing_core_bigint_256_t* embedded_pairing_bls12_381_group_order = (const embedded_pairing_core_bigint_256_t*) &fr_modulus;
+
     const embedded_pairing_bls12_381_g1_t* embedded_pairing_bls12_381_g1_zero = (const embedded_pairing_bls12_381_g1_t*) &G1::zero;
     const embedded_pairing_bls12_381_g1affine_t* embedded_pairing_bls12_381_g1affine_zero = (const embedded_pairing_bls12_381_g1affine_t*) &G1Affine::zero;
     const embedded_pairing_bls12_381_g1affine_t* embedded_pairing_bls12_381_g1affine_generator = (const embedded_pairing_bls12_381_g1affine_t*) &G1Affine::generator;

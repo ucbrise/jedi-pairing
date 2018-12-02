@@ -36,12 +36,10 @@ package cryptutils
 #cgo CFLAGS: -I ../../../include
 #cgo LDFLAGS: ${SRCDIR}/pairing.a
 #include <string.h>
-#include "wkdibe/wkdibe.h"
+#include "bls12_381/bls12_381.h"
 */
 import "C"
 import (
-	"crypto/rand"
-	"crypto/sha256"
 	"math/big"
 	"unsafe"
 
@@ -55,13 +53,13 @@ import (
 // intended usage is to choose a random message, encrypt that message, and
 // then hash the message to obtain a symmetric key.
 type Encryptable struct {
-	Data C.embedded_pairing_wkdibe_gt_t
+	bls12381.GT
 }
 
 // Random sets the message to a random valid message and returns a pointer to
 // the message on which it was invoked.
 func (m *Encryptable) Random() *Encryptable {
-	C.embedded_pairing_wkdibe_random_gt(&m.Data, internal.RandomBytesFunction)
+	m.GT.Random(bls12381.GTGenerator)
 	return m
 }
 
@@ -69,16 +67,12 @@ func (m *Encryptable) Random() *Encryptable {
 // a copy of the underlying C memory, so it can be safely mutated. It can be
 // passed to a hash function to hash the message to a symmetric key.
 func (m *Encryptable) Bytes() []byte {
-	return C.GoBytes(unsafe.Pointer(&m.Data), C.sizeof_embedded_pairing_wkdibe_gt_t)
+	return m.GT.Marshal(make([]byte, bls12381.GTMarshalledSize))
 }
 
 // Set sets the value of an encryptable to the provided byte slice.
 func (m *Encryptable) Set(data []byte) bool {
-	if len(data) != int(C.sizeof_embedded_pairing_wkdibe_gt_t) {
-		return false
-	}
-	C.memcpy(unsafe.Pointer(&m.Data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_gt_t)
-	return true
+	return m.GT.Unmarshal(data) == &m.GT
 }
 
 // Marshal does the same thing as Bytes.
@@ -116,38 +110,47 @@ func GenerateKey(sk []byte) ([]byte, *Encryptable) {
 // usage is to hash the message to sign to a Signable, and then pass the
 // Signable to the Sign function.
 type Signable struct {
-	Data C.embedded_pairing_wkdibe_scalar_t
+	Data C.embedded_pairing_core_bigint_256_t
 }
 
 // Hash assigns the value of this Signable to a cryptographic hash of the
 // provided data. The cryptographic hash used is sha256.
 func (m *Signable) Hash(data []byte) *Signable {
-	digest := sha256.Sum256(data)
-	return m.Set(digest[:])
+	var hash [C.sizeof_embedded_pairing_core_bigint_256_t]byte
+
+	shake := sha3.NewShake256()
+	shake.Write(data)
+	shake.Read(hash[:])
+
+	C.embedded_pairing_bls12_381_zp_from_hash(&m.Data, unsafe.Pointer(&hash[0]))
+	return m
 }
 
 // Set sets the value of this signable to the specified byte slice, which
 // must be 32 bytes long. It will automatically "reduce" itself if the
-// specified byte slice represents an int value greater than GroupOrder.
+// specified byte slice represents a value greater than bls12381.GroupOrder.
 func (m *Signable) Set(data []byte) *Signable {
-	if C.size_t(len(data)) != C.sizeof_embedded_pairing_wkdibe_scalar_t {
+	if C.size_t(len(data)) != C.sizeof_embedded_pairing_core_bigint_256_t {
 		panic("Slice has wrong size")
 	}
-	C.memcpy(unsafe.Pointer(&m.Data), unsafe.Pointer(&data[0]), C.sizeof_embedded_pairing_wkdibe_scalar_t)
-	C.embedded_pairing_wkdibe_scalar_hash_reduce(&m.Data)
+	C.embedded_pairing_bls12_381_zp_from_hash(&m.Data, unsafe.Pointer(&data[0]))
 	return m
 }
 
-// RandomZp returns a random element in Zp.
-func RandomZp() *big.Int {
-	return new(big.Int).Rand(rand.Reader, bls12381.GroupOrder)
+// RandomZp samples a random element of Zp and stores it in the provided
+// big.Int. The provided big.Int is then returned.
+func RandomZp(result *big.Int) *big.Int {
+	var x C.embedded_pairing_core_bigint_256_t
+	C.embedded_pairing_bls12_381_zp_random(&x, internal.RandomBytesFunction)
+	internal.BigIntFromC(result, unsafe.Pointer(&x), C.sizeof_embedded_pairing_core_bigint_256_t)
+	return result
 }
 
-// HashToZp hashes a byte slice to an integer in Zp*.
-func HashToZp(bytestring []byte) *big.Int {
-	digest := sha256.Sum256(bytestring)
-	bigint := new(big.Int).SetBytes(digest[:])
-	bigint.Mod(bigint, new(big.Int).Add(bls12381.GroupOrder, big.NewInt(-1)))
-	bigint.Add(bigint, big.NewInt(1))
-	return bigint
+// HashToZp samples a random element of Zp and stores it in the provided
+// big.Int. The provided big.Int is then returned.
+func HashToZp(result *big.Int, buffer []byte) *big.Int {
+	var s Signable
+	s.Hash(buffer)
+	internal.BigIntFromC(result, unsafe.Pointer(&s.Data), C.sizeof_embedded_pairing_core_bigint_256_t)
+	return result
 }
