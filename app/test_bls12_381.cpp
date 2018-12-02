@@ -2015,7 +2015,7 @@ const char* test_pairing_zero(void) {
         t3a_pairs[0].g2 = &b_affine;
         t3a_pairs[1].g1 = &c_affine;
         t3a_pairs[1].g2 = &d_affine;
-        pairing_product(t3a, t3a_pairs, 2);
+        pairing_product(t3a, t3a_pairs, 2, nullptr, 0);
 
         Fq12 t3b;
         AffinePair t3b_pairs[2];
@@ -2023,7 +2023,7 @@ const char* test_pairing_zero(void) {
         t3b_pairs[0].g2 = &z2;
         t3b_pairs[1].g1 = &c_affine;
         t3b_pairs[1].g2 = &d_affine;
-        pairing_product(t3b, t3b_pairs, 2);
+        pairing_product(t3b, t3b_pairs, 2, nullptr, 0);
 
         if (!Fq12::equal(t3a, t3b)) {
             return "FAIL (t3)";
@@ -2035,7 +2035,7 @@ const char* test_pairing_zero(void) {
         t4a_pairs[0].g2 = &b_affine;
         t4a_pairs[1].g1 = &z1;
         t4a_pairs[1].g2 = &d_affine;
-        pairing_product(t4a, t4a_pairs, 2);
+        pairing_product(t4a, t4a_pairs, 2, nullptr, 0);
 
         Fq12 t4b;
         AffinePair t4b_pairs[2];
@@ -2043,7 +2043,7 @@ const char* test_pairing_zero(void) {
         t4b_pairs[0].g2 = &b_affine;
         t4b_pairs[1].g1 = &c_affine;
         t4b_pairs[1].g2 = &z2;
-        pairing_product(t4b, t4b_pairs, 2);
+        pairing_product(t4b, t4b_pairs, 2, nullptr, 0);
 
         if (!Fq12::equal(t4a, t4b)) {
             return "FAIL (t4)";
@@ -2188,7 +2188,7 @@ const char* test_pairing_miller(void) {
         pairs[1].g2 = &d_affine;
 
         Fq12 abcd_with_double_loop;
-        pairing_product(abcd_with_double_loop, pairs, 2);
+        pairing_product(abcd_with_double_loop, pairs, 2, nullptr, 0);
 
         if (!Fq12::equal(abcd, abcd_with_double_loop)) {
             return "FAIL (double loop)";

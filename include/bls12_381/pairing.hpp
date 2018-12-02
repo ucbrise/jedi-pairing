@@ -33,6 +33,8 @@
 #ifndef EMBEDDED_PAIRING_BLS12_381_PAIRING_HPP_
 #define EMBEDDED_PAIRING_BLS12_381_PAIRING_HPP_
 
+#include <stddef.h>
+
 #include "core/bigint.hpp"
 #include "bls12_381/fq.hpp"
 #include "bls12_381/fq2.hpp"
@@ -73,13 +75,12 @@ namespace embedded_pairing::bls12_381 {
     struct AffinePair;
     struct PreparedPair;
 
-    void miller_loop(Fq12& result, AffinePair* pairs, unsigned int num_pairs);
-    void miller_loop(Fq12& result, PreparedPair* pairs, unsigned int num_pairs);
+    void miller_loop(Fq12& result, AffinePair* affine_pairs, size_t num_affine_pairs, PreparedPair* prepared_pairs, size_t num_prepared_pairs);
     void miller_loop(Fq12& result, const G1Affine& g1, const G2Affine& g2);
     void miller_loop(Fq12& result, const G1Affine& g1, const G2Prepared& g2);
 
     struct AffinePair {
-        friend void miller_loop(Fq12& result, AffinePair* pairs, unsigned int num_pairs);
+        friend void miller_loop(Fq12& result, AffinePair* affine_pairs, size_t num_affine_pairs, PreparedPair* prepared_pairs, size_t num_prepared_pairs);
 
         const G1Affine* g1;
         const G2Affine* g2;
@@ -89,20 +90,19 @@ namespace embedded_pairing::bls12_381 {
     };
 
     struct PreparedPair {
-        friend void miller_loop(Fq12& result, PreparedPair* pairs, unsigned int num_pairs);
+        friend void miller_loop(Fq12& result, AffinePair* affine_pairs, size_t num_affine_pairs, PreparedPair* prepared_pairs, size_t num_prepared_pairs);
 
         const G1Affine* g1;
         const G2Prepared* g2;
 
     private:
-        unsigned int coeff_idx;
+        size_t coeff_idx;
     };
 
     void final_exponentiation(Fq12& result, const Fq12& a);
 
-    template <typename GroupPair>
-    void pairing_product(Fq12& result, GroupPair* pairs, unsigned int num_pairs) {
-        miller_loop(result, pairs, num_pairs);
+    inline void pairing_product(Fq12& result, AffinePair* affine_pairs, size_t num_affine_pairs, PreparedPair* prepared_pairs, size_t num_prepared_pairs) {
+        miller_loop(result, affine_pairs, num_affine_pairs, prepared_pairs, num_prepared_pairs);
         final_exponentiation(result, result);
     }
 

@@ -176,6 +176,14 @@ bool embedded_pairing_bls12_381_g2affine_equal(const embedded_pairing_bls12_381_
     return G2Affine::equal(*reinterpret_cast<const G2Affine*>(a), *reinterpret_cast<const G2Affine*>(b));
 }
 
+void embedded_pairing_bls12_381_g2prepared_prepare(embedded_pairing_bls12_381_g2prepared_t* result, const embedded_pairing_bls12_381_g2affine_t* a) {
+    reinterpret_cast<G2Prepared*>(result)->prepare(*reinterpret_cast<const G2Affine*>(a));
+}
+
+bool embedded_pairing_bls12_381_g2prepared_is_zero(const embedded_pairing_bls12_381_g2prepared_t* a) {
+    return reinterpret_cast<const G2Prepared*>(a)->is_zero();
+}
+
 void embedded_pairing_bls12_381_gt_add(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_fq12_t* a, const embedded_pairing_bls12_381_fq12_t* b) {
     reinterpret_cast<Fq12*>(result)->multiply(*reinterpret_cast<const Fq12*>(a), *reinterpret_cast<const Fq12*>(b));
 }
@@ -205,8 +213,12 @@ void embedded_pairing_bls12_381_pairing(embedded_pairing_bls12_381_fq12_t* resul
     pairing(*reinterpret_cast<Fq12*>(result), *reinterpret_cast<const G1Affine*>(a), *reinterpret_cast<const G2Affine*>(b));
 }
 
-void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_pair_t* pairs, size_t num_pairs) {
-    pairing_product(*reinterpret_cast<Fq12*>(result), reinterpret_cast<AffinePair*>(pairs), num_pairs);
+void embedded_pairing_bls12_381_prepared_pairing(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_bls12_381_g2prepared_t* b) {
+    pairing(*reinterpret_cast<Fq12*>(result), *reinterpret_cast<const G1Affine*>(a), *reinterpret_cast<const G2Prepared*>(b));
+}
+
+void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_affine_pair_t* affine_pairs, size_t num_affine_pairs, embedded_pairing_bls12_381_prepared_pair_t* prepared_pairs, size_t num_prepared_pairs) {
+    pairing_product(*reinterpret_cast<Fq12*>(result), reinterpret_cast<AffinePair*>(affine_pairs), num_affine_pairs, reinterpret_cast<PreparedPair*>(prepared_pairs), num_prepared_pairs);
 }
 
 void embedded_pairing_bls12_381_g1_marshal(void* buffer, const embedded_pairing_bls12_381_g1affine_t* a, bool compressed) {

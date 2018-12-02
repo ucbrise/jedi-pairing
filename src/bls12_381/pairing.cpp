@@ -216,31 +216,47 @@ namespace embedded_pairing::bls12_381 {
         f.multiply_by_c014(f, coeffs.c, c1, c0);
     }
 
-    void miller_loop(Fq12& result, AffinePair* pairs, unsigned int num_pairs) {
+    void miller_loop(Fq12& result, AffinePair* affine_pairs, size_t num_affine_pairs, PreparedPair* prepared_pairs, size_t num_prepared_pairs) {
         MillerTriple coeffs;
         result.copy(Fq12::one);
 
-        for (unsigned int j = 0; j != num_pairs; j++) {
-            AffinePair& pair = pairs[j];
+        for (size_t j = 0; j != num_affine_pairs; j++) {
+            AffinePair& pair = affine_pairs[j];
             pair.r.from_affine(*pair.g2);
+        }
+        for (size_t j = 0; j != num_prepared_pairs; j++) {
+            PreparedPair& pair = prepared_pairs[j];
+            pair.coeff_idx = 0;
         }
 
         /* Skips the least significant bit and most significant set bit. */
         for (unsigned int i = bls_x_highest_set_bit - 1; i != 0; i--) {
-            for (unsigned int j = 0; j != num_pairs; j++) {
-                AffinePair& pair = pairs[j];
+            for (size_t j = 0; j != num_affine_pairs; j++) {
+                AffinePair& pair = affine_pairs[j];
                 if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
                     miller_doubling_step(coeffs, pair.r);
                     ell(result, coeffs, *pair.g1);
                 }
             }
+            for (size_t j = 0; j != num_prepared_pairs; j++) {
+                PreparedPair& pair = prepared_pairs[j];
+                if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
+                    ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
+                }
+            }
 
             if (bls_x.bit(i)) {
-                for (unsigned int j = 0; j != num_pairs; j++) {
-                    AffinePair& pair = pairs[j];
+                for (size_t j = 0; j != num_affine_pairs; j++) {
+                    AffinePair& pair = affine_pairs[j];
                     if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
                         miller_addition_step(coeffs, pair.r, *pair.g2);
                         ell(result, coeffs, *pair.g1);
+                    }
+                }
+                for (size_t j = 0; j != num_prepared_pairs; j++) {
+                    PreparedPair& pair = prepared_pairs[j];
+                    if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
+                        ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
                     }
                 }
             }
@@ -248,11 +264,17 @@ namespace embedded_pairing::bls12_381 {
             result.square(result);
         }
 
-        for (unsigned int j = 0; j != num_pairs; j++) {
-            AffinePair& pair = pairs[j];
+        for (size_t j = 0; j != num_affine_pairs; j++) {
+            AffinePair& pair = affine_pairs[j];
             if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
                 miller_doubling_step(coeffs, pair.r);
                 ell(result, coeffs, *pair.g1);
+            }
+        }
+        for (size_t j = 0; j != num_prepared_pairs; j++) {
+            PreparedPair& pair = prepared_pairs[j];
+            if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
+                ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
             }
         }
 
@@ -265,53 +287,14 @@ namespace embedded_pairing::bls12_381 {
         AffinePair pair;
         pair.g1 = &g1;
         pair.g2 = &g2;
-        miller_loop(result, &pair, 1);
-    }
-
-    void miller_loop(Fq12& result, PreparedPair* pairs, unsigned int num_pairs) {
-        result.copy(Fq12::one);
-
-        for (unsigned int j = 0; j != num_pairs; j++) {
-            PreparedPair& pair = pairs[j];
-            pair.coeff_idx = 0;
-        }
-
-        /* Skips the least significant bit and most significant set bit. */
-        for (unsigned int i = bls_x_highest_set_bit - 1; i != 0; i--) {
-            for (unsigned int j = 0; j != num_pairs; j++) {
-                PreparedPair& pair = pairs[j];
-                if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
-                    ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
-                }
-            }
-            if (bls_x.bit(i)) {
-                for (unsigned int j = 0; j != num_pairs; j++) {
-                    PreparedPair& pair = pairs[j];
-                    if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
-                        ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
-                    }
-                }
-            }
-            result.square(result);
-        }
-
-        for (unsigned int j = 0; j != num_pairs; j++) {
-            PreparedPair& pair = pairs[j];
-            if (!pair.g1->is_zero() && !pair.g2->is_zero()) {
-                ell(result, pair.g2->coeffs[pair.coeff_idx++], *pair.g1);
-            }
-        }
-
-        if constexpr(bls_x_is_negative) {
-            result.conjugate(result);
-        }
+        miller_loop(result, &pair, 1, nullptr, 0);
     }
 
     void miller_loop(Fq12& result, const G1Affine& g1, const G2Prepared& g2) {
         PreparedPair pair;
         pair.g1 = &g1;
         pair.g2 = &g2;
-        miller_loop(result, &pair, 1);
+        miller_loop(result, nullptr, 0, &pair, 1);
     }
 
     /*

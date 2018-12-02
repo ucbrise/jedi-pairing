@@ -99,6 +99,13 @@ type G2Affine struct {
 	data C.embedded_pairing_bls12_381_g2affine_t
 }
 
+// G2Prepared represents a precomputed value derived from an element of G2 that
+// accelerates pairing computations involving that element. Note that this is
+// large (~20 KB) compared to other structures in this library.
+type G2Prepared struct {
+	data C.embedded_pairing_bls12_381_g2prepared_t
+}
+
 // GT represents an element of GT, the target group of the BLS12-381 pairing.
 type GT struct {
 	data C.embedded_pairing_bls12_381_fq12_t
@@ -330,6 +337,13 @@ func G2AffineEqual(a *G2Affine, b *G2Affine) bool {
 	return bool(C.embedded_pairing_bls12_381_g2affine_equal(&a.data, &b.data))
 }
 
+// Prepare precomputes a value that can be used to accelerate future pairing
+// computations using a (see PreparedPairing), and store it in result.
+func (result *G2Prepared) Prepare(a *G2Affine) *G2Prepared {
+	C.embedded_pairing_bls12_381_g2prepared_prepare(&result.data, &a.data)
+	return result
+}
+
 // Add computes result := a + b.
 func (result *GT) Add(a *GT, b *GT) *GT {
 	C.embedded_pairing_bls12_381_gt_add(&result.data, &a.data, &b.data)
@@ -385,21 +399,46 @@ func (result *GT) Pairing(a *G1Affine, b *G2Affine) *GT {
 	return result
 }
 
-// PairingSum computes the sum of e(a[i], b[i]) for i = 0 ... len(a) - 1, and
-// stores it in result. It is significantly faster than computing each term
-// separately using Pairing() and then computing the sum using Add.
-func (result *GT) PairingSum(a []*G1Affine, b []*G2Affine) *GT {
-	numPairs := C.size_t(len(a))
-	pairsPointer := C.malloc(numPairs * C.sizeof_embedded_pairing_bls12_381_pair_t)
-	defer C.free(pairsPointer)
+// PreparedPairing computes result := e(a, b).
+func (result *GT) PreparedPairing(a *G1Affine, b *G2Prepared) *GT {
+	C.embedded_pairing_bls12_381_prepared_pairing(&result.data, &a.data, &b.data)
+	return result
+}
 
-	pairs := (*C.embedded_pairing_bls12_381_pair_t)(pairsPointer)
-	for i := range a {
-		pair := (*C.embedded_pairing_bls12_381_pair_t)(unsafe.Pointer(uintptr(pairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_pair_t))
-		pair.g1 = &a[i].data
-		pair.g2 = &b[i].data
+// PairingSum computes the sum of e(a[i], b[i]) for i = 0 ... len(a) - 1 and
+// e(c[j], d[j]) for j = 0 ... len(c) - 1 (so the sum of len(a) + len(c) terms
+// total), and stores the in result. It is significantly faster than computing
+// each term separately using Pairing() or PreparedPairing and then computing
+// the sum using Add.
+func (result *GT) PairingSum(a []*G1Affine, b []*G2Affine, c []*G1Affine, d []*G2Prepared) *GT {
+	var affinePairs *C.embedded_pairing_bls12_381_affine_pair_t
+	numAffinePairs := C.size_t(len(a))
+	if numAffinePairs != 0 {
+		affinePairsPointer := C.malloc(numAffinePairs * C.sizeof_embedded_pairing_bls12_381_affine_pair_t)
+		defer C.free(affinePairsPointer)
+
+		affinePairs = (*C.embedded_pairing_bls12_381_affine_pair_t)(affinePairsPointer)
+		for i := range a {
+			pair := (*C.embedded_pairing_bls12_381_affine_pair_t)(unsafe.Pointer(uintptr(affinePairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_affine_pair_t))
+			pair.g1 = &a[i].data
+			pair.g2 = &b[i].data
+		}
 	}
 
-	C.embedded_pairing_bls12_381_pairing_sum(&result.data, pairs, numPairs)
+	var preparedPairs *C.embedded_pairing_bls12_381_prepared_pair_t
+	numPreparedPairs := C.size_t(len(c))
+	if numPreparedPairs != 0 {
+		preparedPairsPointer := C.malloc(numPreparedPairs * C.sizeof_embedded_pairing_bls12_381_prepared_pair_t)
+		defer C.free(preparedPairsPointer)
+
+		preparedPairs = (*C.embedded_pairing_bls12_381_prepared_pair_t)(preparedPairsPointer)
+		for i := range c {
+			pair := (*C.embedded_pairing_bls12_381_prepared_pair_t)(unsafe.Pointer(uintptr(preparedPairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_prepared_pair_t))
+			pair.g1 = &c[i].data
+			pair.g2 = &d[i].data
+		}
+	}
+
+	C.embedded_pairing_bls12_381_pairing_sum(&result.data, affinePairs, numAffinePairs, preparedPairs, numPreparedPairs)
 	return result
 }

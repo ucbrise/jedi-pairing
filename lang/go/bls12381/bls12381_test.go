@@ -387,6 +387,21 @@ func TestBilinearity(t *testing.T) {
 	}
 }
 
+func TestPreparedPairing(t *testing.T) {
+	for i := 0; i != testFewIters; i++ {
+		a := new(G1Affine).FromProjective(new(G1).Random())
+		b := new(G2Affine).FromProjective(new(G2).Random())
+		bp := new(G2Prepared).Prepare(b)
+
+		eab1 := new(GT).Pairing(a, b)
+		eab2 := new(GT).PreparedPairing(a, bp)
+
+		if !GTEqual(eab1, eab2) {
+			t.Fatal("Prepared pairing is incorrect")
+		}
+	}
+}
+
 func TestPairingSum(t *testing.T) {
 	for i := 0; i != testFewIters; i++ {
 		a := new(G1Affine).FromProjective(new(G1).Random())
@@ -395,13 +410,21 @@ func TestPairingSum(t *testing.T) {
 		c := new(G1Affine).FromProjective(new(G1).Random())
 		d := new(G2Affine).FromProjective(new(G2).Random())
 
+		w := new(G1Affine).FromProjective(new(G1).Random())
+		x := new(G2Prepared).Prepare(new(G2Affine).FromProjective(new(G2).Random()))
+
+		y := new(G1Affine).FromProjective(new(G1).Random())
+		z := new(G2Prepared).Prepare(new(G2Affine).FromProjective(new(G2).Random()))
+
 		eab := new(GT).Pairing(a, b)
 		ecd := new(GT).Pairing(c, d)
-		eabecd := new(GT).Add(eab, ecd)
+		exy := new(GT).PreparedPairing(w, x)
+		eyz := new(GT).PreparedPairing(y, z)
+		eabecdexyeyz := new(GT).Add(new(GT).Add(eab, ecd), new(GT).Add(exy, eyz))
 
-		pairsum := new(GT).PairingSum([]*G1Affine{a, c}, []*G2Affine{b, d})
+		pairsum := new(GT).PairingSum([]*G1Affine{a, c}, []*G2Affine{b, d}, []*G1Affine{w, y}, []*G2Prepared{x, z})
 
-		if !GTEqual(eabecd, pairsum) {
+		if !GTEqual(eabecdexyeyz, pairsum) {
 			t.Fatal("Found counterexample to bilinearity")
 		}
 	}
@@ -554,7 +577,7 @@ func BenchmarkPairingSum4(b *testing.B) {
 		m := new(G2Affine).FromProjective(new(G2).Random())
 		eac := new(GT)
 		b.StartTimer()
-		eac.PairingSum([]*G1Affine{a, d, g, k}, []*G2Affine{c, f, h, m})
+		eac.PairingSum([]*G1Affine{a, d, g, k}, []*G2Affine{c, f, h, m}, nil, nil)
 		b.StopTimer()
 	}
 }

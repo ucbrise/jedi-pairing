@@ -390,7 +390,7 @@ namespace embedded_pairing::wkdibe {
         pairs[0].g2 = &a1affine;
         pairs[1].g1 = &a0affine;
         pairs[1].g2 = &baffine;
-        bls12_381::pairing_product(message, pairs, 2);
+        bls12_381::pairing_product(message, pairs, 2, nullptr, 0);
         message.multiply(message, ciphertext.a);
     }
 

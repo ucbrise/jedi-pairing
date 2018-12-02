@@ -86,10 +86,25 @@ typedef struct {
 } embedded_pairing_bls12_381_g2_t;
 
 typedef struct {
+    struct {
+        embedded_pairing_bls12_381_fq2_t a;
+        embedded_pairing_bls12_381_fq2_t b;
+        embedded_pairing_bls12_381_fq2_t c;
+    } coeffs[68];
+    bool infinity;
+} embedded_pairing_bls12_381_g2prepared_t;
+
+typedef struct {
     embedded_pairing_bls12_381_g1affine_t* g1;
     embedded_pairing_bls12_381_g2affine_t* g2;
     embedded_pairing_bls12_381_g2_t _r;
-} embedded_pairing_bls12_381_pair_t;
+} embedded_pairing_bls12_381_affine_pair_t;
+
+typedef struct {
+    embedded_pairing_bls12_381_g1affine_t* g1;
+    embedded_pairing_bls12_381_g2prepared_t* g2;
+    size_t _coeff_idx;
+} embedded_pairing_bls12_381_prepared_pair_t;
 
 extern const embedded_pairing_bls12_381_g1_t* embedded_pairing_bls12_381_g1_zero;
 extern const embedded_pairing_bls12_381_g1affine_t* embedded_pairing_bls12_381_g1affine_zero;
@@ -135,6 +150,9 @@ void embedded_pairing_bls12_381_g2affine_negate(embedded_pairing_bls12_381_g2aff
 void embedded_pairing_bls12_381_g2affine_from_hash(embedded_pairing_bls12_381_g2affine_t* result, const void* hash);
 bool embedded_pairing_bls12_381_g2affine_equal(const embedded_pairing_bls12_381_g2affine_t* a, const embedded_pairing_bls12_381_g2affine_t* b);
 
+void embedded_pairing_bls12_381_g2prepared_prepare(embedded_pairing_bls12_381_g2prepared_t* result, const embedded_pairing_bls12_381_g2affine_t* a);
+bool embedded_pairing_bls12_381_g2prepared_is_zero(const embedded_pairing_bls12_381_g2prepared_t* a);
+
 void embedded_pairing_bls12_381_gt_add(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_fq12_t* a, const embedded_pairing_bls12_381_fq12_t* b);
 void embedded_pairing_bls12_381_gt_negate(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_fq12_t* a);
 void embedded_pairing_bls12_381_gt_double(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_fq12_t* a);
@@ -143,7 +161,8 @@ void embedded_pairing_bls12_381_gt_multiply_random(embedded_pairing_bls12_381_fq
 bool embedded_pairing_bls12_381_gt_equal(const embedded_pairing_bls12_381_fq12_t* a, const embedded_pairing_bls12_381_fq12_t* b);
 
 void embedded_pairing_bls12_381_pairing(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_bls12_381_g2affine_t* b);
-void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_pair_t* pairs, size_t num_pairs);
+void embedded_pairing_bls12_381_prepared_pairing(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_g1affine_t* a, const embedded_pairing_bls12_381_g2prepared_t* b);
+void embedded_pairing_bls12_381_pairing_sum(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_bls12_381_affine_pair_t* affine_pairs, size_t num_affine_pairs, embedded_pairing_bls12_381_prepared_pair_t* prepared_pairs, size_t num_prepared_pairs);
 
 extern const size_t embedded_pairing_bls12_381_g1_marshalled_compressed_size;
 extern const size_t embedded_pairing_bls12_381_g1_marshalled_uncompressed_size;
