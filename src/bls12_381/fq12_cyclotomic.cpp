@@ -30,6 +30,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Although I wrote this code, it is based on techniques used by RELIC (see
+ * https://github.com/relic-toolkit/relic), specifically in the file
+ * src/fpx/relic_fp12_sqr.c, last modified (at the time of writing) in commit
+ * 606e84d4177bcff00d5bdd1b8f494508700fb856 in that repository. I am using
+ * RELIC under the Apache 2.0 License (which RELIC provides as a licensing
+ * option, at the time of writing), so the corresponding functions below are
+ * also subject to the Apache 2.0 License.
+ */
+
 #include "bls12_381/fq2.hpp"
 #include "bls12_381/fq6.hpp"
 #include "bls12_381/fq12.hpp"
