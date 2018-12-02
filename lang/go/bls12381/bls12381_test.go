@@ -564,6 +564,19 @@ func BenchmarkPairing(b *testing.B) {
 	}
 }
 
+func BenchmarkPreparedPairing(b *testing.B) {
+	b.StopTimer()
+	for i := 0; i < b.N; i++ {
+		a := new(G1Affine).FromProjective(new(G1).Random())
+		c := new(G2Affine).FromProjective(new(G2).Random())
+		cp := new(G2Prepared).Prepare(c)
+		eac := new(GT)
+		b.StartTimer()
+		eac.PreparedPairing(a, cp)
+		b.StopTimer()
+	}
+}
+
 func BenchmarkPairingSum4(b *testing.B) {
 	b.StopTimer()
 	for i := 0; i < b.N; i++ {
