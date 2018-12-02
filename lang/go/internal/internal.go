@@ -30,6 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Package internal implements common functionality shared by the other
+// packages in this library.
 package internal
 
 /*

@@ -30,6 +30,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Package bls12381 provides a Go interface to the implementation of the
+// BLS12-381 bilinear pairing. See https://z.cash/blog/new-snark-curve/ for
+// more information about BLS12-381.
 package bls12381
 
 /*

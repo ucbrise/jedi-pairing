@@ -30,6 +30,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Package lqibe provides a Go interface to an implementation of Identity-Based
+// Encryption (IBE). The construction used is due to Libert and Quisquater; see
+// http://cseweb.ucsd.edu/~mihir/cse208-06/libert-quisquater-ibe-acns-05.pdf
+// for information about LQ-IBE.
 package lqibe
 
 /*

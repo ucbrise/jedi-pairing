@@ -30,6 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Package cryptutils implements functionality that may be useful to users of
+// the other packages in this library.
 package cryptutils
 
 /*

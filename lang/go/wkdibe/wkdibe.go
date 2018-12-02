@@ -30,6 +30,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Package wkdibe provides a Go interface to an implementation of WKD-IBE. See
+// https://eprint.iacr.org/2007/221.pdf for more information about WKD-IBE.
+// The implementation uses the construction of WKD-IBE based on BBG HIBE.
 package wkdibe
 
 /*
