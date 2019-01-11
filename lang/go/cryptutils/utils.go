@@ -148,8 +148,8 @@ func RandomZp(result *big.Int) *big.Int {
 	return result
 }
 
-// HashToZp samples a random element of Zp and stores it in the provided
-// big.Int. The provided big.Int is then returned.
+// HashToZp hashes the contents of the specified buffer to Zp and stores it in
+// the provided big.Int. The provided big.Int is then returned.
 func HashToZp(result *big.Int, buffer []byte) *big.Int {
 	var s Signable
 	s.Hash(buffer)
