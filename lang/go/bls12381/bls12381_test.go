@@ -38,8 +38,6 @@ import (
 	"math/big"
 	"os"
 	"testing"
-
-	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
 )
 
 var testStdIters = 1000
@@ -52,6 +50,14 @@ func TestMain(m *testing.M) {
 		testFewIters = 10
 	}
 	os.Exit(m.Run())
+}
+
+func randomZp() *big.Int {
+	x, err := rand.Int(rand.Reader, GroupOrder)
+	if err != nil {
+		panic(err)
+	}
+	return x
 }
 
 func TestGroupOrder(t *testing.T) {
@@ -355,8 +361,8 @@ func TestBilinearity(t *testing.T) {
 		a := new(G1).Random()
 		b := new(G2).Random()
 
-		x := cryptutils.RandomZp(new(big.Int))
-		y := cryptutils.RandomZp(new(big.Int))
+		x := randomZp()
+		y := randomZp()
 
 		xa := new(G1).Multiply(a, x)
 		yb := new(G2).Multiply(b, y)
@@ -450,7 +456,7 @@ func BenchmarkG1Multiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a := new(G1).Random()
 		c := new(G1)
-		s := cryptutils.RandomZp(new(big.Int))
+		s := randomZp()
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()
@@ -492,7 +498,7 @@ func BenchmarkG2Multiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a := new(G2).Random()
 		c := new(G2)
-		s := cryptutils.RandomZp(new(big.Int))
+		s := randomZp()
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()
@@ -519,7 +525,7 @@ func BenchmarkGTMultiply(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		a, _ := new(GT).Random(GTGenerator)
 		c := new(GT)
-		s := cryptutils.RandomZp(new(big.Int))
+		s := randomZp()
 		b.StartTimer()
 		c.Multiply(a, s)
 		b.StopTimer()
