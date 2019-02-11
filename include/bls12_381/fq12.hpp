@@ -68,7 +68,7 @@ namespace embedded_pairing::bls12_381 {
          */
         void square_cyclotomic(const Fq12& a);
         template <typename BigInt>
-        void exponentiate_restrict_cyclotomic(const Fq12& __restrict a, const BigInt& __restrict power) {
+        void exponentiate_restrict_cyclotomic_nodiv(const Fq12& __restrict a, const BigInt& __restrict power) {
 #ifdef RESIST_SIDE_CHANNELS
             Fq12 tmp;
 #else
@@ -95,10 +95,21 @@ namespace embedded_pairing::bls12_381 {
             }
         }
         template <typename BigInt>
-        void exponentiate_cyclotomic(const Fq12& a, const BigInt& __restrict power) {
+        void exponentiate_gt_nodiv(const Fq12& a, const BigInt& __restrict power) {
             Fq12 tmp;
-            tmp.exponentiate_restrict_cyclotomic<BigInt>(a, power);
+            tmp.exponentiate_restrict_cyclotomic_nodiv<BigInt>(a, power);
             this->copy(tmp);
+        }
+        void exponentiate_gt(const Fq12& a, const BigInt<256>& power) {
+            /*
+             * Division to decompose into words should be faster if we have
+             * support for 64-bit words.
+             */
+            if constexpr(sizeof(BigInt<256>::word_t) >= 8) {
+                this->exponentiate_gt_div(a, power);
+            } else {
+                this->exponentiate_gt_nodiv(a, power);
+            }
         }
         /* Sets this to a^((q^6 - 1)*(q^2 + 1)). */
         void map_to_cyclotomic(const Fq12& a);
@@ -111,6 +122,21 @@ namespace embedded_pairing::bls12_381 {
          * computation substantially.
          */
         void exponentiate_gt_coeff(const Fq12& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
+
+        /*
+         * Decomposes a chosen value y into c0, c1, c2, c3 such that each c is in
+         * [0, |x|) and y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3. The argument y must
+         * be in the interval [0, r).
+         */
+        static void div_exp_coeff(BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, const BigInt<256>& y);
+
+        /*
+         * Sets this to a ^ power, using division to decompose power. This may not
+         * be performant on systems where division is slow (e.g., systems that
+         * do not have hardware division support, or systems that do not support
+         * 64-bit words).
+         */
+        void exponentiate_gt_div(const Fq12& a, const BigInt<256>& power);
 
         /*
          * Chooses random c0, c1, c2, c3 such that each c is in [0, |x|) and

@@ -1470,7 +1470,28 @@ const char* test_fq12_pow_cyclotomic(void) {
 
         power.random(random_bytes);
 
-        tmp2.exponentiate_cyclotomic(c, power);
+        tmp2.exponentiate_gt(c, power);
+        exponentiate(tmp1, c, power);
+
+        if (!Fq12::equal(tmp1, tmp2)) {
+            return "FAIL";
+        }
+    }
+
+    return "PASS";
+}
+
+const char* test_fq12_pow_cyclotomic_nodiv(void) {
+    BigInt<256> power;
+    for (int i = 0; i != std_iters; i++) {
+        Fq12 c = generator_pairing;
+
+        Fq12 tmp1;
+        Fq12 tmp2;
+
+        power.random(random_bytes);
+
+        tmp2.exponentiate_gt_nodiv(c, power);
         exponentiate(tmp1, c, power);
 
         if (!Fq12::equal(tmp1, tmp2)) {
@@ -1506,6 +1527,7 @@ void test_bls12_381_fq12(void) {
     printf("Exponentiation...\t%s\n", test_fq12_pow());
     printf("Cyclotomic Squaring...\t%s\n", test_fq12_squaring_cyclotomic());
     printf("Cyclotomic Exp...\t%s\n", test_fq12_pow_cyclotomic());
+    printf("Cyclotomic Exp (Platforms w/o Division)...\t%s\n", test_fq12_pow_cyclotomic_nodiv());
     printf("GT Random...\t\t%s\n", test_fq12_gt_random());
     printf("Frobenius (random)...\t%s\n", test_frobenius_random<Fq12, Fq::p_value, 13>());
     printf("\n");

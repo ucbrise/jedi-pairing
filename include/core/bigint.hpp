@@ -64,11 +64,8 @@ namespace embedded_pairing::core {
 #elif defined(UINT64_MAX)
         typedef uint64_t dword_t;
         typedef uint32_t word_t;
-#elif defined(UINT32_MAX)
-        typedef uint32_t dword_t;
-        typedef uint16_t word_t;
 #else
-#error "Support for uint32_t is required, but not present."
+#error "Support for uint64_t is required, but not present."
 #endif
 
         /* Length of this BigInt in various units. */
@@ -357,6 +354,23 @@ namespace embedded_pairing::core {
                 }
                 this->words[i + b.word_length] = carry;
             }
+        }
+
+        template <word_t divisor>
+        word_t divide_word(const BigInt<bits>& a) {
+            word_t rem = 0;
+            for (int i = a.word_length - 1; i != -1; i--) {
+                dword_t dividend = (((dword_t) rem) << (sizeof(word_t) * 8)) | ((dword_t) a.words[i]);
+                word_t quotient;
+                if (dividend == 0) {
+                    quotient = 0;
+                } else {
+                    quotient = dividend / divisor;
+                    rem = dividend % divisor;
+                }
+                this->words[i] = quotient;
+            }
+            return rem;
         }
 
         // void square(const BigInt<bits/2>& __restrict a) {

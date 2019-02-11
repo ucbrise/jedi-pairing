@@ -319,7 +319,7 @@ uint64_t bench_fq12_exp(void) {
     return end - start;
 }
 
-uint64_t bench_fq12_exp_cyclotomic(void) {
+uint64_t bench_fq12_exp_gt_nodiv(void) {
     Fq12 a;
     a.random(random_bytes);
 
@@ -329,7 +329,22 @@ uint64_t bench_fq12_exp_cyclotomic(void) {
     Fq12 c;
 
     uint64_t start = current_time_nanos();
-    c.exponentiate_cyclotomic(a, x);
+    c.exponentiate_gt_nodiv(a, x);
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
+uint64_t bench_fq12_exp_gt(void) {
+    Fq12 a;
+    a.random(random_bytes);
+
+    BigInt<256> x;
+    x.random(random_bytes);
+
+    Fq12 c;
+
+    uint64_t start = current_time_nanos();
+    c.exponentiate_gt(a, x);
     uint64_t end = current_time_nanos();
     return end - start;
 }
@@ -402,7 +417,8 @@ void run_benchmarks(void) {
     printf("\n");
     benchmark_time("Fq12 Multiply", bench_fq12_mult, default_duration);
     benchmark_time("Fq12 Exponentiate", bench_fq12_exp, default_duration);
-    benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_cyclotomic, default_duration);
+    benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_gt, default_duration);
+    benchmark_time("Fq12 Exponentiate GT (Platforms w/o Division)", bench_fq12_exp_gt_nodiv, default_duration);
     benchmark_time("Fq12 Random GT", bench_fq12_random_gt, default_duration);
     benchmark_time("Pairing (Affine)", bench_pairing, default_duration);
 }

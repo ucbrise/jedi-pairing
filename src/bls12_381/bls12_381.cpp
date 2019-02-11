@@ -199,7 +199,7 @@ void embedded_pairing_bls12_381_gt_double(embedded_pairing_bls12_381_fq12_t* res
 }
 
 void embedded_pairing_bls12_381_gt_multiply(embedded_pairing_bls12_381_fq12_t* result, const embedded_pairing_bls12_381_fq12_t* a, const embedded_pairing_core_bigint_256_t* scalar) {
-    reinterpret_cast<Fq12*>(result)->exponentiate_cyclotomic(*reinterpret_cast<const Fq12*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
+    reinterpret_cast<Fq12*>(result)->exponentiate_gt(*reinterpret_cast<const Fq12*>(a), *reinterpret_cast<const BigInt<256>*>(scalar));
 }
 
 void embedded_pairing_bls12_381_gt_multiply_random(embedded_pairing_bls12_381_fq12_t* result, embedded_pairing_core_bigint_256_t* scalar, const embedded_pairing_bls12_381_fq12_t* base, void (*get_random_bytes)(void*, size_t)) {

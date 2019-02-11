@@ -163,6 +163,39 @@ namespace embedded_pairing::bls12_381 {
     }
 
     /*
+     * Decomposes a chosen value y into c0, c1, c2, c3 such that each c is in
+     * [0, |x|) and y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3. The argument y must
+     * be in the interval [0, r).
+     */
+    void Fq12::div_exp_coeff(BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, const BigInt<256>& y) {
+        BigInt<256> quotient;
+
+        constexpr BigInt<64>::word_t x = (BigInt<64>::word_t) (((uint64_t) bls_x.std_words[1]) << 32) | (uint64_t) (bls_x.std_words[0]);
+        c0.words[0] = quotient.divide_word<x>(y);
+        c1.words[0] = quotient.divide_word<x>(quotient);
+        c2.words[0] = quotient.divide_word<x>(quotient);
+        c3.words[0] = quotient.words[0];
+    }
+
+    /*
+     * Sets this to a ^ power, using division to decompose power. This may not
+     * be performant on systems where division is slow (e.g., systems that
+     * do not have hardware division support, or systems that do not support
+     * 64-bit words).
+     */
+    void Fq12::exponentiate_gt_div(const Fq12& a, const BigInt<256>& power) {
+        BigInt<64> c0, c1, c2, c3;
+        if (BigInt<256>::compare(power, Fr::p_value) == -1) {
+            Fq12::div_exp_coeff(c0, c1, c2, c3, power);
+        } else {
+            BigInt<256> a;
+            a.subtract(power, Fr::p_value);
+            Fq12::div_exp_coeff(c0, c1, c2, c3, a);
+        }
+        this->exponentiate_gt_coeff(a, c0, c1, c2, c3);
+    }
+
+    /*
      * Chooses random c0, c1, c2, c3 such that each c is in [0, |x|) and
      * y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3 is uniformly distributed in
      * [0, r).
