@@ -393,28 +393,40 @@ func (result *GT) PairingSum(a []*G1Affine, b []*G2Affine, c []*G1Affine, d []*G
 	var affinePairs *C.embedded_pairing_bls12_381_affine_pair_t
 	numAffinePairs := C.size_t(len(a))
 	if numAffinePairs != 0 {
-		affinePairsPointer := C.malloc(numAffinePairs * C.sizeof_embedded_pairing_bls12_381_affine_pair_t)
-		defer C.free(affinePairsPointer)
+		aLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_g1affine_t
+		bLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_g2affine_t
+		pairsLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_affine_pair_t
 
-		affinePairs = (*C.embedded_pairing_bls12_381_affine_pair_t)(affinePairsPointer)
+		buffer := C.malloc(aLen + bLen + pairsLen)
+		defer C.free(buffer)
+
+		affinePairs = (*C.embedded_pairing_bls12_381_affine_pair_t)(unsafe.Pointer(uintptr(buffer) + uintptr(aLen) + uintptr(bLen)))
 		for i := range a {
-			pair := (*C.embedded_pairing_bls12_381_affine_pair_t)(unsafe.Pointer(uintptr(affinePairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_affine_pair_t))
-			pair.g1 = &a[i].Data
-			pair.g2 = &b[i].Data
+			pair := (*C.embedded_pairing_bls12_381_affine_pair_t)(unsafe.Pointer(uintptr(buffer) + uintptr(aLen) + uintptr(bLen) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_affine_pair_t))
+			pair.g1 = (*C.embedded_pairing_bls12_381_g1affine_t)(unsafe.Pointer(uintptr(buffer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_g1affine_t))
+			pair.g2 = (*C.embedded_pairing_bls12_381_g2affine_t)(unsafe.Pointer(uintptr(buffer) + uintptr(aLen) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_g2affine_t))
+			*pair.g1 = a[i].Data
+			*pair.g2 = b[i].Data
 		}
 	}
 
 	var preparedPairs *C.embedded_pairing_bls12_381_prepared_pair_t
 	numPreparedPairs := C.size_t(len(c))
 	if numPreparedPairs != 0 {
-		preparedPairsPointer := C.malloc(numPreparedPairs * C.sizeof_embedded_pairing_bls12_381_prepared_pair_t)
-		defer C.free(preparedPairsPointer)
+		cLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_g1affine_t
+		dLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_g2prepared_t
+		pairsLen := numAffinePairs * C.sizeof_embedded_pairing_bls12_381_prepared_pair_t
 
-		preparedPairs = (*C.embedded_pairing_bls12_381_prepared_pair_t)(preparedPairsPointer)
+		buffer := C.malloc(cLen + dLen + pairsLen)
+		defer C.free(buffer)
+
+		preparedPairs = (*C.embedded_pairing_bls12_381_prepared_pair_t)(unsafe.Pointer(uintptr(buffer) + uintptr(cLen) + uintptr(dLen)))
 		for i := range c {
-			pair := (*C.embedded_pairing_bls12_381_prepared_pair_t)(unsafe.Pointer(uintptr(preparedPairsPointer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_prepared_pair_t))
-			pair.g1 = &c[i].Data
-			pair.g2 = &d[i].Data
+			pair := (*C.embedded_pairing_bls12_381_prepared_pair_t)(unsafe.Pointer(uintptr(buffer) + uintptr(cLen) + uintptr(dLen) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_prepared_pair_t))
+			pair.g1 = (*C.embedded_pairing_bls12_381_g1affine_t)(unsafe.Pointer(uintptr(buffer) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_g1affine_t))
+			pair.g2 = (*C.embedded_pairing_bls12_381_g2prepared_t)(unsafe.Pointer(uintptr(buffer) + uintptr(cLen) + uintptr(i)*C.sizeof_embedded_pairing_bls12_381_g2prepared_t))
+			*pair.g1 = c[i].Data
+			*pair.g2 = d[i].Data
 		}
 	}
 
