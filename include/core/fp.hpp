@@ -354,6 +354,10 @@ namespace embedded_pairing::core {
 #include "./arch/x86_64/fp.hpp"
 #endif
 
+#if defined(__aarch64__)
+#include "./arch/aarch64/fp.hpp"
+#endif
+
 #endif /* NO_ASM */
 
 #endif

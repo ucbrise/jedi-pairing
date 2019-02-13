@@ -505,6 +505,10 @@ namespace embedded_pairing::core {
 #include "./arch/x86_64/bigint.hpp"
 #endif
 
+#if defined(__aarch64__)
+#include "./arch/aarch64/bigint.hpp"
+#endif
+
 #endif /* NO_ASM */
 
 #endif
