@@ -303,25 +303,118 @@ embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce:
     stp x25, x26, [sp, #-16]!
 
     // Load p into {x19, x20, x21, x22, x23, x24}
-    ldp x19, x20, [x1], #16
-    ldp x21, x22, [x1], #16
-    ldp x23, x24, [x1], #16
+    ldp x19, x20, [x2], #16
+    ldp x21, x22, [x2], #16
+    ldp x23, x24, [x2], #16
 
-    // Load a into {x1, x3, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14}
-    ldp x1, x3, [x0], #16
-    ldp x4, x5, [x0], #16
-    ldp x6, x7, [x0], #16
-    ldp x9, x10, [x0]
-    ldp x11, x12, [x0, #16]
-    ldp x13, x14, [x0, #32]
+    // Load a into {x2, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14, x15}
+    ldp x2, x4, [x1], #16
+    ldp x5, x6, [x1], #16
+    ldp x7, x9, [x1], #16
+    ldp x10, x11, [x1], #16
+    ldp x12, x13, [x1], #16
+    ldp x14, x15, [x1], #16
 
     // Do the Montgomery Reduction
-    montgomeryreduce384 x1, x3, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14, x19, x20, x21, x22, x23, x24, x2, x15, x25, x26
+    montgomeryreduce384 x2, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x23, x24, x3, x1, x25, x26
 
-    // Store result from {x9, x10, x11, x12, x13, x14}
-    stp x9, x10, [x0], #16
-    stp x11, x12, [x0], #16
-    stp x13, x14, [x0], #16
+    // Store result from {x10, x11, x12, x13, x14, x15}
+    stp x10, x11, [x0], #16
+    stp x12, x13, [x0], #16
+    stp x14, x15, [x0], #16
+
+    // Restore registers and return
+    ldp x25, x26, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ret
+
+.global embedded_pairing_core_arch_aarch64_fpbase_384_multiply
+.type embedded_pairing_core_arch_aarch64_fpbase_384_multiply, %function
+.text
+
+embedded_pairing_core_arch_aarch64_fpbase_384_multiply:
+    // Save registers
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+    stp x27, x28, [sp, #-16]!
+
+    // Save p and inv_word
+    stp x3, x4, [sp, #-16]!
+
+    // Load b into {x9, x10, x11, x12, x13, x14}
+    ldp x9, x10, [x2], #16
+    ldp x11, x12, [x2], #16
+    ldp x13, x14, [x2], #16
+
+    // Load a into {x2, x3, x4, x5, x6, x7}
+    ldp x2, x3, [x1], #16
+    ldp x4, x5, [x1], #16
+    ldp x6, x7, [x1], #16
+
+    multiply768 x1, x15, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x2, x3, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14
+
+    // Restore p and inv_word
+    ldp x2, x3, [sp], #16
+
+    // Load p into {x9, x10, x11, x12, x13, x14}
+    ldp x9, x10, [x2], #16
+    ldp x11, x12, [x2], #16
+    ldp x13, x14, [x2], #16
+
+    montgomeryreduce384 x1, x15, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x9, x10, x11, x12, x13, x14, x3, x2, x4, x5
+
+    // Store result from {x23, x24, x25, x26, x27, x28}
+    stp x23, x24, [x0], #16
+    stp x25, x26, [x0], #16
+    stp x27, x28, [x0], #16
+
+    // Restore registers and return
+    ldp x27, x28, [sp], #16
+    ldp x25, x26, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ret
+
+.global embedded_pairing_core_arch_aarch64_fpbase_384_square
+.type embedded_pairing_core_arch_aarch64_fpbase_384_square, %function
+.text
+
+embedded_pairing_core_arch_aarch64_fpbase_384_square:
+    // Save registers
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+
+    // Save p and inv_word
+    stp x2, x3, [sp, #-16]!
+
+    // Load a into {x2, x3, x4, x5, x6, x7}
+    ldp x2, x3, [x1], #16
+    ldp x4, x5, [x1], #16
+    ldp x6, x7, [x1], #16
+
+    square768 x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x2, x3, x4, x5, x6, x7
+
+    // Restore p and inv_word
+    ldp x2, x3, [sp], #16
+
+    // Load p into {x4, x5, x6, x7, x23, x24}
+    ldp x4, x5, [x2], #16
+    ldp x6, x7, [x2], #16
+    ldp x23, x24, [x2], #16
+
+    montgomeryreduce384 x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x4, x5, x6, x7, x23, x24, x3, x2, x25, x26
+
+    // Store result from {x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22}
+    stp x14, x15, [x0], #16
+    stp x19, x20, [x0], #16
+    stp x21, x22, [x0], #16
 
     // Restore registers and return
     ldp x25, x26, [sp], #16
