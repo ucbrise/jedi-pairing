@@ -135,3 +135,111 @@ embedded_pairing_core_arch_aarch64_bigint_768_multiply:
     ldp x21, x22, [sp], #16
     ldp x19, x20, [sp], #16
     ret
+
+// Sets res := a * a
+.macro square768 res0, res1, res2, res3, res4, res5, res6, res7, res8, res9, res10, res11, ar0, ar1, ar2, ar3, ar4, ar5
+    adds xzr, xzr, xzr // Clear carry flag
+
+    // Iteration i = 1
+    multiply64 \res1, \res2, \ar1, \ar0
+
+    // Iteration i = 2
+    muladd64 \res2, \res0, \ar2, \ar0, \res11
+    mulcarry64 \res3, \res4, \ar2, \ar1, \res0
+    adcs \res4, \res4, xzr
+
+    // Iteration i = 3
+    muladd64 \res3, \res6, \ar3, \ar0, \res11
+    muladdcarry64 \res4, \res0, \ar3, \ar1, \res6 \res11
+    mulcarry64 \res5, \res6, \ar3, \ar2, \res0
+    adcs \res6, \res6, xzr
+
+    // Iteration i = 4
+    muladd64 \res4, \res0, \ar4, \ar0, \res11
+    muladdcarry64 \res5, \res8, \ar4, \ar1, \res0, \res11
+    muladdcarry64 \res6, \res0, \ar4, \ar2, \res8, \res11
+    mulcarry64 \res7, \res8, \ar4, \ar3, \res0
+    adcs \res8, \res8, xzr
+
+    // Iteration i = 5
+    muladd64 \res5, \res10, \ar5, \ar0, \res11
+    muladdcarry64 \res6, \res0, \ar5, \ar1, \res10, \res11
+    muladdcarry64 \res7, \res10, \ar5, \ar2, \res0, \res11
+    muladdcarry64 \res8, \res0, \ar5, \ar3, \res10, \res11
+    mulcarry64 \res9, \res10, \ar5, \ar4, \res0
+    adcs \res10, \res10, xzr
+
+    add \res0, xzr, xzr
+
+    // Double the result
+    adds \res1, \res1, \res1
+    adcs \res2, \res2, \res2
+    adcs \res3, \res3, \res3
+    adcs \res4, \res4, \res4
+    adcs \res5, \res5, \res5
+    adcs \res6, \res6, \res6
+    adcs \res7, \res7, \res7
+    adcs \res8, \res8, \res8
+    adcs \res9, \res9, \res9
+    adcs \res10, \res10, \res10
+    adcs \res11, xzr, xzr
+
+    // Handle the diagonal
+    mul \res0, \ar0, \ar0
+    umulh \ar0, \ar0, \ar0
+    adds \res1, \res1, \ar0
+
+    mul \ar0, \ar1, \ar1
+    umulh \ar1, \ar1, \ar1
+    adcs \res2, \res2, \ar0
+    adcs \res3, \res3, \ar1
+
+    mul \ar0, \ar2, \ar2
+    umulh \ar1, \ar2, \ar2
+    adcs \res4, \res4, \ar0
+    adcs \res5, \res5, \ar1
+
+    mul \ar0, \ar3, \ar3
+    umulh \ar1, \ar3, \ar3
+    adcs \res6, \res6, \ar0
+    adcs \res7, \res7, \ar1
+
+    mul \ar0, \ar4, \ar4
+    umulh \ar1, \ar4, \ar4
+    adcs \res8, \res8, \ar0
+    adcs \res9, \res9, \ar1
+
+    mul \ar0, \ar5, \ar5
+    umulh \ar1, \ar5, \ar5
+    adcs \res10, \res10, \ar0
+    adcs \res11, \res11, \ar1
+.endm
+
+.global embedded_pairing_core_arch_aarch64_bigint_768_square
+.type embedded_pairing_core_arch_aarch64_bigint_768_square, %function
+.text
+
+embedded_pairing_core_arch_aarch64_bigint_768_square:
+    // Save registers
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+
+    // Load a into {x2, x3, x4, x5, x6, x7}
+    ldp x2, x3, [x1], #16
+    ldp x4, x5, [x1], #16
+    ldp x6, x7, [x1], #16
+
+    square768 x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x2, x3, x4, x5, x6, x7
+
+    // Store result from {x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22}
+    stp x1, x9, [x0], #16
+    stp x10, x11, [x0], #16
+    stp x12, x13, [x0], #16
+    stp x14, x15, [x0], #16
+    stp x19, x20, [x0], #16
+    stp x21, x22, [x0], #16
+
+    // Restore registers and return
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ret
