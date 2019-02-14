@@ -109,3 +109,61 @@ embedded_pairing_core_arch_aarch64_bigint_384_multiply2:
 
     cset x0, cs
     ret
+
+.global embedded_pairing_core_arch_aarch64_fpbase_384_add
+.type embedded_pairing_core_arch_aarch64_fpbase_384_add, %function
+.text
+
+embedded_pairing_core_arch_aarch64_fpbase_384_add:
+    ldp x4, x5, [x1], #16
+    ldp x6, x7, [x2], #16
+    adds x4, x4, x6
+    adcs x5, x5, x7
+
+    ldp x6, x7, [x1], #16
+    ldp x9, x10, [x2], #16
+    adcs x6, x6, x9
+    adcs x7, x7, x10
+
+    ldp x9, x10, [x1], #16
+    ldp x11, x12, [x2], #16
+    adcs x9, x9, x11
+    adcs x10, x10, x12
+
+    // Now, x4, x5, x6, x7, x9, and x10 store the sum
+
+    ldp x15, x1, [x3, #32]
+
+    // As a heuristic
+    b.cs embedded_pairing_core_arch_aarch64_fpbase_384_add_final_subtract
+    cmp x1, x10
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_add_copy_original
+
+embedded_pairing_core_arch_aarch64_fpbase_384_add_final_subtract:
+    // Now x11, x12, x13, x14, x15, and x1 store p
+    ldp x11, x12, [x3], #16
+    subs x11, x4, x11
+    sbcs x12, x5, x12
+
+    ldp x13, x14, [x3], #16
+    sbcs x13, x6, x13
+    sbcs x14, x7, x14
+
+    sbcs x15, x9, x15
+    sbcs x1, x10, x1
+
+    // Now x11, x12, x13, x14, x15, and x1 store (sum - p)
+
+    b.cs embedded_pairing_core_arch_aarch64_fpbase_384_add_copy_subtracted
+
+embedded_pairing_core_arch_aarch64_fpbase_384_add_copy_original:
+    stp x4, x5, [x0], #16
+    stp x6, x7, [x0], #16
+    stp x9, x10, [x0], #16
+    ret
+
+embedded_pairing_core_arch_aarch64_fpbase_384_add_copy_subtracted:
+    stp x11, x12, [x0], #16
+    stp x13, x14, [x0], #16
+    stp x15, x1, [x0], #16
+    ret

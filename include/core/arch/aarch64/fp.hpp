@@ -35,7 +35,17 @@
 
 #include "core/fp.hpp"
 
+extern "C" {
+    void embedded_pairing_core_arch_aarch64_fpbase_384_add(void* res, const void* a, const void* b, const void* p);
+    void embedded_pairing_core_arch_aarch64_fpbase_384_subtract(void* res, const void* a, const void* b, const void* p);
+    void embedded_pairing_core_arch_aarch64_fpbase_384_multiply2(void* res, const void* a, const void* p);
+}
+
 namespace embedded_pairing::core {
+    // template <>
+    // inline void FpBase<384>::add(const FpBase<384>& a, const FpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
+    //     embedded_pairing_core_arch_aarch64_fpbase_384_add(this, &a, &b, &p);
+    // }
 }
 
 #endif

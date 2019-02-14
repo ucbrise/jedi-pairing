@@ -39,6 +39,8 @@ extern "C" {
     bool embedded_pairing_core_arch_aarch64_bigint_384_add(void* res, const void* a, const void* b);
     bool embedded_pairing_core_arch_aarch64_bigint_384_subtract(void* res, const void* a, const void* b);
     uint64_t embedded_pairing_core_arch_aarch64_bigint_384_multiply2(void* res, const void* a);
+
+    void embedded_pairing_core_arch_aarch64_bigint_768_multiply(void* res, const void* a, const void* b);
 }
 
 namespace embedded_pairing::core {
@@ -56,6 +58,12 @@ namespace embedded_pairing::core {
     template <>
     inline typename BigInt<384>::word_t BigInt<384>::shift_left_in_word<1>(const BigInt<384>& a) {
         return embedded_pairing_core_arch_aarch64_bigint_384_multiply2(this, &a);
+    }
+
+    template <>
+    template <>
+    inline void BigInt<768>::multiply(const BigInt<384>& a, const BigInt<384>& __restrict b) {
+        return embedded_pairing_core_arch_aarch64_bigint_768_multiply(this, &a, &b);
     }
 }
 
