@@ -243,3 +243,89 @@ embedded_pairing_core_arch_aarch64_bigint_768_square:
     ldp x21, x22, [sp], #16
     ldp x19, x20, [sp], #16
     ret
+
+.macro montgomeryreduce384iterationraw dst0, dst1, dst2, dst3, dst4, dst5, dst6, pr0, pr1, pr2, pr3, pr4, pr5, inv, u, carry, scratch
+    muladd64 \dst0, \carry, \u, \pr0, \scratch
+    // \dst0 is now free, so we use it for carry (along with \carry)
+    muladdcarry64 \dst1, \dst0, \u, \pr1, \carry, \scratch
+    muladdcarry64 \dst2, \carry, \u, \pr2, \dst0, \scratch
+    muladdcarry64 \dst3, \dst0, \u, \pr3, \carry, \scratch
+    muladdcarry64 \dst4, \carry, \u, \pr4, \dst0, \scratch
+    muladdcarry64 \dst5, \dst0, \u, \pr5, \carry, \scratch
+.endm
+
+.macro montgomeryreduce384iteration dst0, dst1, dst2, dst3, dst4, dst5, dst6, pr0, pr1, pr2, pr3, pr4, pr5, inv, u, carry, scratch, metacarry
+    mul \u, \dst0, \inv
+
+    montgomeryreduce384iterationraw \dst0, \dst1, \dst2, \dst3, \dst4, \dst5, \dst6, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch
+    adcs \dst0, \dst0, xzr
+    // Now \dst0 has the output carry
+
+    // Set carry flag to meta-carry
+    subs xzr, \metacarry, #1
+
+    // Now add metacarry and derive the new one
+    adcs \dst6, \dst6, \dst0
+    adcs \metacarry, xzr, xzr
+.endm
+
+.macro montgomeryreduce384 dst0, dst1, dst2, dst3, dst4, dst5, dst6, dst7, dst8, dst9, dst10, dst11, pr0, pr1, pr2, pr3, pr4, pr5, inv, u, carry, scratch
+    // Iteration 0
+    mul \u, \dst0, \inv
+    montgomeryreduce384iterationraw \dst0, \dst1, \dst2, \dst3, \dst4, \dst5, \dst6, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch
+    adcs \dst6, \dst6, \dst0
+    // Now \dst0 is never used by any future iterations, so we can use it as metacarry
+    adcs \dst0, xzr, xzr
+
+    // Iterations 1 - 4
+    montgomeryreduce384iteration \dst1, \dst2, \dst3, \dst4, \dst5, \dst6, \dst7, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch, \dst0
+    montgomeryreduce384iteration \dst2, \dst3, \dst4, \dst5, \dst6, \dst7, \dst8, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch, \dst0
+    montgomeryreduce384iteration \dst3, \dst4, \dst5, \dst6, \dst7, \dst8, \dst9, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch, \dst0
+    montgomeryreduce384iteration \dst4, \dst5, \dst6, \dst7, \dst8, \dst9, \dst10, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch, \dst0
+
+    // Iteration 5
+    mul \u, \dst5, \inv
+    montgomeryreduce384iterationraw \dst5, \dst6, \dst7, \dst8, \dst9, \dst10, \dst11, \pr0, \pr1, \pr2, \pr3, \pr4, \pr5, \inv, \u, \carry, \scratch
+    adcs \dst5, \dst5, xzr
+    subs xzr, \dst0, #1
+    adcs \dst11, \dst11, \dst5
+.endm
+
+.global embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce
+.type embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce, %function
+.text
+
+embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce:
+    // Save registers
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+
+    // Load p into {x19, x20, x21, x22, x23, x24}
+    ldp x19, x20, [x1], #16
+    ldp x21, x22, [x1], #16
+    ldp x23, x24, [x1], #16
+
+    // Load a into {x1, x3, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14}
+    ldp x1, x3, [x0], #16
+    ldp x4, x5, [x0], #16
+    ldp x6, x7, [x0], #16
+    ldp x9, x10, [x0]
+    ldp x11, x12, [x0, #16]
+    ldp x13, x14, [x0, #32]
+
+    // Do the Montgomery Reduction
+    montgomeryreduce384 x1, x3, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14, x19, x20, x21, x22, x23, x24, x2, x15, x25, x26
+
+    // Store result from {x9, x10, x11, x12, x13, x14}
+    stp x9, x10, [x0], #16
+    stp x11, x12, [x0], #16
+    stp x13, x14, [x0], #16
+
+    // Restore registers and return
+    ldp x25, x26, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x19, x20, [sp], #16
+    ret

@@ -36,16 +36,15 @@
 #include "core/fp.hpp"
 
 extern "C" {
-    void embedded_pairing_core_arch_aarch64_fpbase_384_add(void* res, const void* a, const void* b, const void* p);
-    void embedded_pairing_core_arch_aarch64_fpbase_384_subtract(void* res, const void* a, const void* b, const void* p);
-    void embedded_pairing_core_arch_aarch64_fpbase_384_multiply2(void* res, const void* a, const void* p);
+    void embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce(void* a, const void* p, uint64_t inv_word);
 }
 
 namespace embedded_pairing::core {
-    // template <>
-    // inline void FpBase<384>::add(const FpBase<384>& a, const FpBase<384>& __restrict b, const BigInt<384>& __restrict p) {
-    //     embedded_pairing_core_arch_aarch64_fpbase_384_add(this, &a, &b, &p);
-    // }
+    template <>
+    inline void FpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
+        embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce(&a, &p, inv_word);
+        this->reduce(*reinterpret_cast<BigInt<384>*>(&a.bytes[384/8]), p);
+    }
 }
 
 #endif
