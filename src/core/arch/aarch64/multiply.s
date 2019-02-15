@@ -318,6 +318,34 @@ embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce:
     // Do the Montgomery Reduction
     montgomeryreduce384 x2, x4, x5, x6, x7, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x23, x24, x3, x1, x25, x26
 
+    // Perform final subtraction: result is in {x10, x11, x12, x13, x14, x15}
+    cmp x15, x24
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+    cmp x14, x23
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+    cmp x13, x22
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+    cmp x12, x21
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+    cmp x11, x20
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+    cmp x10, x19
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy
+
+embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_subtract:
+    subs x10, x10, x19
+    sbcs x11, x11, x20
+    sbcs x12, x12, x21
+    sbcs x13, x13, x22
+    sbcs x14, x14, x23
+    sbcs x15, x15, x24
+
+embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce_final_copy:
     // Store result from {x10, x11, x12, x13, x14, x15}
     stp x10, x11, [x0], #16
     stp x12, x13, [x0], #16
@@ -365,8 +393,37 @@ embedded_pairing_core_arch_aarch64_fpbase_384_multiply:
     ldp x11, x12, [x2], #16
     ldp x13, x14, [x2], #16
 
+    // Do Montgomery Reduction
     montgomeryreduce384 x1, x15, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, x9, x10, x11, x12, x13, x14, x3, x2, x4, x5
 
+    // Perform final subraction: result is in {x23, x24, x25, x26, x27, x28}
+    cmp x28, x14
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+    cmp x27, x13
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+    cmp x26, x12
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+    cmp x25, x11
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+    cmp x24, x10
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+    cmp x23, x9
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy
+
+embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_subtract:
+    subs x23, x23, x9
+    sbcs x24, x24, x10
+    sbcs x25, x25, x11
+    sbcs x26, x26, x12
+    sbcs x27, x27, x13
+    sbcs x28, x28, x14
+
+embedded_pairing_core_arch_aarch64_fpbase_384_multiply_final_copy:
     // Store result from {x23, x24, x25, x26, x27, x28}
     stp x23, x24, [x0], #16
     stp x25, x26, [x0], #16
@@ -411,7 +468,35 @@ embedded_pairing_core_arch_aarch64_fpbase_384_square:
 
     montgomeryreduce384 x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22, x4, x5, x6, x7, x23, x24, x3, x2, x25, x26
 
-    // Store result from {x1, x9, x10, x11, x12, x13, x14, x15, x19, x20, x21, x22}
+    // Perform final subtraction: result is in {x14, x15, x19, x20, x21, x22}
+    cmp x22, x24
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+    cmp x21, x23
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+    cmp x20, x7
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+    cmp x19, x6
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+    cmp x15, x5
+    b.hi embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+    cmp x14, x4
+    b.lo embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy
+
+embedded_pairing_core_arch_aarch64_fpbase_384_square_final_subtract:
+    subs x14, x14, x4
+    sbcs x15, x15, x5
+    sbcs x19, x19, x6
+    sbcs x20, x20, x7
+    sbcs x21, x21, x23
+    sbcs x22, x22, x24
+
+embedded_pairing_core_arch_aarch64_fpbase_384_square_final_copy:
+    // Store result from {x14, x15, x19, x20, x21, x22}
     stp x14, x15, [x0], #16
     stp x19, x20, [x0], #16
     stp x21, x22, [x0], #16

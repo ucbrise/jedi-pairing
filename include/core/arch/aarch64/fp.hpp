@@ -44,23 +44,17 @@ extern "C" {
 namespace embedded_pairing::core {
     template <>
     inline void FpBase<384>::multiply(const FpBase<384>& a, const FpBase<384>& b, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        BigInt<384> tmp;
-        embedded_pairing_core_arch_aarch64_fpbase_384_multiply(&tmp, &a, &b, &p, inv_word);
-        this->reduce(*reinterpret_cast<BigInt<384>*>(&tmp), p);
+        embedded_pairing_core_arch_aarch64_fpbase_384_multiply(this, &a, &b, &p, inv_word);
     }
 
     template <>
     inline void FpBase<384>::square(const FpBase<384>& a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        BigInt<384> tmp;
-        embedded_pairing_core_arch_aarch64_fpbase_384_square(&tmp, &a, &p, inv_word);
-        this->reduce(*reinterpret_cast<BigInt<384>*>(&tmp), p);
+        embedded_pairing_core_arch_aarch64_fpbase_384_square(this, &a, &p, inv_word);
     }
 
     template <>
     inline void FpBase<384>::montgomery_reduce(BigInt<768>& __restrict a, const BigInt<384>& __restrict p, typename BigInt<384>::word_t inv_word) {
-        BigInt<384> tmp;
-        embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce(&tmp, &a, &p, inv_word);
-        this->reduce(*reinterpret_cast<BigInt<384>*>(&tmp), p);
+        embedded_pairing_core_arch_aarch64_fpbase_384_montgomery_reduce(this, &a, &p, inv_word);
     }
 }
 
