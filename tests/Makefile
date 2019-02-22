@@ -12,7 +12,10 @@ LDFLAGS = -Wl,--gc-sections
 AR = ar
 AS = as
 ASFLAGS =
-ARCHDIR = lib/src/core/arch/x86_64
+
+# Try to autodetect the target architecture and set ARCHDIR accordingly
+ARCH = $(shell uname -m)
+ARCHDIR = lib/src/core/arch/$(ARCH)
 
 # CXX = arm-none-eabi-g++
 # CXXFLAGS = -std=c++17 -I../include -Os -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -fno-threadsafe-statics

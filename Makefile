@@ -3,14 +3,18 @@
 # AR = ar
 # AS = as
 # ASFLAGS =
-# ARCHDIR = src/core/arch/x86_64
 
 CXX = clang++
 CXXFLAGS = -std=c++17 -I./include -Ofast
 AR = ar
 AS = as
 ASFLAGS =
-ARCHDIR = src/core/arch/x86_64
+
+# Try to autodetect the target architecture and set ARCHDIR accordingly
+ARCH = $(shell uname -m)
+ARCHDIR = src/core/arch/$(ARCH)
+
+# Comment out the above and uncomment the below for embedded build
 
 # CXX = arm-none-eabi-g++
 # CXXFLAGS = -std=c++17 -I./include -Os -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -fno-threadsafe-statics
