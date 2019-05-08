@@ -463,6 +463,20 @@ func BenchmarkG1Multiply(b *testing.B) {
 	}
 }
 
+func BenchmarkG1Hash(b *testing.B) {
+	b.StopTimer()
+	buffer := make([]byte, 16)
+	for i := 0; i < b.N; i++ {
+		a := new(G1Affine)
+		if _, err := rand.Read(buffer); err != nil {
+			b.Fatal(err)
+		}
+		b.StartTimer()
+		a.Hash(buffer)
+		b.StopTimer()
+	}
+}
+
 func BenchmarkG2Add(b *testing.B) {
 	b.StopTimer()
 	if testing.Short() {
@@ -501,6 +515,20 @@ func BenchmarkG2Multiply(b *testing.B) {
 		s := randomZp()
 		b.StartTimer()
 		c.Multiply(a, s)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkG2Hash(b *testing.B) {
+	b.StopTimer()
+	buffer := make([]byte, 16)
+	for i := 0; i < b.N; i++ {
+		a := new(G2Affine)
+		if _, err := rand.Read(buffer); err != nil {
+			b.Fatal(err)
+		}
+		b.StartTimer()
+		a.Hash(buffer)
 		b.StopTimer()
 	}
 }
