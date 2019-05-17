@@ -29,7 +29,7 @@ The result of running `make` is the `pairing.a` file, which can be statically li
 
 To build the go library, you must first build the `pairing.a` file. To do so, run `make`. This is necessary because CGo will only look for C and C++ files in the same directory as the Go package. Unfortunately, it is not as simple as running `go get`.
 
-Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output.
+Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output. There is code in the Makefile that should do this check automatically.
 
 Using this Library from C++
 --------------------------
@@ -41,7 +41,7 @@ You can use this library from C in nearly the same way as C++. Header files with
 
 Using this Library from Go
 --------------------------
-[![GoDoc](https://godoc.org/github.com/samkumar/embedded-pairing/lang/go?status.svg)](https://godoc.org/github.com/samkumar/embedded-pairing/lang/go)
+[![GoDoc](https://godoc.org/github.com/ucbrise/jedi-pairing/lang/go?status.svg)](https://godoc.org/github.com/ucbrise/jedi-pairing/lang/go)
 
 Support for Go is implemented via CGo in multiple packages, according to the functionality that the application needs (raw group elements or cryptographic schemes). These packages are in the `lang/go` directory. You will first need to clone the repository into the appropriate directory in your Go source tree (`src/github.com/samkumar/embedded-pairing`) and then run `make`, as described above, to produce the `pairing.a` file. You can then use the implementation from your code by importing the correct package. For example, to use the BLS12-381 pairing directly, you would use:
 ```
