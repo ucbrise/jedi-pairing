@@ -50,8 +50,8 @@ import (
 	"sort"
 	"unsafe"
 
-	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
-	"github.com/samkumar/embedded-pairing/lang/go/internal"
+	"github.com/ucbrise/jedi-pairing/lang/go/cryptutils"
+	"github.com/ucbrise/jedi-pairing/lang/go/internal"
 )
 
 // Params represents public parameters for a WKD-IBE system.

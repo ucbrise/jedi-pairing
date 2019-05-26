@@ -38,8 +38,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/samkumar/embedded-pairing/lang/go/bls12381"
-	"github.com/samkumar/embedded-pairing/lang/go/cryptutils"
+	"github.com/ucbrise/jedi-pairing/lang/go/bls12381"
+	"github.com/ucbrise/jedi-pairing/lang/go/cryptutils"
 )
 
 func NewMessage() *cryptutils.Encryptable {

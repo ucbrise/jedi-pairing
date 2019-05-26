@@ -47,8 +47,8 @@ import (
 
 	"golang.org/x/crypto/sha3"
 
-	"github.com/samkumar/embedded-pairing/lang/go/bls12381"
-	"github.com/samkumar/embedded-pairing/lang/go/internal"
+	"github.com/ucbrise/jedi-pairing/lang/go/bls12381"
+	"github.com/ucbrise/jedi-pairing/lang/go/internal"
 )
 
 // Encryptable represents a message that can be encrypted with WKD-IBE. The

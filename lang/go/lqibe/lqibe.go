@@ -46,7 +46,7 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/samkumar/embedded-pairing/lang/go/internal"
+	"github.com/ucbrise/jedi-pairing/lang/go/internal"
 	"golang.org/x/crypto/sha3"
 )
 
