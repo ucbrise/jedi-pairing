@@ -1183,7 +1183,7 @@ void test_bls12_381_fq2(void) {
     printf("Negate...\t\t%s\n", test_fq2_negate());
     printf("Double...\t\t%s\n", test_fq2_double());
     printf("Frobenius...\t\t%s\n", test_fq2_frobenius());
-    printf("Frobenius (random)...\t%s\n", test_frobenius_random<Fq2, Fq::p_value, 13>());
+    printf("Frobenius (random)...\t%s\n", test_frobenius_random<Fq2, Fq::p_value, 1>());
     printf("Square Root...\t\t%s\n", test_fq2_sqrt());
     printf("Legendre...\t\t%s\n", test_fq2_legendre());
     printf("Multiply Nonresidue...\t%s\n", test_fq2_mul_nonresidue());
@@ -1971,6 +1971,48 @@ const char* test_g2_double(void) {
     return "PASS";
 }
 
+const char* test_g2_frobenius_random(void) {
+    for (int i = 0; i != std_iters; i++) {
+        G2 a;
+        a.random_generator(random_bytes);
+        G2 b;
+        b.copy(a);
+
+        a.multiply(a, Fq::p_value);
+        b.frobenius_map(b, 1);
+
+        if (!G2::equal(a, b)) {
+            return "FAIL";
+        }
+    }
+
+    return "PASS";
+}
+
+const char* test_g2_multiply_div(void) {
+    /* Compare WNAF multiplication with double-add multiplication. */
+    G2 a;
+    BigInt<Fr::bits_value> scalar;
+
+    G2 tmp1;
+    G2 tmp2;
+
+    for (int i = 0; i != std_iters; i++) {
+        tmp1.random_generator(random_bytes);
+        a.set(tmp1);
+        scalar.random(random_bytes);
+
+        tmp1.multiply(a, scalar);
+        tmp2.multiply_div(a, scalar);
+
+        if (!G2::equal(tmp1, tmp2)) {
+            return "FAIL (double-add)";
+        }
+    }
+
+    return "PASS";
+}
+
 void test_bls12_381_g2(void) {
     printf("G2:\n");
     printf("Generator...\t\t%s\n", test_g2_generator());
@@ -1981,6 +2023,8 @@ void test_bls12_381_g2(void) {
     printf("Multiplication (A)...\t%s\n", test_g_mul<G2, G2Affine>());
     printf("w-NAF Mult (P)...\t%s\n", test_g_wnaf<G2, G2, 4>());
     printf("w-NAF Mult (A)...\t%s\n", test_g_wnaf<G2, G2Affine, 4>());
+    printf("Frobenius (random)...\t%s\n", test_g2_frobenius_random());
+    printf("Multiplication Fast...\t%s\n", test_g2_multiply_div());
     printf("Encoding...\t\t%s\n", test_g_encoding<G2, G2Affine, G2Uncompressed, G2Compressed>());
     printf("\n");
 }
@@ -2234,12 +2278,12 @@ extern "C" {
 }
 
 void run_tests() {
-    test_bls12_381_fr();
-    test_bls12_381_fq();
-    test_bls12_381_fq2();
-    test_bls12_381_fq6();
-    test_bls12_381_fq12();
-    test_bls12_381_g1();
+    // test_bls12_381_fr();
+    // test_bls12_381_fq();
+    // test_bls12_381_fq2();
+    // test_bls12_381_fq6();
+    // test_bls12_381_fq12();
+    // test_bls12_381_g1();
     test_bls12_381_g2();
-    test_bls12_381_pairing();
+    // test_bls12_381_pairing();
 }

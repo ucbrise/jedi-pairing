@@ -626,6 +626,9 @@ namespace embedded_pairing::bls12_381 {
         static const G2 zero;
         static const G2 one;
 
+        void frobenius_map(const G2& a, unsigned int power);
+        void multiply_coeff(const G2& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
+        void multiply_div(const G2& a, const BigInt<256>& scalar);
         void random_generator(void (*get_random_bytes)(void*, size_t));
     };
     constexpr G2 G2::zero = {{

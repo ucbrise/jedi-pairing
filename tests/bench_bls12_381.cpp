@@ -142,6 +142,16 @@ uint64_t bench_g1_projective_add(void) {
     return end - start;
 }
 
+uint64_t bench_g1_projective_multiply2(void) {
+    G1 a;
+    a.random_generator(random_bytes);
+
+    uint64_t start = current_time_nanos();
+    a.multiply2(a);
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
 template <unsigned int wnaf_window>
 uint64_t bench_g1_projective_scalar_mult(void) {
     G1 a;
@@ -223,6 +233,16 @@ uint64_t bench_g2_projective_add(void) {
     return end - start;
 }
 
+uint64_t bench_g2_projective_multiply2(void) {
+    G2 a;
+    a.random_generator(random_bytes);
+
+    uint64_t start = current_time_nanos();
+    a.multiply2(a);
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
 template <unsigned int wnaf_window>
 uint64_t bench_g2_projective_scalar_mult(void) {
     G2 a;
@@ -257,6 +277,19 @@ uint64_t bench_g2_affine_scalar_mult(void) {
     } else {
         wnaf_multiply<G2, G2Affine, 256, wnaf_window>(a, aff, x);
     }
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
+uint64_t bench_g2_fast_scalar_mult(void) {
+    G2 a;
+    a.random_generator(random_bytes);
+
+    BigInt<256> x;
+    x.random(random_bytes);
+
+    uint64_t start = current_time_nanos();
+    a.multiply_div(a, x);
     uint64_t end = current_time_nanos();
     return end - start;
 }
@@ -300,6 +333,18 @@ uint64_t bench_fq12_mult(void) {
 
     uint64_t start = current_time_nanos();
     c.multiply(a, b);
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
+uint64_t bench_fq12_square(void) {
+    Fq12 a;
+    a.random(random_bytes);
+
+    Fq12 c;
+
+    uint64_t start = current_time_nanos();
+    c.square(a);
     uint64_t end = current_time_nanos();
     return end - start;
 }
@@ -386,29 +431,32 @@ extern "C" {
 }
 
 void run_benchmarks(void) {
-    benchmark_time("1000 * Fq Addition", bench_fq_add, default_duration);
-    benchmark_time("1000 * Fq Subtraction", bench_fq_subtract, default_duration);
-    benchmark_time("1000 * Fq Double", bench_fq_multiply2, default_duration);
-    benchmark_time("1000 * Fq Montgomery", bench_fq_montgomery, default_duration);
-    benchmark_time("1000 * Fq Multiply", bench_fq_mul, default_duration);
-    benchmark_time("1000 * Fq Square", bench_fq_square, default_duration);
-    printf("\n");
-    benchmark_time("G1 Projective Add", bench_g1_projective_add, default_duration / 100);
-    benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<0>, default_duration);
-    benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<0>, default_duration);
-    benchmark_time("G1 Projective w-NAF Mult", bench_g1_projective_scalar_mult<4>, default_duration);
-    benchmark_time("G1 Affine w-NAF Mult", bench_g1_affine_scalar_mult<4>, default_duration);
-    benchmark_time("G1 Convert to Affine", bench_g1_convert_affine, default_duration / 10);
-    benchmark_time("G1 Unmarshal: Compressed, Checked", bench_g1_unmarshal<true, true>, default_duration);
-    benchmark_time("G1 Unmarshal: Uncompressed, Checked", bench_g1_unmarshal<false, true>, default_duration);
-    benchmark_time("G1 Unmarshal: Compressed, Unchecked", bench_g1_unmarshal<true, false>, default_duration);
-    benchmark_time("G1 Unmarshal: Uncompressed, Unchecked", bench_g1_unmarshal<false, false>, default_duration / 1000);
-    printf("\n");
-    benchmark_time("G2 Projective Add", bench_g2_projective_add, default_duration / 100);
-    benchmark_time("G2 Projective Mult", bench_g2_projective_scalar_mult<0>, default_duration);
-    benchmark_time("G2 Affine Mult", bench_g2_affine_scalar_mult<0>, default_duration);
-    benchmark_time("G2 Projective w-NAF Mult", bench_g2_projective_scalar_mult<4>, default_duration);
-    benchmark_time("G2 Affine w-NAF Mult", bench_g2_affine_scalar_mult<4>, default_duration);
+    // benchmark_time("1000 * Fq Addition", bench_fq_add, default_duration);
+    // benchmark_time("1000 * Fq Subtraction", bench_fq_subtract, default_duration);
+    // benchmark_time("1000 * Fq Double", bench_fq_multiply2, default_duration);
+    // benchmark_time("1000 * Fq Montgomery", bench_fq_montgomery, default_duration);
+    // benchmark_time("1000 * Fq Multiply", bench_fq_mul, default_duration);
+    // benchmark_time("1000 * Fq Square", bench_fq_square, default_duration);
+    // printf("\n");
+    // benchmark_time("G1 Projective Add", bench_g1_projective_add, default_duration / 100);
+    // benchmark_time("G1 Projective Double", bench_g1_projective_multiply2, default_duration / 100);
+    // benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<0>, default_duration);
+    // benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<0>, default_duration);
+    // benchmark_time("G1 Projective w-NAF Mult", bench_g1_projective_scalar_mult<4>, default_duration);
+    // benchmark_time("G1 Affine w-NAF Mult", bench_g1_affine_scalar_mult<4>, default_duration);
+    // benchmark_time("G1 Convert to Affine", bench_g1_convert_affine, default_duration / 10);
+    // benchmark_time("G1 Unmarshal: Compressed, Checked", bench_g1_unmarshal<true, true>, default_duration);
+    // benchmark_time("G1 Unmarshal: Uncompressed, Checked", bench_g1_unmarshal<false, true>, default_duration);
+    // benchmark_time("G1 Unmarshal: Compressed, Unchecked", bench_g1_unmarshal<true, false>, default_duration);
+    // benchmark_time("G1 Unmarshal: Uncompressed, Unchecked", bench_g1_unmarshal<false, false>, default_duration / 1000);
+    // printf("\n");
+    // benchmark_time("G2 Projective Add", bench_g2_projective_add, default_duration / 100);
+    // benchmark_time("G2 Projective Double", bench_g2_projective_multiply2, default_duration / 100);
+    // benchmark_time("G2 Projective Mult", bench_g2_projective_scalar_mult<0>, default_duration);
+    // benchmark_time("G2 Affine Mult", bench_g2_affine_scalar_mult<0>, default_duration);
+    // benchmark_time("G2 Projective w-NAF Mult", bench_g2_projective_scalar_mult<4>, default_duration);
+    // benchmark_time("G2 Affine w-NAF Mult", bench_g2_affine_scalar_mult<4>, default_duration);
+    benchmark_time("G2 Fast Scalar Mult", bench_g2_fast_scalar_mult, default_duration);
     benchmark_time("G2 Convert to Affine", bench_g2_convert_affine, default_duration / 10);
     benchmark_time("G2 Unmarshal: Compressed, Checked", bench_g2_unmarshal<true, true>, default_duration);
     benchmark_time("G2 Unmarshal: Uncompressed, Checked", bench_g2_unmarshal<false, true>, default_duration);
@@ -416,6 +464,7 @@ void run_benchmarks(void) {
     benchmark_time("G2 Unmarshal: Uncompressed, Unchecked", bench_g2_unmarshal<false, false>, default_duration / 1000);
     printf("\n");
     benchmark_time("Fq12 Multiply", bench_fq12_mult, default_duration);
+    benchmark_time("Fq12 Square", bench_fq12_mult, default_duration);
     benchmark_time("Fq12 Exponentiate", bench_fq12_exp, default_duration);
     benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_gt, default_duration);
     benchmark_time("Fq12 Exponentiate GT (Platforms w/o Division)", bench_fq12_exp_gt_nodiv, default_duration);
