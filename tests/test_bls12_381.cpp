@@ -1810,6 +1810,51 @@ const char* test_g_wnaf(void) {
     return "PASS";
 }
 
+
+BigInt<256> g1_endomorphism_lambda = {
+    .std_words = {0x00000001, 0xfffffffe, 0xfffcb7fc, 0xa7780001, 0x09a1d804, 0x3339d808, 0x299d7d48, 0x73eda753}
+};
+const char* test_g1_endomorphism_random(void) {
+    for (int i = 0; i != std_iters; i++) {
+        G1 a;
+        a.random_generator(random_bytes);
+        G1 b;
+        b.copy(a);
+
+        a.multiply(a, g1_endomorphism_lambda);
+        b.endomorphism(b);
+
+        if (!G1::equal(a, b)) {
+            return "FAIL";
+        }
+    }
+
+    return "PASS";
+}
+
+const char* test_g1_multiply_fast(void) {
+    G1 a;
+    BigInt<Fr::bits_value> scalar;
+
+    G1 tmp1;
+    G1 tmp2;
+
+    for (int i = 0; i != std_iters; i++) {
+        tmp1.random_generator(random_bytes);
+        a.set(tmp1);
+        scalar.random(random_bytes);
+
+        tmp1.multiply(a, scalar);
+        tmp2.multiply_fast(a, scalar);
+
+        if (!G1::equal(tmp1, tmp2)) {
+            return "FAIL (double-add)";
+        }
+    }
+
+    return "PASS";
+}
+
 void test_bls12_381_g1(void) {
     printf("G1:\n");
     printf("Generator...\t\t%s\n", test_g1_generator());
@@ -1821,6 +1866,8 @@ void test_bls12_381_g1(void) {
     printf("Multiplication (A)...\t%s\n", test_g_mul<G1, G1Affine>());
     printf("w-NAF Mult (P)...\t%s\n", test_g_wnaf<G1, G1, 4>());
     printf("w-NAF Mult (A)...\t%s\n", test_g_wnaf<G1, G1Affine, 4>());
+    printf("Endomorphism...\t\t%s\n", test_g1_endomorphism_random());
+    printf("Multiplication Fast...\t%s\n", test_g1_multiply_fast());
     printf("Encoding...\t\t%s\n", test_g_encoding<G1, G1Affine, G1Uncompressed, G1Compressed>());
     printf("\n");
 }
@@ -1990,7 +2037,6 @@ const char* test_g2_frobenius_random(void) {
 }
 
 const char* test_g2_multiply_div(void) {
-    /* Compare WNAF multiplication with double-add multiplication. */
     G2 a;
     BigInt<Fr::bits_value> scalar;
 
@@ -2278,12 +2324,12 @@ extern "C" {
 }
 
 void run_tests() {
-    // test_bls12_381_fr();
-    // test_bls12_381_fq();
-    // test_bls12_381_fq2();
-    // test_bls12_381_fq6();
-    // test_bls12_381_fq12();
-    // test_bls12_381_g1();
+    test_bls12_381_fr();
+    test_bls12_381_fq();
+    test_bls12_381_fq2();
+    test_bls12_381_fq6();
+    test_bls12_381_fq12();
+    test_bls12_381_g1();
     test_bls12_381_g2();
-    // test_bls12_381_pairing();
+    test_bls12_381_pairing();
 }

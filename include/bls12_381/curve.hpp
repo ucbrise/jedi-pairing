@@ -582,6 +582,9 @@ namespace embedded_pairing::bls12_381 {
         static const G1 zero;
         static const G1 one;
 
+        void endomorphism(const G1& a);
+        void multiply_endomorphism(const G1& a, const BigInt<256>& c0, bool c0_neg, const BigInt<256>& c1, bool c1_neg);
+        void multiply_fast(const G1& a, const BigInt<256>& scalar);
         void random_generator(void (*get_random_bytes)(void*, size_t));
     };
     constexpr G1 G1::zero = {{
