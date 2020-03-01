@@ -44,9 +44,9 @@ namespace embedded_pairing::wkdibe {
         random_zpstar(alpha, get_random_bytes);
         walpha.from_bigint(alpha);
         params.g.random_generator(get_random_bytes);
-        bls12_381::wnaf_multiply(params.g1, params.g, walpha);
+        params.g1.multiply_wnaf(params.g, walpha);
         params.g2.random_generator(get_random_bytes);
-        bls12_381::wnaf_multiply(msk.g2alpha, params.g2, walpha);
+        msk.g2alpha.multiply_wnaf(params.g2, walpha);
         params.g3.random_generator(get_random_bytes);
 
         G1Affine g2affine;
@@ -79,26 +79,26 @@ namespace embedded_pairing::wkdibe {
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (!attrs.attrs[k].omitFromKeys) {
-                    bls12_381::wnaf_multiply(temp, params.h[i], attrs.attrs[k].id);
+                    temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
                     sk.a0.add(sk.a0, temp);
                 }
                 k++;
             } else if (!attrs.omitAllFromKeysUnlessPresent) {
                 sk.b[j].idx = i;
-                bls12_381::wnaf_multiply(sk.b[j].hexp, params.h[i], wr);
+                sk.b[j].hexp.multiply_wnaf(params.h[i], wr);
                 j++;
             }
         }
         sk.l = j;
         sk.signatures = params.signatures;
         if (sk.signatures) {
-            bls12_381::wnaf_multiply(sk.bsig, params.hsig, wr);
+            sk.bsig.multiply_wnaf(params.hsig, wr);
         } else {
             sk.bsig.copy(G1::zero);
         }
-        bls12_381::wnaf_multiply(sk.a0, sk.a0, wr);
+        sk.a0.multiply_wnaf(sk.a0, wr);
         sk.a0.add(sk.a0, msk.g2alpha);
-        bls12_381::wnaf_multiply(sk.a1, params.g, wr);
+        sk.a1.multiply_wnaf(params.g, wr);
     }
 
     void qualifykey(SecretKey& qualified, const Params& params, const SecretKey& sk, const AttributeList& attrs, void (*get_random_bytes)(void*, size_t)) {
@@ -116,10 +116,10 @@ namespace embedded_pairing::wkdibe {
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (!attrs.attrs[k].omitFromKeys) {
-                    bls12_381::wnaf_multiply(temp, params.h[i], attrs.attrs[k].id);
+                    temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
                     product.add(product, temp);
                     if (x != sk.l && sk.b[x].idx == i) {
-                        bls12_381::wnaf_multiply(temp, sk.b[x].hexp, attrs.attrs[k].id);
+                        temp.multiply_wnaf(sk.b[x].hexp, attrs.attrs[k].id);
                         qualified.a0.add(qualified.a0, temp);
                         x++;
                     }
@@ -128,7 +128,7 @@ namespace embedded_pairing::wkdibe {
             } else if (x != sk.l && sk.b[x].idx == i) {
                 if (!attrs.omitAllFromKeysUnlessPresent) {
                     qualified.b[j].idx = i;
-                    bls12_381::wnaf_multiply(qualified.b[j].hexp, params.h[i], wt);
+                    qualified.b[j].hexp.multiply_wnaf(params.h[i], wt);
                     qualified.b[j].hexp.add(qualified.b[j].hexp, sk.b[x].hexp);
                     j++;
                 }
@@ -142,14 +142,14 @@ namespace embedded_pairing::wkdibe {
         qualified.l = j;
         qualified.signatures = sk.signatures;
         if (qualified.signatures) {
-            bls12_381::wnaf_multiply(qualified.bsig, params.hsig, wt);
+            qualified.bsig.multiply_wnaf(params.hsig, wt);
             qualified.bsig.add(qualified.bsig, sk.bsig);
         } else {
             qualified.bsig.copy(G1::zero);
         }
-        bls12_381::wnaf_multiply(product, product, wt);
+        product.multiply_wnaf(product, wt);
         qualified.a0.add(qualified.a0, product);
-        bls12_381::wnaf_multiply(qualified.a1, params.g, wt);
+        qualified.a1.multiply_wnaf(params.g, wt);
         qualified.a1.add(qualified.a1, sk.a1);
     }
 
@@ -160,7 +160,7 @@ namespace embedded_pairing::wkdibe {
         int k = 0; /* Index for reading from attrs.attrs */
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && !attrs.attrs[k].omitFromKeys && attrs.attrs[k].idx == i) {
-                bls12_381::wnaf_multiply(temp, params.h[i], attrs.attrs[k].id);
+                temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
                 sk.a0.add(sk.a0, temp);
                 k++;
             } else if (!attrs.omitAllFromKeysUnlessPresent) {
@@ -189,7 +189,7 @@ namespace embedded_pairing::wkdibe {
         for (int i = 0; x != sk.l && i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (sk.b[x].idx == i && !attrs.attrs[k].omitFromKeys) {
-                    bls12_381::wnaf_multiply(temp, sk.b[x].hexp, attrs.attrs[k].id);
+                    temp.multiply_wnaf(sk.b[x].hexp, attrs.attrs[k].id);
                     qualified.a0.add(qualified.a0, temp);
                     x++;
                 }
@@ -242,15 +242,15 @@ namespace embedded_pairing::wkdibe {
                         if (diff.subtract(to.attrs[k].id, from.attrs[j].id)) {
                             diff.add(diff, group_order);
                         }
-                        bls12_381::wnaf_multiply(temp, parent.b[i].hexp, diff);
+                        temp.multiply_wnaf(parent.b[i].hexp, diff);
                         sk.a0.add(sk.a0, temp);
                     }
                 } else if (sub_from) {
                     diff.subtract(group_order, from.attrs[j].id);
-                    bls12_381::wnaf_multiply(temp, parent.b[i].hexp, diff);
+                    temp.multiply_wnaf(parent.b[i].hexp, diff);
                     sk.a0.add(sk.a0, temp);
                 } else if (add_to) {
-                    bls12_381::wnaf_multiply(temp, parent.b[i].hexp, to.attrs[k].id);
+                    temp.multiply_wnaf(parent.b[i].hexp, to.attrs[k].id);
                     sk.a0.add(sk.a0, temp);
                 }
             }
@@ -270,7 +270,7 @@ namespace embedded_pairing::wkdibe {
         precomputed.prodexp.copy(params.g3);
         for (int i = 0; i != attrs.length; i++) {
             const Attribute& attr = attrs.attrs[i];
-            bls12_381::wnaf_multiply(temp, params.h[attr.idx], attr.id);
+            temp.multiply_wnaf(params.h[attr.idx], attr.id);
             precomputed.prodexp.add(precomputed.prodexp, temp);
         }
     }
@@ -289,18 +289,18 @@ namespace embedded_pairing::wkdibe {
                     if (diff.subtract(to_attr.id, from_attr.id)) {
                         diff.add(diff, group_order);
                     }
-                    bls12_381::wnaf_multiply(temp, params.h[to_attr.idx], diff);
+                    temp.multiply_wnaf(params.h[to_attr.idx], diff);
                     precomputed.prodexp.add(precomputed.prodexp, temp);
                 }
                 i++;
                 j++;
             } else if (from_attr.idx < to_attr.idx) {
                 diff.subtract(group_order, from_attr.id);
-                bls12_381::wnaf_multiply(temp, params.h[from_attr.idx], diff);
+                temp.multiply_wnaf(params.h[from_attr.idx], diff);
                 precomputed.prodexp.add(precomputed.prodexp, temp);
                 i++;
             } else {
-                bls12_381::wnaf_multiply(temp, params.h[to_attr.idx], to_attr.id);
+                temp.multiply_wnaf(params.h[to_attr.idx], to_attr.id);
                 precomputed.prodexp.add(precomputed.prodexp, temp);
                 j++;
             }
@@ -308,13 +308,13 @@ namespace embedded_pairing::wkdibe {
         while (i != from.length) {
             const Attribute& from_attr = from.attrs[i];
             diff.subtract(group_order, from_attr.id);
-            bls12_381::wnaf_multiply(temp, params.h[from_attr.idx], diff);
+            temp.multiply_wnaf(params.h[from_attr.idx], diff);
             precomputed.prodexp.add(precomputed.prodexp, temp);
             i++;
         }
         while (j != to.length) {
             const Attribute& to_attr = to.attrs[j];
-            bls12_381::wnaf_multiply(temp, params.h[to_attr.idx], to_attr.id);
+            temp.multiply_wnaf(params.h[to_attr.idx], to_attr.id);
             precomputed.prodexp.add(precomputed.prodexp, temp);
             j++;
         }
@@ -329,15 +329,15 @@ namespace embedded_pairing::wkdibe {
         bls12_381::WnafScalar<256, 4> wt;
         wt.from_bigint(t);
 
-        bls12_381::wnaf_multiply(temp, precomputed.prodexp, wt);
+        temp.multiply_wnaf(precomputed.prodexp, wt);
         resampled.a0.add(sk.a0, temp);
 
-        bls12_381::wnaf_multiply(temp2, params.g, wt);
+        temp2.multiply_wnaf(params.g, wt);
         resampled.a1.add(sk.a1, temp2);
 
         resampled.signatures = sk.signatures;
         if (resampled.signatures) {
-            bls12_381::wnaf_multiply(temp, params.hsig, wt);
+            temp.multiply_wnaf(params.hsig, wt);
             resampled.bsig.add(sk.bsig, temp);
         } else {
             resampled.bsig.copy(G1::zero);
@@ -345,7 +345,7 @@ namespace embedded_pairing::wkdibe {
 
         if (supportFurtherQualification) {
             for (int i = 0; i != sk.l; i++) {
-                bls12_381::wnaf_multiply(temp, params.h[sk.b[i].idx], wt);
+                temp.multiply_wnaf(params.h[sk.b[i].idx], wt);
                 resampled.b[i].hexp.add(sk.b[i].hexp, temp);
                 resampled.b[i].idx = sk.b[i].idx;
             }
@@ -369,8 +369,8 @@ namespace embedded_pairing::wkdibe {
         bls12_381::WnafScalar<256, 4> ws;
         ws.from_bigint(s);
 
-        bls12_381::wnaf_multiply(ciphertext.b, params.g, ws);
-        bls12_381::wnaf_multiply(ciphertext.c, precomputed.prodexp, ws);
+        ciphertext.b.multiply_wnaf(params.g, ws);
+        ciphertext.c.multiply_wnaf(precomputed.prodexp, ws);
     }
 
     void decrypt(GT& message, const Ciphertext& ciphertext, const SecretKey& sk) {
@@ -419,16 +419,16 @@ namespace embedded_pairing::wkdibe {
         {
             bls12_381::WnafScalar<256, 4> wm;
             wm.from_bigint(message);
-            bls12_381::wnaf_multiply(signature.a0, sk.bsig, wm);
-            bls12_381::wnaf_multiply(prodexp, params.hsig, wm);
+            signature.a0.multiply_wnaf(sk.bsig, wm);
+            prodexp.multiply_wnaf(params.hsig, wm);
         }
         signature.a0.add(signature.a0, sk.a0);
         prodexp.add(prodexp, precomputed.prodexp);
         {
             bls12_381::WnafScalar<256, 4> ws;
             ws.from_bigint(s);
-            bls12_381::wnaf_multiply(signature.a1, params.g, ws);
-            bls12_381::wnaf_multiply(prodexp, prodexp, ws);
+            signature.a1.multiply_wnaf(params.g, ws);
+            prodexp.multiply_wnaf(prodexp, ws);
         }
         signature.a0.add(signature.a0, prodexp);
         signature.a1.add(signature.a1, sk.a1);
@@ -443,7 +443,7 @@ namespace embedded_pairing::wkdibe {
                     return;
                 }
                 if (sk.b[i].idx == attrs->attrs[k].idx) {
-                    bls12_381::wnaf_multiply(prodexp, sk.b[i].hexp, attrs->attrs[k].id);
+                    prodexp.multiply_wnaf(sk.b[i].hexp, attrs->attrs[k].id);
                     signature.a0.add(signature.a0, prodexp);
                     k++;
                 }
@@ -461,7 +461,7 @@ namespace embedded_pairing::wkdibe {
         GT ratio;
         GT denominator;
         G1 prodexp;
-        bls12_381::wnaf_multiply(prodexp, params.hsig, message);
+        prodexp.multiply_wnaf(params.hsig, message);
         prodexp.add(prodexp, precomputed.prodexp);
         G1Affine a0affine;
         G2Affine gaffine;

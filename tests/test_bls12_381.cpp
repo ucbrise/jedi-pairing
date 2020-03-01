@@ -1787,23 +1787,31 @@ const char* test_g_encoding(void) {
 
 template<typename Result, typename Base, unsigned int window>
 const char* test_g_wnaf(void) {
-    /* Compare WNAF multiplication with double-add multiplication. */
+    /*
+     * Compare WNAF multiplication with double-add multiplication and chosen
+     * multiplication algorithm.
+     */
     Base a;
     BigInt<Fr::bits_value> scalar;
 
     Result tmp1;
     Result tmp2;
+    Result tmp3;
 
     for (int i = 0; i != std_iters; i++) {
         tmp1.random_generator(random_bytes);
         a.set(tmp1);
         scalar.random(random_bytes);
 
-        tmp1.multiply(a, scalar);
-        wnaf_multiply<Result, Base, Fr::bits_value, window>(tmp2, a, scalar);
+        tmp1.multiply_doubleadd(a, scalar);
+        tmp2.multiply_wnaf(a, scalar);
+        tmp3.multiply(a, scalar);
 
         if (!Result::equal(tmp1, tmp2)) {
-            return "FAIL (double-add)";
+            return "FAIL (double-add != wnaf)";
+        }
+        if (!Result::equal(tmp1, tmp3)) {
+            return "FAIL (double-add != multiply)";
         }
     }
 

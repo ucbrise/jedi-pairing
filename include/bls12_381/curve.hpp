@@ -39,6 +39,7 @@
 #include "./fr.hpp"
 #include "./fq.hpp"
 #include "./fq2.hpp"
+#include "./wnaf.hpp"
 
 namespace embedded_pairing::bls12_381 {
     /*
@@ -140,7 +141,9 @@ namespace embedded_pairing::bls12_381 {
 
         bool is_in_correct_subgroup_assuming_on_curve(void) const {
             Projective<BaseField> ar;
-            ar.multiply_restrict(*this, ScalarField::p_value);
+
+            /* This doesn't have to be optimized, so just use doubleadd. */
+            ar.multiply_doubleadd_restrict(*this, ScalarField::p_value);
             return ar.is_zero();
         }
 
@@ -494,6 +497,17 @@ namespace embedded_pairing::bls12_381 {
             this->z.copy(a.z);
         }
 
+        template <typename ScalarField, const BaseField& coeff_b>
+        void from_affine(const Affine<BaseField, ScalarField, coeff_b>& __restrict a) {
+            if (a.is_zero()) {
+                this->copy(Projective<BaseField>::zero);
+            } else {
+                this->x.copy(a.x);
+                this->y.copy(a.y);
+                this->z.copy(BaseField::one);
+            }
+        }
+
         /*
          * Scalar multiplication by repeated doubling. Almost equivalent to
          * the 'exponentiate' function in montgomeryfp_utils.hpp. We implement
@@ -504,7 +518,7 @@ namespace embedded_pairing::bls12_381 {
          *    itself.
          */
         template <typename ArgType, typename BigInt>
-        void multiply_restrict(const ArgType& __restrict base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
+        void multiply_doubleadd_restrict(const ArgType& __restrict base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
 #ifdef RESIST_SIDE_CHANNELS
             Projective<BaseField> tmp;
 #endif
@@ -522,20 +536,25 @@ namespace embedded_pairing::bls12_381 {
         }
 
         template <typename ArgType, typename BigInt>
-        void multiply(const ArgType& base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
+        void multiply_doubleadd(const ArgType& base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
             const ArgType tmp = base;
-            this->multiply_restrict(tmp, scalar, highest_bit);
+            this->multiply_doubleadd_restrict(tmp, scalar, highest_bit);
         }
 
-        template <typename ScalarField, const BaseField& coeff_b>
-        void from_affine(const Affine<BaseField, ScalarField, coeff_b>& __restrict a) {
-            if (a.is_zero()) {
-                this->copy(Projective<BaseField>::zero);
-            } else {
-                this->x.copy(a.x);
-                this->y.copy(a.y);
-                this->z.copy(BaseField::one);
-            }
+        template <typename ArgType, typename BigInt, unsigned int window = 4>
+        void multiply_wnaf(const ArgType& base, const BigInt& scalar) {
+            bls12_381::wnaf_multiply<Projective<BaseField>, ArgType, BigInt::bits_value, window>(*this, base, scalar);
+        }
+
+        template <typename ArgType, int bits, unsigned int window>
+        void multiply_wnaf(const ArgType& base, const WnafScalar<bits, window>& scalar) {
+            bls12_381::wnaf_multiply(*this, base, scalar);
+        }
+
+        template <typename ArgType, typename BigInt>
+        void multiply(const ArgType& base, const BigInt& scalar) {
+            /* TODO: choose an algorithm statically */
+            this->multiply_wnaf(base, scalar);
         }
     };
 

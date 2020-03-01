@@ -7,7 +7,6 @@
 #include "bls12_381/fq12.hpp"
 #include "bls12_381/curve.hpp"
 #include "bls12_381/pairing.hpp"
-#include "bls12_381/wnaf.hpp"
 
 using namespace embedded_pairing::bls12_381;
 using embedded_pairing::core::BigInt;
@@ -142,7 +141,7 @@ uint64_t bench_g1_projective_add(void) {
     return end - start;
 }
 
-template <unsigned int wnaf_window>
+template <bool doubleadd, unsigned int wnaf_window>
 uint64_t bench_g1_projective_scalar_mult(void) {
     G1 a;
     a.random_generator(random_bytes);
@@ -151,16 +150,18 @@ uint64_t bench_g1_projective_scalar_mult(void) {
     x.random(random_bytes);
 
     uint64_t start = current_time_nanos();
-    if constexpr(wnaf_window == 0) {
+    if constexpr(doubleadd) {
+        a.multiply_doubleadd(a, x);
+    } else if constexpr(wnaf_window == 0) {
         a.multiply(a, x);
     } else {
-        wnaf_multiply<G1, G1, 256, wnaf_window>(a, a, x);
+        a.multiply_wnaf<G1, BigInt<256>, wnaf_window>(a, x);
     }
     uint64_t end = current_time_nanos();
     return end - start;
 }
 
-template <unsigned int wnaf_window>
+template <bool doubleadd, unsigned int wnaf_window>
 uint64_t bench_g1_affine_scalar_mult(void) {
     G1 a;
     a.random_generator(random_bytes);
@@ -171,10 +172,12 @@ uint64_t bench_g1_affine_scalar_mult(void) {
     x.random(random_bytes);
 
     uint64_t start = current_time_nanos();
-    if constexpr(wnaf_window == 0) {
+    if constexpr(doubleadd) {
+        a.multiply_doubleadd(aff, x);
+    } else if constexpr(wnaf_window == 0) {
         a.multiply(aff, x);
     } else {
-        wnaf_multiply<G1, G1Affine, 256, wnaf_window>(a, aff, x);
+        a.multiply_wnaf<G1Affine, BigInt<256>, wnaf_window>(aff, x);
     }
     uint64_t end = current_time_nanos();
     return end - start;
@@ -223,7 +226,7 @@ uint64_t bench_g2_projective_add(void) {
     return end - start;
 }
 
-template <unsigned int wnaf_window>
+template <bool doubleadd, unsigned int wnaf_window>
 uint64_t bench_g2_projective_scalar_mult(void) {
     G2 a;
     a.random_generator(random_bytes);
@@ -232,16 +235,18 @@ uint64_t bench_g2_projective_scalar_mult(void) {
     x.random(random_bytes);
 
     uint64_t start = current_time_nanos();
-    if constexpr(wnaf_window == 0) {
+    if constexpr(doubleadd) {
+        a.multiply_doubleadd(a, x);
+    } else if constexpr(wnaf_window == 0) {
         a.multiply(a, x);
     } else {
-        wnaf_multiply<G2, G2, 256, wnaf_window>(a, a, x);
+        a.multiply_wnaf<G2, BigInt<256>, wnaf_window>(a, x);
     }
     uint64_t end = current_time_nanos();
     return end - start;
 }
 
-template <unsigned int wnaf_window>
+template <bool doubleadd, unsigned int wnaf_window>
 uint64_t bench_g2_affine_scalar_mult(void) {
     G2 a;
     a.random_generator(random_bytes);
@@ -252,10 +257,12 @@ uint64_t bench_g2_affine_scalar_mult(void) {
     x.random(random_bytes);
 
     uint64_t start = current_time_nanos();
-    if constexpr(wnaf_window == 0) {
+    if constexpr(doubleadd) {
+        a.multiply_doubleadd(aff, x);
+    } else if constexpr(wnaf_window == 0) {
         a.multiply(aff, x);
     } else {
-        wnaf_multiply<G2, G2Affine, 256, wnaf_window>(a, aff, x);
+        a.multiply_wnaf<G2Affine, BigInt<256>, wnaf_window>(aff, x);
     }
     uint64_t end = current_time_nanos();
     return end - start;
@@ -394,10 +401,12 @@ void run_benchmarks(void) {
     benchmark_time("1000 * Fq Square", bench_fq_square, default_duration);
     printf("\n");
     benchmark_time("G1 Projective Add", bench_g1_projective_add, default_duration / 100);
-    benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<0>, default_duration);
-    benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<0>, default_duration);
-    benchmark_time("G1 Projective w-NAF Mult", bench_g1_projective_scalar_mult<4>, default_duration);
-    benchmark_time("G1 Affine w-NAF Mult", bench_g1_affine_scalar_mult<4>, default_duration);
+    benchmark_time("G1 Projective Double-Add Mult", bench_g1_projective_scalar_mult<true, 0>, default_duration);
+    benchmark_time("G1 Affine Double-Add Mult", bench_g1_affine_scalar_mult<true, 0>, default_duration);
+    benchmark_time("G1 Projective w-NAF Mult", bench_g1_projective_scalar_mult<false, 4>, default_duration);
+    benchmark_time("G1 Affine w-NAF Mult", bench_g1_affine_scalar_mult<false, 4>, default_duration);
+    benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<false, 0>, default_duration);
+    benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<false, 0>, default_duration);
     benchmark_time("G1 Convert to Affine", bench_g1_convert_affine, default_duration / 10);
     benchmark_time("G1 Unmarshal: Compressed, Checked", bench_g1_unmarshal<true, true>, default_duration);
     benchmark_time("G1 Unmarshal: Uncompressed, Checked", bench_g1_unmarshal<false, true>, default_duration);
@@ -405,10 +414,12 @@ void run_benchmarks(void) {
     benchmark_time("G1 Unmarshal: Uncompressed, Unchecked", bench_g1_unmarshal<false, false>, default_duration / 1000);
     printf("\n");
     benchmark_time("G2 Projective Add", bench_g2_projective_add, default_duration / 100);
-    benchmark_time("G2 Projective Mult", bench_g2_projective_scalar_mult<0>, default_duration);
-    benchmark_time("G2 Affine Mult", bench_g2_affine_scalar_mult<0>, default_duration);
-    benchmark_time("G2 Projective w-NAF Mult", bench_g2_projective_scalar_mult<4>, default_duration);
-    benchmark_time("G2 Affine w-NAF Mult", bench_g2_affine_scalar_mult<4>, default_duration);
+    benchmark_time("G2 Projective Double-Add Mult", bench_g2_projective_scalar_mult<true, 0>, default_duration);
+    benchmark_time("G2 Affine Double-Add Mult", bench_g2_affine_scalar_mult<true, 0>, default_duration);
+    benchmark_time("G2 Projective w-NAF Mult", bench_g2_projective_scalar_mult<false, 4>, default_duration);
+    benchmark_time("G2 Affine w-NAF Mult", bench_g2_affine_scalar_mult<false, 4>, default_duration);
+    benchmark_time("G2 Projective Mult", bench_g2_projective_scalar_mult<false, 0>, default_duration);
+    benchmark_time("G2 Affine Mult", bench_g2_affine_scalar_mult<false, 0>, default_duration);
     benchmark_time("G2 Convert to Affine", bench_g2_convert_affine, default_duration / 10);
     benchmark_time("G2 Unmarshal: Compressed, Checked", bench_g2_unmarshal<true, true>, default_duration);
     benchmark_time("G2 Unmarshal: Uncompressed, Checked", bench_g2_unmarshal<false, true>, default_duration);

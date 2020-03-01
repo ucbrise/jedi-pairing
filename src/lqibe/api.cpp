@@ -44,7 +44,7 @@ namespace embedded_pairing::lqibe {
         qaffine.from_hash(hash.hash);
 
         G1 q;
-        bls12_381::wnaf_multiply(q, qaffine, G1Affine::cofactor);
+        q.multiply_wnaf(qaffine, G1Affine::cofactor);
 
         id.q.from_projective(q);
     }
@@ -52,12 +52,12 @@ namespace embedded_pairing::lqibe {
     void setup(Params& params, MasterKey& msk, void (*get_random_bytes)(void*, size_t)) {
         msk.s.random(get_random_bytes);
         params.p.random_generator(get_random_bytes);
-        bls12_381::wnaf_multiply(params.sp, params.p, msk.s);
+        params.sp.multiply_wnaf(params.p, msk.s);
     }
 
     void keygen(SecretKey& sk, const MasterKey& msk, const ID& id) {
         G1 sq;
-        bls12_381::wnaf_multiply(sq, id.q, msk.s);
+        sq.multiply_wnaf(id.q, msk.s);
         sk.sq.from_projective(sq);
     }
 
@@ -75,11 +75,11 @@ namespace embedded_pairing::lqibe {
         wr.from_bigint(r);
 
         G2 rp;
-        bls12_381::wnaf_multiply(rp, params.p, wr);
+        rp.multiply_wnaf(params.p, wr);
         ciphertext.rp.from_projective(rp);
 
         G2 rsp;
-        bls12_381::wnaf_multiply(rsp, params.sp, wr);
+        rsp.multiply_wnaf(params.sp, wr);
 
         SymmetricKeyHashBuffer buffer;
 
