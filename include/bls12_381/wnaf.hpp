@@ -53,6 +53,7 @@ namespace embedded_pairing::bls12_381 {
         }
     };
 
+    /* This probably doesn't work for window >= 8 */
     template <int bits, unsigned int window>
     struct WnafScalar {
         int8_t wnaf[bits + 1];

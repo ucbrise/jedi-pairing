@@ -553,7 +553,7 @@ namespace embedded_pairing::bls12_381 {
 
         template <typename ArgType, typename BigInt>
         void multiply(const ArgType& base, const BigInt& scalar) {
-            /* TODO: choose an algorithm statically */
+            /* Choose an algorithm statically */
             this->multiply_wnaf(base, scalar);
         }
     };
@@ -601,6 +601,24 @@ namespace embedded_pairing::bls12_381 {
         static const G1 zero;
         static const G1 one;
 
+        void endomorphism(const G1& a);
+        void multiply_endomorphism(const G1& base, const BigInt<256>& c0, bool c0_neg, const BigInt<256>& c1, bool c1_neg);
+        void multiply_endomorphism(const G1& base, const BigInt<256>& scalar);
+
+        /* Fast, specialized implementation for G1. */
+        void multiply(const G1& base, const BigInt<256>& scalar) {
+            this->multiply_endomorphism(base, scalar);
+        }
+        void multiply(const G1Affine& base, const BigInt<256>& scalar) {
+            G1 projective;
+            projective.from_affine(base);
+            this->multiply_endomorphism(projective, scalar);
+        }
+        template <typename ArgType>
+        void multiply(const ArgType& base, const BigInt<128>& scalar) {
+            this->multiply_wnaf(base, scalar);
+        }
+
         void random_generator(void (*get_random_bytes)(void*, size_t));
     };
     constexpr G1 G1::zero = {{
@@ -644,6 +662,24 @@ namespace embedded_pairing::bls12_381 {
     struct G2 : Projective<Fq2> {
         static const G2 zero;
         static const G2 one;
+
+        void frobenius_map(const G2& a, unsigned int power);
+        void multiply_frobenius(const G2& base, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
+        void multiply_frobenius(const G2& base, const BigInt<256>& scalar);
+
+        /* Fast, specialized implementation for G2. */
+        void multiply(const G2& base, const BigInt<256>& scalar) {
+            this->multiply_frobenius(base, scalar);
+        }
+        void multiply(const G2Affine& base, const BigInt<256>& scalar) {
+            G2 projective;
+            projective.from_affine(base);
+            this->multiply_frobenius(projective, scalar);
+        }
+        template <typename ArgType>
+        void multiply(const ArgType& base, const BigInt<512>& scalar) {
+            this->multiply_wnaf(base, scalar);
+        }
 
         void random_generator(void (*get_random_bytes)(void*, size_t));
     };
