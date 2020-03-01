@@ -44,7 +44,8 @@ namespace embedded_pairing::lqibe {
         qaffine.from_hash(hash.hash);
 
         G1 q;
-        bls12_381::wnaf_multiply(q, qaffine, G1Affine::cofactor);
+        q.multiply(qaffine, G1Affine::cofactor);
+        //bls12_381::wnaf_multiply(q, qaffine, G1Affine::cofactor);
 
         id.q.from_projective(q);
     }
@@ -52,12 +53,14 @@ namespace embedded_pairing::lqibe {
     void setup(Params& params, MasterKey& msk, void (*get_random_bytes)(void*, size_t)) {
         msk.s.random(get_random_bytes);
         params.p.random_generator(get_random_bytes);
-        bls12_381::wnaf_multiply(params.sp, params.p, msk.s);
+        params.sp.multiply(params.p, msk.s);
+        //bls12_381::wnaf_multiply(params.sp, params.p, msk.s);
     }
 
     void keygen(SecretKey& sk, const MasterKey& msk, const ID& id) {
         G1 sq;
-        bls12_381::wnaf_multiply(sq, id.q, msk.s);
+        sq.multiply(id.q, msk.s);
+        //bls12_381::wnaf_multiply(sq, id.q, msk.s);
         sk.sq.from_projective(sq);
     }
 

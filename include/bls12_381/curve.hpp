@@ -39,6 +39,11 @@
 #include "./fr.hpp"
 #include "./fq.hpp"
 #include "./fq2.hpp"
+#include "./wnaf.hpp"
+
+#if defined(__ARM_ARCH_6M__)
+#define EMBEDDED_PAIRING_BLS12_381_MULTIPLY_USE_WNAF_ONLY
+#endif
 
 namespace embedded_pairing::bls12_381 {
     /*
@@ -140,7 +145,7 @@ namespace embedded_pairing::bls12_381 {
 
         bool is_in_correct_subgroup_assuming_on_curve(void) const {
             Projective<BaseField> ar;
-            ar.multiply_restrict(*this, ScalarField::p_value);
+            ar.multiply_doubleadd_restrict(*this, ScalarField::p_value);
             return ar.is_zero();
         }
 
@@ -504,7 +509,7 @@ namespace embedded_pairing::bls12_381 {
          *    itself.
          */
         template <typename ArgType, typename BigInt>
-        void multiply_restrict(const ArgType& __restrict base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
+        void multiply_doubleadd_restrict(const ArgType& __restrict base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
 #ifdef RESIST_SIDE_CHANNELS
             Projective<BaseField> tmp;
 #endif
@@ -522,9 +527,20 @@ namespace embedded_pairing::bls12_381 {
         }
 
         template <typename ArgType, typename BigInt>
-        void multiply(const ArgType& base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
-            const ArgType tmp = base;
-            this->multiply_restrict(tmp, scalar, highest_bit);
+        void multiply_doubleadd(const ArgType& base, const BigInt& __restrict scalar, int highest_bit = BigInt::bits_value - 1) {
+            const ArgType base_copy = base;
+            this->multiply_doubleadd_restrict(base_copy, scalar, highest_bit);
+        }
+
+        /* Scalar multiplication using w-NAF. */
+        template <typename ArgType, typename BigInt, int wnaf_window = 4>
+        void multiply_wnaf(const ArgType& base, const WnafScalar<BigInt::bits_value, wnaf_window>& scalar) {
+            wnaf_multiply(*this, base, scalar);
+        }
+
+        template <typename ArgType, typename BigInt, int wnaf_window = 4>
+        void multiply_wnaf(const ArgType& base, const BigInt& scalar) {
+            wnaf_multiply(*this, base, scalar);
         }
 
         template <typename ScalarField, const BaseField& coeff_b>
@@ -586,6 +602,24 @@ namespace embedded_pairing::bls12_381 {
         void multiply_endomorphism(const G1& a, const BigInt<256>& c0, bool c0_neg, const BigInt<256>& c1, bool c1_neg);
         void multiply_fast(const G1& a, const BigInt<256>& scalar);
         void random_generator(void (*get_random_bytes)(void*, size_t));
+
+        void multiply(const G1& a, const BigInt<256>& scalar) {
+#ifdef EMBEDDED_PAIRING_BLS12_381_MULTIPLY_USE_WNAF_ONLY
+            this->multiply_wnaf(a, scalar);
+#else
+            this->multiply_fast(a, scalar);
+#endif
+        }
+
+        void multiply(const G1Affine& a, const BigInt<256>& scalar) {
+#ifdef EMBEDDED_PAIRING_BLS12_381_MULTIPLY_USE_WNAF_ONLY
+            this->multiply_wnaf(a, scalar);
+#else
+            G1 b;
+            b.from_affine(a);
+            this->multiply_fast(b, scalar);
+#endif
+        }
     };
     constexpr G1 G1::zero = {{
         .x = Fq::zero,
@@ -633,6 +667,24 @@ namespace embedded_pairing::bls12_381 {
         void multiply_coeff(const G2& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
         void multiply_div(const G2& a, const BigInt<256>& scalar);
         void random_generator(void (*get_random_bytes)(void*, size_t));
+
+        void multiply(const G2& a, const BigInt<256>& scalar) {
+#ifdef EMBEDDED_PAIRING_BLS12_381_MULTIPLY_USE_WNAF_ONLY
+            this->multiply_wnaf(a, scalar);
+#else
+            this->multiply_div(a, scalar);
+#endif
+        }
+
+        void multiply(const G2Affine& a, const BigInt<256>& scalar) {
+#ifdef EMBEDDED_PAIRING_BLS12_381_MULTIPLY_USE_WNAF_ONLY
+            this->multiply_wnaf(a, scalar);
+#else
+            G2 b;
+            b.from_affine(a);
+            this->multiply_div(b, scalar);
+#endif
+        }
     };
     constexpr G2 G2::zero = {{
         .x = Fq2::zero,
