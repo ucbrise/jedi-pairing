@@ -36,17 +36,17 @@
 
 #include "bls12_381/pairing.hpp"
 #include "bls12_381/wnaf.hpp"
+#include "bls12_381/decomposition.hpp"
 
 namespace embedded_pairing::wkdibe {
     void setup(Params& params, MasterKey& msk, int l, bool signatures, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX alphax;
         Scalar alpha;
-        bls12_381::WnafScalar<256, 4> walpha;
-        random_zpstar(alpha, get_random_bytes);
-        walpha.from_bigint(alpha);
+        random_zpstar(alphax, alpha, get_random_bytes);
         params.g.random_generator(get_random_bytes);
-        params.g1.multiply_wnaf(params.g, walpha);
+        params.g1.multiply_frobenius(params.g, alphax);
         params.g2.random_generator(get_random_bytes);
-        msk.g2alpha.multiply_wnaf(params.g2, walpha);
+        msk.g2alpha.multiply(params.g2, alpha);
         params.g3.random_generator(get_random_bytes);
 
         G1Affine g2affine;
@@ -68,46 +68,44 @@ namespace embedded_pairing::wkdibe {
     }
 
     void keygen(SecretKey& sk, const Params& params, const MasterKey& msk, const AttributeList& attrs, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX rx;
         Scalar r;
-        bls12_381::WnafScalar<256, 4> wr;
         G1 temp;
-        random_zpstar(r, get_random_bytes);
-        wr.from_bigint(r);
+        random_zpstar(rx, r, get_random_bytes);
         sk.a0.copy(params.g3);
         int j = 0; /* Index for writing to qualified.b */
         int k = 0; /* Index for reading from attrs.attrs */
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (!attrs.attrs[k].omitFromKeys) {
-                    temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
+                    temp.multiply(params.h[i], attrs.attrs[k].id);
                     sk.a0.add(sk.a0, temp);
                 }
                 k++;
             } else if (!attrs.omitAllFromKeysUnlessPresent) {
                 sk.b[j].idx = i;
-                sk.b[j].hexp.multiply_wnaf(params.h[i], wr);
+                sk.b[j].hexp.multiply(params.h[i], r);
                 j++;
             }
         }
         sk.l = j;
         sk.signatures = params.signatures;
         if (sk.signatures) {
-            sk.bsig.multiply_wnaf(params.hsig, wr);
+            sk.bsig.multiply(params.hsig, r);
         } else {
             sk.bsig.copy(G1::zero);
         }
-        sk.a0.multiply_wnaf(sk.a0, wr);
+        sk.a0.multiply(sk.a0, r);
         sk.a0.add(sk.a0, msk.g2alpha);
-        sk.a1.multiply_wnaf(params.g, wr);
+        sk.a1.multiply_frobenius(params.g, rx);
     }
 
     void qualifykey(SecretKey& qualified, const Params& params, const SecretKey& sk, const AttributeList& attrs, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX tx;
         Scalar t;
-        bls12_381::WnafScalar<256, 4> wt;
         G1 temp;
         G1 product;
-        random_zpstar(t, get_random_bytes);
-        wt.from_bigint(t);
+        random_zpstar(tx, t, get_random_bytes);
         product.copy(params.g3);
         qualified.a0.copy(sk.a0);
         int j = 0; /* Index for writing to qualified.b */
@@ -116,10 +114,10 @@ namespace embedded_pairing::wkdibe {
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (!attrs.attrs[k].omitFromKeys) {
-                    temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
+                    temp.multiply(params.h[i], attrs.attrs[k].id);
                     product.add(product, temp);
                     if (x != sk.l && sk.b[x].idx == i) {
-                        temp.multiply_wnaf(sk.b[x].hexp, attrs.attrs[k].id);
+                        temp.multiply(sk.b[x].hexp, attrs.attrs[k].id);
                         qualified.a0.add(qualified.a0, temp);
                         x++;
                     }
@@ -128,7 +126,7 @@ namespace embedded_pairing::wkdibe {
             } else if (x != sk.l && sk.b[x].idx == i) {
                 if (!attrs.omitAllFromKeysUnlessPresent) {
                     qualified.b[j].idx = i;
-                    qualified.b[j].hexp.multiply_wnaf(params.h[i], wt);
+                    qualified.b[j].hexp.multiply(params.h[i], t);
                     qualified.b[j].hexp.add(qualified.b[j].hexp, sk.b[x].hexp);
                     j++;
                 }
@@ -142,14 +140,14 @@ namespace embedded_pairing::wkdibe {
         qualified.l = j;
         qualified.signatures = sk.signatures;
         if (qualified.signatures) {
-            qualified.bsig.multiply_wnaf(params.hsig, wt);
+            qualified.bsig.multiply(params.hsig, t);
             qualified.bsig.add(qualified.bsig, sk.bsig);
         } else {
             qualified.bsig.copy(G1::zero);
         }
-        product.multiply_wnaf(product, wt);
+        product.multiply(product, t);
         qualified.a0.add(qualified.a0, product);
-        qualified.a1.multiply_wnaf(params.g, wt);
+        qualified.a1.multiply_frobenius(params.g, tx);
         qualified.a1.add(qualified.a1, sk.a1);
     }
 
@@ -160,7 +158,7 @@ namespace embedded_pairing::wkdibe {
         int k = 0; /* Index for reading from attrs.attrs */
         for (int i = 0; i != params.l; i++) {
             if (k != attrs.length && !attrs.attrs[k].omitFromKeys && attrs.attrs[k].idx == i) {
-                temp.multiply_wnaf(params.h[i], attrs.attrs[k].id);
+                temp.multiply(params.h[i], attrs.attrs[k].id);
                 sk.a0.add(sk.a0, temp);
                 k++;
             } else if (!attrs.omitAllFromKeysUnlessPresent) {
@@ -189,7 +187,7 @@ namespace embedded_pairing::wkdibe {
         for (int i = 0; x != sk.l && i != params.l; i++) {
             if (k != attrs.length && attrs.attrs[k].idx == i) {
                 if (sk.b[x].idx == i && !attrs.attrs[k].omitFromKeys) {
-                    temp.multiply_wnaf(sk.b[x].hexp, attrs.attrs[k].id);
+                    temp.multiply(sk.b[x].hexp, attrs.attrs[k].id);
                     qualified.a0.add(qualified.a0, temp);
                     x++;
                 }
@@ -242,15 +240,15 @@ namespace embedded_pairing::wkdibe {
                         if (diff.subtract(to.attrs[k].id, from.attrs[j].id)) {
                             diff.add(diff, group_order);
                         }
-                        temp.multiply_wnaf(parent.b[i].hexp, diff);
+                        temp.multiply(parent.b[i].hexp, diff);
                         sk.a0.add(sk.a0, temp);
                     }
                 } else if (sub_from) {
                     diff.subtract(group_order, from.attrs[j].id);
-                    temp.multiply_wnaf(parent.b[i].hexp, diff);
+                    temp.multiply(parent.b[i].hexp, diff);
                     sk.a0.add(sk.a0, temp);
                 } else if (add_to) {
-                    temp.multiply_wnaf(parent.b[i].hexp, to.attrs[k].id);
+                    temp.multiply(parent.b[i].hexp, to.attrs[k].id);
                     sk.a0.add(sk.a0, temp);
                 }
             }
@@ -270,7 +268,7 @@ namespace embedded_pairing::wkdibe {
         precomputed.prodexp.copy(params.g3);
         for (int i = 0; i != attrs.length; i++) {
             const Attribute& attr = attrs.attrs[i];
-            temp.multiply_wnaf(params.h[attr.idx], attr.id);
+            temp.multiply(params.h[attr.idx], attr.id);
             precomputed.prodexp.add(precomputed.prodexp, temp);
         }
     }
@@ -289,18 +287,18 @@ namespace embedded_pairing::wkdibe {
                     if (diff.subtract(to_attr.id, from_attr.id)) {
                         diff.add(diff, group_order);
                     }
-                    temp.multiply_wnaf(params.h[to_attr.idx], diff);
+                    temp.multiply(params.h[to_attr.idx], diff);
                     precomputed.prodexp.add(precomputed.prodexp, temp);
                 }
                 i++;
                 j++;
             } else if (from_attr.idx < to_attr.idx) {
                 diff.subtract(group_order, from_attr.id);
-                temp.multiply_wnaf(params.h[from_attr.idx], diff);
+                temp.multiply(params.h[from_attr.idx], diff);
                 precomputed.prodexp.add(precomputed.prodexp, temp);
                 i++;
             } else {
-                temp.multiply_wnaf(params.h[to_attr.idx], to_attr.id);
+                temp.multiply(params.h[to_attr.idx], to_attr.id);
                 precomputed.prodexp.add(precomputed.prodexp, temp);
                 j++;
             }
@@ -308,36 +306,34 @@ namespace embedded_pairing::wkdibe {
         while (i != from.length) {
             const Attribute& from_attr = from.attrs[i];
             diff.subtract(group_order, from_attr.id);
-            temp.multiply_wnaf(params.h[from_attr.idx], diff);
+            temp.multiply(params.h[from_attr.idx], diff);
             precomputed.prodexp.add(precomputed.prodexp, temp);
             i++;
         }
         while (j != to.length) {
             const Attribute& to_attr = to.attrs[j];
-            temp.multiply_wnaf(params.h[to_attr.idx], to_attr.id);
+            temp.multiply(params.h[to_attr.idx], to_attr.id);
             precomputed.prodexp.add(precomputed.prodexp, temp);
             j++;
         }
     }
 
     void resamplekey(SecretKey& resampled, const Params& params, const Precomputed& precomputed, const SecretKey& sk, bool supportFurtherQualification, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX tx;
         Scalar t;
         G1 temp;
         G2 temp2;
-        random_zpstar(t, get_random_bytes);
+        random_zpstar(tx, t, get_random_bytes);
 
-        bls12_381::WnafScalar<256, 4> wt;
-        wt.from_bigint(t);
-
-        temp.multiply_wnaf(precomputed.prodexp, wt);
+        temp.multiply(precomputed.prodexp, t);
         resampled.a0.add(sk.a0, temp);
 
-        temp2.multiply_wnaf(params.g, wt);
+        temp2.multiply_frobenius(params.g, tx);
         resampled.a1.add(sk.a1, temp2);
 
         resampled.signatures = sk.signatures;
         if (resampled.signatures) {
-            temp.multiply_wnaf(params.hsig, wt);
+            temp.multiply(params.hsig, t);
             resampled.bsig.add(sk.bsig, temp);
         } else {
             resampled.bsig.copy(G1::zero);
@@ -345,7 +341,7 @@ namespace embedded_pairing::wkdibe {
 
         if (supportFurtherQualification) {
             for (int i = 0; i != sk.l; i++) {
-                temp.multiply_wnaf(params.h[sk.b[i].idx], wt);
+                temp.multiply(params.h[sk.b[i].idx], t);
                 resampled.b[i].hexp.add(sk.b[i].hexp, temp);
                 resampled.b[i].idx = sk.b[i].idx;
             }
@@ -362,15 +358,14 @@ namespace embedded_pairing::wkdibe {
     }
 
     void encrypt_precomputed(Ciphertext& ciphertext, const GT& message, const Params& params, const Precomputed& precomputed, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX sx;
         Scalar s;
-        ciphertext.a.random_gt(s, params.pairing, get_random_bytes);
+        random_zpstar(sx, s, get_random_bytes);
+
+        ciphertext.a.exponentiate_gt(params.pairing, sx);
         ciphertext.a.multiply(ciphertext.a, message);
-
-        bls12_381::WnafScalar<256, 4> ws;
-        ws.from_bigint(s);
-
-        ciphertext.b.multiply_wnaf(params.g, ws);
-        ciphertext.c.multiply_wnaf(precomputed.prodexp, ws);
+        ciphertext.b.multiply_frobenius(params.g, sx);
+        ciphertext.c.multiply(precomputed.prodexp, s);
     }
 
     void decrypt(GT& message, const Ciphertext& ciphertext, const SecretKey& sk) {
@@ -412,24 +407,17 @@ namespace embedded_pairing::wkdibe {
     }
 
     void sign_precomputed(Signature& signature, const Params& params, const SecretKey& sk, const AttributeList* attrs, const Precomputed& precomputed, const Scalar& message, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX sx;
         Scalar s;
         G1 prodexp;
-        random_zpstar(s, get_random_bytes);
+        random_zpstar(sx, s, get_random_bytes);
 
-        {
-            bls12_381::WnafScalar<256, 4> wm;
-            wm.from_bigint(message);
-            signature.a0.multiply_wnaf(sk.bsig, wm);
-            prodexp.multiply_wnaf(params.hsig, wm);
-        }
+        signature.a0.multiply(sk.bsig, message);
+        prodexp.multiply(params.hsig, message);
         signature.a0.add(signature.a0, sk.a0);
         prodexp.add(prodexp, precomputed.prodexp);
-        {
-            bls12_381::WnafScalar<256, 4> ws;
-            ws.from_bigint(s);
-            signature.a1.multiply_wnaf(params.g, ws);
-            prodexp.multiply_wnaf(prodexp, ws);
-        }
+        signature.a1.multiply_frobenius(params.g, sx);
+        prodexp.multiply(prodexp, s);
         signature.a0.add(signature.a0, prodexp);
         signature.a1.add(signature.a1, sk.a1);
 
@@ -443,7 +431,7 @@ namespace embedded_pairing::wkdibe {
                     return;
                 }
                 if (sk.b[i].idx == attrs->attrs[k].idx) {
-                    prodexp.multiply_wnaf(sk.b[i].hexp, attrs->attrs[k].id);
+                    prodexp.multiply(sk.b[i].hexp, attrs->attrs[k].id);
                     signature.a0.add(signature.a0, prodexp);
                     k++;
                 }
@@ -458,23 +446,31 @@ namespace embedded_pairing::wkdibe {
     }
 
     bool verify_precomputed(const Params& params, const Precomputed& precomputed, const Signature& signature, const Scalar& message) {
-        GT ratio;
-        GT denominator;
-        G1 prodexp;
-        prodexp.multiply_wnaf(params.hsig, message);
-        prodexp.add(prodexp, precomputed.prodexp);
         G1Affine a0affine;
         G2Affine gaffine;
         G1Affine prodexpaffine;
         G2Affine a1affine;
-        a0affine.from_projective(signature.a0);
-        gaffine.from_projective(params.g);
-        prodexpaffine.from_projective(prodexp);
-        a1affine.from_projective(signature.a1);
-        bls12_381::pairing(ratio, a0affine, gaffine);
-        bls12_381::pairing(denominator, prodexpaffine, a1affine);
-        denominator.inverse(denominator);
-        ratio.multiply(ratio, denominator);
+
+        {
+            G1 prodexp;
+            prodexp.multiply(params.hsig, message);
+            prodexp.add(prodexp, precomputed.prodexp);
+            a0affine.from_projective(signature.a0);
+            gaffine.from_projective(params.g);
+            prodexpaffine.from_projective(prodexp);
+            a1affine.from_projective(signature.a1);
+        }
+
+        /* Compute e(a0affine, gaffine) / e(prodexpaffine, a1affine). */
+        GT ratio;
+        prodexpaffine.negate(prodexpaffine);
+        bls12_381::AffinePair pairs[2];
+        pairs[0].g1 = &a0affine;
+        pairs[0].g2 = &gaffine;
+        pairs[1].g1 = &prodexpaffine;
+        pairs[1].g2 = &a1affine;
+        bls12_381::pairing_product(ratio, pairs, 2, nullptr, 0);
+
         return GT::equal(ratio, params.pairing);
     }
 }

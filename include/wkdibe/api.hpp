@@ -41,6 +41,7 @@
 #include "bls12_381/fq12.hpp"
 #include "bls12_381/curve.hpp"
 #include "bls12_381/pairing.hpp"
+#include "bls12_381/decomposition.hpp"
 
 namespace embedded_pairing::wkdibe {
     typedef bls12_381::G1 G1;
@@ -232,9 +233,13 @@ namespace embedded_pairing::wkdibe {
         target->hash_reduce();
     }
 
-    inline void random_zpstar(Scalar& x, void (*get_random_bytes)(void*, size_t)) {
-        bls12_381::Fr* target = reinterpret_cast<bls12_381::Fr*>(&x);
+    inline void random_zpstar(Scalar& s, void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::Fr* target = reinterpret_cast<bls12_381::Fr*>(&s);
         target->random(get_random_bytes);
+    }
+
+    inline void random_zpstar(bls12_381::PowersOfX& __restrict powers, Scalar& __restrict s, void (*get_random_bytes)(void*, size_t)) {
+        powers.random(s, get_random_bytes);
     }
 
     inline void random_g1(G1& g1, void (*get_random_bytes)(void*, size_t)) {

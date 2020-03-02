@@ -44,20 +44,21 @@ namespace embedded_pairing::lqibe {
         qaffine.from_hash(hash.hash);
 
         G1 q;
-        q.multiply_wnaf(qaffine, G1Affine::cofactor);
+        q.multiply(qaffine, G1Affine::cofactor);
 
         id.q.from_projective(q);
     }
 
     void setup(Params& params, MasterKey& msk, void (*get_random_bytes)(void*, size_t)) {
-        msk.s.random(get_random_bytes);
+        bls12_381::PowersOfX sx;
+        sx.random(msk.s, get_random_bytes);
         params.p.random_generator(get_random_bytes);
-        params.sp.multiply_wnaf(params.p, msk.s);
+        params.sp.multiply_frobenius(params.p, sx);
     }
 
     void keygen(SecretKey& sk, const MasterKey& msk, const ID& id) {
         G1 sq;
-        sq.multiply_wnaf(id.q, msk.s);
+        sq.multiply(id.q, msk.s);
         sk.sq.from_projective(sq);
     }
 
@@ -68,18 +69,16 @@ namespace embedded_pairing::lqibe {
     };
 
     void encrypt(Ciphertext& ciphertext, void* symmetric, size_t symmetric_length, const Params& params, const ID& id, void (*hash_fill)(void*, size_t, const void*, size_t), void (*get_random_bytes)(void*, size_t)) {
+        bls12_381::PowersOfX rx;
         Scalar r;
-        r.random(get_random_bytes);
-
-        bls12_381::WnafScalar<256, 4> wr;
-        wr.from_bigint(r);
+        rx.random(r, get_random_bytes);
 
         G2 rp;
-        rp.multiply_wnaf(params.p, wr);
+        rp.multiply_frobenius(params.p, rx);
         ciphertext.rp.from_projective(rp);
 
         G2 rsp;
-        rsp.multiply_wnaf(params.sp, wr);
+        rsp.multiply_frobenius(params.sp, rx);
 
         SymmetricKeyHashBuffer buffer;
 

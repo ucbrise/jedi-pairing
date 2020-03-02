@@ -136,7 +136,7 @@ namespace embedded_pairing::bls12_381 {
      * Therefore, we can use the frobenius map to calculate a^x, speeding up
      * computation substantially (only one-fourth as many squares).
      */
-    void Fq12::exponentiate_gt_coeff(const Fq12& a, const PowersOfX& scalar) {
+    void Fq12::exponentiate_gt(const Fq12& a, const PowersOfX& scalar) {
         /* t[i] contains a^(x^i), which is equal to a^(p^i). */
         Fq12 t[4];
         for (unsigned int i = 0; i != 4; i++) {
@@ -170,12 +170,12 @@ namespace embedded_pairing::bls12_381 {
     void Fq12::exponentiate_gt_div(const Fq12& a, const BigInt<256>& power) {
         PowersOfX scalar;
         scalar.decompose(power);
-        this->exponentiate_gt_coeff(a, scalar);
+        this->exponentiate_gt(a, scalar);
     }
 
     void Fq12::random_gt(BigInt<256>& y, const Fq12& base, void (*get_random_bytes)(void*, size_t)) {
         PowersOfX scalar;
         scalar.random(y, get_random_bytes);
-        this->exponentiate_gt_coeff(base, scalar);
+        this->exponentiate_gt(base, scalar);
     }
 }

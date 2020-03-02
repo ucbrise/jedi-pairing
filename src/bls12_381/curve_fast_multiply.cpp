@@ -171,9 +171,11 @@ namespace embedded_pairing::bls12_381 {
     }
 
     void G1::multiply_endomorphism(const G1& a, const BigInt<256>& c0, bool c0_neg, const BigInt<256>& c1, bool c1_neg) {
-        WnafScalar<256, 4> wc0;
+        constexpr unsigned int wnaf_window_size = 4;
+
+        WnafScalar<256, wnaf_window_size> wc0;
         wc0.from_bigint(c0);
-        WnafScalar<256, 4> wc1;
+        WnafScalar<256, wnaf_window_size> wc1;
         wc1.from_bigint(c1);
 
         int larger_wnaf_size;
@@ -183,7 +185,7 @@ namespace embedded_pairing::bls12_381 {
             larger_wnaf_size = wc0.wnaf_size;
         }
 
-        WnafTable<G1, 4> wt;
+        WnafTable<G1, wnaf_window_size> wt;
         wt.fill_table(a);
 
         this->copy(G1::zero);
@@ -322,26 +324,35 @@ namespace embedded_pairing::bls12_381 {
      * computation substantially (only one-fourth as many squares).
      */
     void G2::multiply_frobenius(const G2& a, const PowersOfX& scalar) {
-        WnafScalar<64, 4> wb[4];
+        /*
+         * We need to tune the wnaf_window_size carefully since we have four
+         * of these at the same time and the memory consumed could become
+         * significant. Empirically, 2 or 3 seems like a good choice. I chose
+         * 2 to err on the side of using less memory.
+         */
+        constexpr unsigned int wnaf_window_size = 2;
+
+        WnafScalar<64, wnaf_window_size> wb[4];
         for (unsigned int i = 0; i != 4; i++) {
             wb[i].from_bigint(scalar.c[i]);
         }
 
-        G2 t[4];
-        t[0].copy(a);
-        for (unsigned int i = 1; i != 4; i++) {
-            /* Equivalent to t[i].multiply(t[i - 1], Fq::p_value); */
-            t[i].frobenius_map(t[i - 1], 1);
-        }
-        for (unsigned int i = 0; i != 4; i++) {
-            if (((i & 0x1) == 0) != bls_x_is_negative) {
-                t[i].negate(t[i]);
+        WnafTable<G2, wnaf_window_size> wt[4];
+        {
+            G2 t[4];
+            t[0].copy(a);
+            for (unsigned int i = 1; i != 4; i++) {
+                /* Equivalent to t[i].multiply(t[i - 1], Fq::p_value); */
+                t[i].frobenius_map(t[i - 1], 1);
             }
-        }
-
-        WnafTable<G2, 4> wt[4];
-        for (unsigned int i = 0; i != 4; i++) {
-            wt[i].fill_table(t[i]);
+            for (unsigned int i = 0; i != 4; i++) {
+                if (((i & 0x1) == 0) != bls_x_is_negative) {
+                    t[i].negate(t[i]);
+                }
+            }
+            for (unsigned int i = 0; i != 4; i++) {
+                wt[i].fill_table(t[i]);
+            }
         }
 
         this->copy(G2::zero);
@@ -361,7 +372,7 @@ namespace embedded_pairing::bls12_381 {
                  * The code below does the same thing, but uses w-NAF to speed
                  * it up.
                  */
-                WnafScalar<64, 4>& power = wb[j];
+                WnafScalar<64, wnaf_window_size>& power = wb[j];
                 if (i < power.wnaf_size && power.wnaf[i] != 0) {
                     if (power.wnaf[i] > 0) {
                         this->add(*this, wt[j].table[power.wnaf[i] >> 1]);

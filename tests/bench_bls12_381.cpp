@@ -16,7 +16,7 @@ extern "C" {
     uint64_t current_time_nanos(void);
 }
 
-const uint64_t default_duration = 20000000000ull;
+const uint64_t default_duration = 5000000000ull;
 
 void benchmark_time(const char* name, uint64_t (*function)(void), uint64_t duration) {
     printf("%s...\t", name);

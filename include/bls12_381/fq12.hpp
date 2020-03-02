@@ -68,6 +68,7 @@ namespace embedded_pairing::bls12_381 {
          * subgroup of the cyclotomic subgroup.
          */
         void square_cyclotomic(const Fq12& a);
+
         template <typename BigInt>
         void exponentiate_restrict_cyclotomic_nodiv(const Fq12& __restrict a, const BigInt& __restrict power) {
 #ifdef RESIST_SIDE_CHANNELS
@@ -95,12 +96,21 @@ namespace embedded_pairing::bls12_381 {
 #endif
             }
         }
+
         template <typename BigInt>
         void exponentiate_gt_nodiv(const Fq12& a, const BigInt& __restrict power) {
             Fq12 tmp;
             tmp.exponentiate_restrict_cyclotomic_nodiv<BigInt>(a, power);
             this->copy(tmp);
         }
+
+        /*
+         * Sets this to a ^ power, using division to decompose power. This may
+         * not be performant on systems where division is slow (e.g., systems
+         * that do not have hardware division support, or systems that do not
+         * support 64-bit words).
+         */
+        void exponentiate_gt_div(const Fq12& a, const BigInt<256>& power);
 
         /* Fast, specialized implementation for GT. */
         void exponentiate_gt(const Fq12& a, const BigInt<256>& power) {
@@ -113,9 +123,6 @@ namespace embedded_pairing::bls12_381 {
             this->exponentiate_gt_div(a, power);
         }
 
-        /* Sets this to a^((q^6 - 1)*(q^2 + 1)). */
-        void map_to_cyclotomic(const Fq12& a);
-
         /*
          * This method computes a^(c0 + c1*|x| + c2*|x|^2 + c3*|x|^3). It uses the
          * fact that r = x^4 - x^2 + 1 and q = (x - 1)^2 * r * 3^(-1) + x, which
@@ -123,15 +130,10 @@ namespace embedded_pairing::bls12_381 {
          * Therefore, we can use the frobenius map to calculate a^x, speeding up
          * computation substantially.
          */
-        void exponentiate_gt_coeff(const Fq12& a, const PowersOfX& scalar);
+        void exponentiate_gt(const Fq12& a, const PowersOfX& scalar);
 
-        /*
-         * Sets this to a ^ power, using division to decompose power. This may not
-         * be performant on systems where division is slow (e.g., systems that
-         * do not have hardware division support, or systems that do not support
-         * 64-bit words).
-         */
-        void exponentiate_gt_div(const Fq12& a, const BigInt<256>& power);
+        /* Sets this to a^((q^6 - 1)*(q^2 + 1)). */
+        void map_to_cyclotomic(const Fq12& a);
 
         /*
          * Chooses random c0, c1, c2, c3 such that each c is in [0, |x|) and
