@@ -19,8 +19,8 @@ extern "C" {
 
 #if defined(__ARM_ARCH_6M__)
 constexpr int few_iters = 3;
-constexpr int std_iters = 100;
-constexpr int many_iters = 1000;
+constexpr int std_iters = 10;
+constexpr int many_iters = 100;
 #else
 constexpr int few_iters = 10;
 constexpr int std_iters = 1000;

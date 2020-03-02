@@ -16,7 +16,7 @@ extern "C" {
     uint64_t current_time_nanos(void);
 }
 
-const uint64_t default_duration = 1000000000ull;
+const uint64_t default_duration = 20000000000ull;
 
 void benchmark_time(const char* name, uint64_t (*function)(void), uint64_t duration) {
     printf("%s...\t", name);
@@ -341,6 +341,21 @@ uint64_t bench_fq12_exp_gt_nodiv(void) {
     return end - start;
 }
 
+uint64_t bench_fq12_exp_gt_div(void) {
+    Fq12 a;
+    a.random(random_bytes);
+
+    BigInt<256> x;
+    x.random(random_bytes);
+
+    Fq12 c;
+
+    uint64_t start = current_time_nanos();
+    c.exponentiate_gt_div(a, x);
+    uint64_t end = current_time_nanos();
+    return end - start;
+}
+
 uint64_t bench_fq12_exp_gt(void) {
     Fq12 a;
     a.random(random_bytes);
@@ -405,8 +420,8 @@ void run_benchmarks(void) {
     benchmark_time("G1 Affine Double-Add Mult", bench_g1_affine_scalar_mult<true, 0>, default_duration);
     benchmark_time("G1 Projective w-NAF Mult", bench_g1_projective_scalar_mult<false, 4>, default_duration);
     benchmark_time("G1 Affine w-NAF Mult", bench_g1_affine_scalar_mult<false, 4>, default_duration);
-    benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<false, 0>, default_duration);
-    benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<false, 0>, default_duration);
+    benchmark_time("G1 Projective Mult", bench_g1_projective_scalar_mult<false, 0>, 2 * default_duration);
+    benchmark_time("G1 Affine Mult", bench_g1_affine_scalar_mult<false, 0>, 2 * default_duration);
     benchmark_time("G1 Convert to Affine", bench_g1_convert_affine, default_duration / 10);
     benchmark_time("G1 Unmarshal: Compressed, Checked", bench_g1_unmarshal<true, true>, default_duration);
     benchmark_time("G1 Unmarshal: Uncompressed, Checked", bench_g1_unmarshal<false, true>, default_duration);
@@ -430,6 +445,8 @@ void run_benchmarks(void) {
     benchmark_time("Fq12 Exponentiate", bench_fq12_exp, default_duration);
     benchmark_time("Fq12 Exponentiate GT", bench_fq12_exp_gt, default_duration);
     benchmark_time("Fq12 Exponentiate GT (Platforms w/o Division)", bench_fq12_exp_gt_nodiv, default_duration);
+    benchmark_time("Fq12 Exponentiate GT (Platforms w/ Division)", bench_fq12_exp_gt_div, default_duration);
     benchmark_time("Fq12 Random GT", bench_fq12_random_gt, default_duration);
     benchmark_time("Pairing (Affine)", bench_pairing, default_duration);
+    printf("\nDONE\n");
 }

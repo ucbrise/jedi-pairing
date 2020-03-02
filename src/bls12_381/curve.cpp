@@ -34,6 +34,7 @@
 #include "bls12_381/fq.hpp"
 #include "bls12_381/fq2.hpp"
 #include "bls12_381/curve.hpp"
+#include "bls12_381/decomposition.hpp"
 
 namespace embedded_pairing::bls12_381 {
     extern constexpr Fq g1_b_coeff_var = g1_b_coeff;

@@ -73,12 +73,14 @@ namespace embedded_pairing::core {
         static constexpr int word_length = 1 + ((byte_length - 1) / sizeof(word_t));
         static constexpr int dword_length = 1 + ((byte_length - 1) / sizeof(dword_t));
         static constexpr int std_word_length = 1 + ((byte_length - 1) / sizeof(uint32_t));
+        static constexpr int std_dword_length = 1 + ((byte_length - 1) / sizeof(uint64_t));
 
         /* The elements of this union. */
         dword_t dwords[dword_length];
         word_t words[word_length];
         uint8_t bytes[byte_length];
         uint32_t std_words[std_word_length];
+        uint64_t std_dwords[std_dword_length];
 
         /* Constants for zero and one. */
         static const BigInt<bits> zero;
@@ -361,14 +363,42 @@ namespace embedded_pairing::core {
             word_t rem = 0;
             for (int i = a.word_length - 1; i != -1; i--) {
                 dword_t dividend = (((dword_t) rem) << (sizeof(word_t) * 8)) | ((dword_t) a.words[i]);
-                word_t quotient;
-                if (dividend == 0) {
-                    quotient = 0;
-                } else {
+                word_t quotient = dividend / divisor;
+                rem = dividend % divisor;
+                this->words[i] = quotient;
+            }
+            return rem;
+        }
+
+        template <uint64_t divisor>
+        uint64_t divide_std_dword(const BigInt<bits>& a) {
+            uint64_t rem = 0;
+            for (int i = a.std_dword_length - 1; i != -1; i--) {
+                uint64_t dividend_upper = rem;
+                uint64_t dividend_lower = a.std_dwords[i];
+                uint64_t quotient;
+                if constexpr(sizeof(dword_t) == sizeof(uint64_t) * 2) {
+                    dword_t dividend = (((dword_t) dividend_upper) << (sizeof(uint64_t) * 8)) | ((dword_t) dividend_lower);
                     quotient = dividend / divisor;
                     rem = dividend % divisor;
+                } else {
+                    /*
+                     * Compute (dividend_upper || dividend_lower) / divisor,
+                     * knowing that dividend_upper < divisor.
+                     */
+                    quotient = 0;
+                    rem = dividend_upper;
+                    for (int i = 63; i != -1; i--) {
+                        uint64_t top_bit = rem >> 63; // handles case where 2 * rem + 1 overflows
+                        rem = rem << 1;
+                        rem |= ((dividend_lower >> i) & 0x1);
+                        if (top_bit == 1 || rem >= divisor) {
+                            rem -= divisor;
+                            quotient |= (UINT64_C(1) << i);
+                        }
+                    }
                 }
-                this->words[i] = quotient;
+                this->std_dwords[i] = quotient;
             }
             return rem;
         }

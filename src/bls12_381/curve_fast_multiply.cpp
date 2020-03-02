@@ -42,6 +42,7 @@
 #include "bls12_381/curve.hpp"
 #include "bls12_381/pairing.hpp"
 #include "bls12_381/wnaf.hpp"
+#include "bls12_381/decomposition.hpp"
 
 namespace embedded_pairing::bls12_381 {
     BigInt<256> g1_endomorphism_lambda = {
@@ -320,12 +321,10 @@ namespace embedded_pairing::bls12_381 {
      * Therefore, we can use the frobenius map to calculate a^x, speeding up
      * computation substantially (only one-fourth as many squares).
      */
-    void G2::multiply_frobenius(const G2& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3) {
-        const BigInt<64>* b[4] = {&c0, &c1, &c2, &c3};
-
+    void G2::multiply_frobenius(const G2& a, const PowersOfX& scalar) {
         WnafScalar<64, 4> wb[4];
         for (unsigned int i = 0; i != 4; i++) {
-            wb[i].from_bigint(*b[i]);
+            wb[i].from_bigint(scalar.c[i]);
         }
 
         G2 t[4];
@@ -378,35 +377,14 @@ namespace embedded_pairing::bls12_381 {
     }
 
     /*
-     * Decomposes a chosen value y into c0, c1, c2, c3 such that each c is in
-     * [0, |x|) and y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3. The argument y must
-     * be in the interval [0, r).
-     */
-    static void div_exp_coeff(BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, const BigInt<256>& y) {
-        BigInt<256> quotient;
-
-        constexpr BigInt<64>::word_t x = (BigInt<64>::word_t) (((uint64_t) bls_x.std_words[1]) << 32) | (uint64_t) (bls_x.std_words[0]);
-        c0.words[0] = quotient.divide_word<x>(y);
-        c1.words[0] = quotient.divide_word<x>(quotient);
-        c2.words[0] = quotient.divide_word<x>(quotient);
-        c3.words[0] = quotient.words[0];
-    }
-
-    /*
      * Sets this to a ^ power, using division to decompose power. This may not
      * be performant on systems where division is slow (e.g., systems that
      * do not have hardware division support, or systems that do not support
      * 64-bit words).
      */
     void G2::multiply_frobenius(const G2& a, const BigInt<256>& scalar) {
-        BigInt<64> c0, c1, c2, c3;
-        if (BigInt<256>::compare(scalar, Fr::p_value) == -1) {
-            div_exp_coeff(c0, c1, c2, c3, scalar);
-        } else {
-            BigInt<256> a;
-            a.subtract(scalar, Fr::p_value);
-            div_exp_coeff(c0, c1, c2, c3, a);
-        }
-        this->multiply_frobenius(a, c0, c1, c2, c3);
+        PowersOfX y;
+        y.decompose(scalar);
+        this->multiply_frobenius(a, y);
     }
 }

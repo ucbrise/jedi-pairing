@@ -40,6 +40,7 @@
 #include "./fq.hpp"
 #include "./fq2.hpp"
 #include "./wnaf.hpp"
+#include "./decomposition.hpp"
 
 namespace embedded_pairing::bls12_381 {
     /*
@@ -664,7 +665,7 @@ namespace embedded_pairing::bls12_381 {
         static const G2 one;
 
         void frobenius_map(const G2& a, unsigned int power);
-        void multiply_frobenius(const G2& base, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
+        void multiply_frobenius(const G2& base, const PowersOfX& scalar);
         void multiply_frobenius(const G2& base, const BigInt<256>& scalar);
 
         /* Fast, specialized implementation for G2. */

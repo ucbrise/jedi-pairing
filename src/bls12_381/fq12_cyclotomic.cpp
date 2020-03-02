@@ -44,10 +44,11 @@
 #include "bls12_381/fq6.hpp"
 #include "bls12_381/fq12.hpp"
 #include "bls12_381/pairing.hpp"
+#include "bls12_381/decomposition.hpp"
 
 namespace embedded_pairing::bls12_381 {
-    static constexpr BigInt<128> bls_x_squared = {.std_words = {0x00000000, 0x00000001, 0x0001a402, 0xac45a401}};
-    static constexpr BigInt<192> bls_x_cubed = {.std_words = {0x00000000, 0x00010000, 0x76030000, 0xec030002, 0x760304d0, 0x8d51ccce}};
+    // static constexpr BigInt<128> bls_x_squared = {.std_words = {0x00000000, 0x00000001, 0x0001a402, 0xac45a401}};
+    // static constexpr BigInt<192> bls_x_cubed = {.std_words = {0x00000000, 0x00010000, 0x76030000, 0xec030002, 0x760304d0, 0x8d51ccce}};
     void Fq12::square_cyclotomic(const Fq12& a) {
         Fq2 t2;
         t2.square(a.c0.c0);
@@ -135,9 +136,7 @@ namespace embedded_pairing::bls12_381 {
      * Therefore, we can use the frobenius map to calculate a^x, speeding up
      * computation substantially (only one-fourth as many squares).
      */
-    void Fq12::exponentiate_gt_coeff(const Fq12& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3) {
-        const BigInt<64>* b[4] = {&c0, &c1, &c2, &c3};
-
+    void Fq12::exponentiate_gt_coeff(const Fq12& a, const PowersOfX& scalar) {
         /* t[i] contains a^(x^i), which is equal to a^(p^i). */
         Fq12 t[4];
         for (unsigned int i = 0; i != 4; i++) {
@@ -154,27 +153,12 @@ namespace embedded_pairing::bls12_381 {
                 this->square_cyclotomic(*this);
             }
             for (unsigned int j = 0; j != 4; j++) {
-                if (b[j]->bit(i)) {
+                if (scalar.c[j].bit(i)) {
                     this->multiply(*this, t[j]);
                     found_one = true;
                 }
             }
         }
-    }
-
-    /*
-     * Decomposes a chosen value y into c0, c1, c2, c3 such that each c is in
-     * [0, |x|) and y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3. The argument y must
-     * be in the interval [0, r).
-     */
-    void Fq12::div_exp_coeff(BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, const BigInt<256>& y) {
-        BigInt<256> quotient;
-
-        constexpr BigInt<64>::word_t x = (BigInt<64>::word_t) (((uint64_t) bls_x.std_words[1]) << 32) | (uint64_t) (bls_x.std_words[0]);
-        c0.words[0] = quotient.divide_word<x>(y);
-        c1.words[0] = quotient.divide_word<x>(quotient);
-        c2.words[0] = quotient.divide_word<x>(quotient);
-        c3.words[0] = quotient.words[0];
     }
 
     /*
@@ -184,53 +168,14 @@ namespace embedded_pairing::bls12_381 {
      * 64-bit words).
      */
     void Fq12::exponentiate_gt_div(const Fq12& a, const BigInt<256>& power) {
-        BigInt<64> c0, c1, c2, c3;
-        if (BigInt<256>::compare(power, Fr::p_value) == -1) {
-            Fq12::div_exp_coeff(c0, c1, c2, c3, power);
-        } else {
-            BigInt<256> a;
-            a.subtract(power, Fr::p_value);
-            Fq12::div_exp_coeff(c0, c1, c2, c3, a);
-        }
-        this->exponentiate_gt_coeff(a, c0, c1, c2, c3);
-    }
-
-    /*
-     * Chooses random c0, c1, c2, c3 such that each c is in [0, |x|) and
-     * y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3 is uniformly distributed in
-     * [0, r).
-     */
-    void Fq12::random_gt_exp_coeff(BigInt<256>& y, BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, void (*get_random_bytes)(void*, size_t)) {
-        do {
-            BigInt<64>* b[4] = {&c0, &c1, &c2, &c3};
-            for (unsigned int i = 0; i != 4; i++) {
-                do {
-                    b[i]->random(get_random_bytes);
-                } while (BigInt<64>::compare(*b[i], bls_x) != -1);
-            }
-
-            BigInt<128> t1;
-            BigInt<128> t2;
-            t1.multiply(c1, bls_x);
-            t2.copy(c0);
-            t1.add(t1, t2);
-
-            BigInt<192> t3;
-            BigInt<192> t4;
-            t3.multiply(c2, bls_x_squared);
-            t4.copy(t1);
-            t3.add(t3, t4);
-
-            BigInt<256> t6;
-            y.multiply(c3, bls_x_cubed);
-            t6.copy(t3);
-            y.add(y, t6);
-        } while (BigInt<256>::compare(y, Fr::p_value) != -1);
+        PowersOfX scalar;
+        scalar.decompose(power);
+        this->exponentiate_gt_coeff(a, scalar);
     }
 
     void Fq12::random_gt(BigInt<256>& y, const Fq12& base, void (*get_random_bytes)(void*, size_t)) {
-        BigInt<64> c0, c1, c2, c3;
-        Fq12::random_gt_exp_coeff(y, c0, c1, c2, c3, get_random_bytes);
-        this->exponentiate_gt_coeff(base, c0, c1, c2, c3);
+        PowersOfX scalar;
+        scalar.random(y, get_random_bytes);
+        this->exponentiate_gt_coeff(base, scalar);
     }
 }

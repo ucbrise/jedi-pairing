@@ -37,6 +37,7 @@
 
 #include "./fq2.hpp"
 #include "./fq6.hpp"
+#include "./decomposition.hpp"
 
 namespace embedded_pairing::bls12_381 {
     struct Fq12 {
@@ -100,17 +101,18 @@ namespace embedded_pairing::bls12_381 {
             tmp.exponentiate_restrict_cyclotomic_nodiv<BigInt>(a, power);
             this->copy(tmp);
         }
+
+        /* Fast, specialized implementation for GT. */
         void exponentiate_gt(const Fq12& a, const BigInt<256>& power) {
             /*
-             * Division to decompose into words should be faster if we have
-             * support for 64-bit words.
+             * We used to statically choose between exponentiate_gt_div and
+             * exponentiate_gt_nodiv based on the platform. But, after the
+             * latest round of optimizations, exponentiate_gt_div is faster
+             * even on Hamilton.
              */
-            if constexpr(sizeof(BigInt<256>::word_t) >= 8) {
-                this->exponentiate_gt_div(a, power);
-            } else {
-                this->exponentiate_gt_nodiv(a, power);
-            }
+            this->exponentiate_gt_div(a, power);
         }
+
         /* Sets this to a^((q^6 - 1)*(q^2 + 1)). */
         void map_to_cyclotomic(const Fq12& a);
 
@@ -121,14 +123,7 @@ namespace embedded_pairing::bls12_381 {
          * Therefore, we can use the frobenius map to calculate a^x, speeding up
          * computation substantially.
          */
-        void exponentiate_gt_coeff(const Fq12& a, const BigInt<64>& c0, const BigInt<64>& c1, const BigInt<64>& c2, const BigInt<64>& c3);
-
-        /*
-         * Decomposes a chosen value y into c0, c1, c2, c3 such that each c is in
-         * [0, |x|) and y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3. The argument y must
-         * be in the interval [0, r).
-         */
-        static void div_exp_coeff(BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, const BigInt<256>& y);
+        void exponentiate_gt_coeff(const Fq12& a, const PowersOfX& scalar);
 
         /*
          * Sets this to a ^ power, using division to decompose power. This may not
@@ -143,7 +138,7 @@ namespace embedded_pairing::bls12_381 {
          * y = c0 + c1*|x| + c2*|x|^2 + c3*|x|^3 is uniformly distributed in
          * [0, r).
          */
-        static void random_gt_exp_coeff(BigInt<256>& y, BigInt<64>& c0, BigInt<64>& c1, BigInt<64>& c2, BigInt<64>& c3, void (*get_random_bytes)(void*, size_t));
+        static void random_gt_exp_coeff(BigInt<256>& y, PowersOfX& scalar, void (*get_random_bytes)(void*, size_t));
 
         /*
          * Chooses an exponent y uniformly distributed in [0, r) and computes
