@@ -196,93 +196,111 @@ void test_wkdibe_sign(void) {
 
 template <bool compressed>
 void test_wkdibe_marshal(const char* name) {
-    MasterKey msk;
-    setup(p, msk, 10, false, random_bytes);
+    {
+        MasterKey msk;
+        setup(p, msk, 10, false, random_bytes);
 
-    size_t pbuflen = p.getMarshalledLength<compressed>();
-    uint8_t pbuf[pbuflen];
-    p.marshal<compressed>(pbuf);
-    if (p.setLength<compressed>(pbuf, pbuflen) == -1) {
-        printf("%s: FAIL (could not set length for params)\n", name);
-        return;
-    }
-    if (!p.unmarshal<compressed>(pbuf, true)) {
-        printf("%s: FAIL (could not unmarshal params)\n", name);
-        return;
-    }
+        {
+            size_t pbuflen = p.getMarshalledLength<compressed>();
+            uint8_t pbuf[pbuflen];
+            p.marshal<compressed>(pbuf);
+            if (p.setLength<compressed>(pbuf, pbuflen) == -1) {
+                printf("%s: FAIL (could not set length for params)\n", name);
+                return;
+            }
+            if (!p.unmarshal<compressed>(pbuf, true)) {
+                printf("%s: FAIL (could not unmarshal params)\n", name);
+                return;
+            }
+        }
 
-    uint8_t mskbuf[MasterKey::marshalledLength<compressed>];
-    msk.marshal<compressed>(mskbuf);
-    if (!msk.unmarshal<compressed>(mskbuf, true)) {
-        printf("%s: FAIL (could not unmarshal master secret key)\n", name);
-        return;
-    }
+        {
+            uint8_t mskbuf[MasterKey::marshalledLength<compressed>];
+            msk.marshal<compressed>(mskbuf);
+            if (!msk.unmarshal<compressed>(mskbuf, true)) {
+                printf("%s: FAIL (could not unmarshal master secret key)\n", name);
+                return;
+            }
+        }
 
-    keygen(sk1, p, msk, attrs1, random_bytes);
+        keygen(sk1, p, msk, attrs1, random_bytes);
 
-    size_t sk1buflen = sk1.getMarshalledLength<compressed>();
-    uint8_t sk1buf[sk1buflen];
-    sk1.marshal<compressed>(sk1buf);
-    if (sk1.setLength<compressed>(sk1buf, sk1buflen) == -1) {
-        printf("%s: FAIL (could not set length for sk1)\n", name);
-        return;
-    }
-    if (!sk1.unmarshal<compressed>(sk1buf, true)) {
-        printf("%s: FAIL (could not unmarshal sk1)\n", name);
-        return;
-    }
+        {
+            size_t sk1buflen = sk1.getMarshalledLength<compressed>();
+            uint8_t sk1buf[sk1buflen];
+            sk1.marshal<compressed>(sk1buf);
+            if (sk1.setLength<compressed>(sk1buf, sk1buflen) == -1) {
+                printf("%s: FAIL (could not set length for sk1)\n", name);
+                return;
+            }
+            if (!sk1.unmarshal<compressed>(sk1buf, true)) {
+                printf("%s: FAIL (could not unmarshal sk1)\n", name);
+                return;
+            }
+        }
 
-    qualifykey(sk2, p, sk1, attrs2, random_bytes);
+        qualifykey(sk2, p, sk1, attrs2, random_bytes);
 
-    size_t sk2buflen = sk2.getMarshalledLength<compressed>();
-    uint8_t sk2buf[sk2buflen];
-    sk2.marshal<compressed>(sk2buf);
-    if (sk2.setLength<compressed>(sk2buf, sk2buflen) == -1) {
-        printf("%s: FAIL (could not set length for sk2)\n", name);
-        return;
-    }
-    if (!sk2.unmarshal<compressed>(sk2buf, true)) {
-        printf("%s: FAIL (could not unmarshal sk2)\n", name);
-        return;
-    }
-
-    GT msg;
-    msg.random(random_bytes);
-
-    Ciphertext c;
-    encrypt(c, msg, p, attrs2, random_bytes);
-
-    uint8_t cbuf[Ciphertext::marshalledLength<compressed>];
-    c.marshal<compressed>(cbuf);
-    if (!c.unmarshal<compressed>(cbuf, true)) {
-        printf("%s: FAIL (could not unmarshal ciphertext)\n", name);
-        return;
+        {
+            size_t sk2buflen = sk2.getMarshalledLength<compressed>();
+            uint8_t sk2buf[sk2buflen];
+            sk2.marshal<compressed>(sk2buf);
+            if (sk2.setLength<compressed>(sk2buf, sk2buflen) == -1) {
+                printf("%s: FAIL (could not set length for sk2)\n", name);
+                return;
+            }
+            if (!sk2.unmarshal<compressed>(sk2buf, true)) {
+                printf("%s: FAIL (could not unmarshal sk2)\n", name);
+                return;
+            }
+        }
     }
 
-    GT decrypted;
-    decrypt(decrypted, c, sk2);
+    {
+        GT msg;
+        msg.random(random_bytes);
 
-    if (!GT::equal(msg, decrypted)) {
-        printf("%s: FAIL (original/decrypted messages differ)\n", name);
-        return;
+        Ciphertext c;
+        encrypt(c, msg, p, attrs2, random_bytes);
+
+        {
+            uint8_t cbuf[Ciphertext::marshalledLength<compressed>];
+            c.marshal<compressed>(cbuf);
+            if (!c.unmarshal<compressed>(cbuf, true)) {
+                printf("%s: FAIL (could not unmarshal ciphertext)\n", name);
+                return;
+            }
+        }
+
+        GT decrypted;
+        decrypt(decrypted, c, sk2);
+
+        if (!GT::equal(msg, decrypted)) {
+            printf("%s: FAIL (original/decrypted messages differ)\n", name);
+            return;
+        }
     }
 
-    Scalar msg2;
-    random_zpstar(msg2, random_bytes);
+    {
+        Scalar msg2;
+        random_zpstar(msg2, random_bytes);
 
-    Signature s;
-    sign(s, p, sk1, &attrs3, msg2, random_bytes);
+        Signature s;
+        sign(s, p, sk1, &attrs3, msg2, random_bytes);
 
-    uint8_t sbuf[Signature::marshalledLength<compressed>];
-    s.marshal<compressed>(cbuf);
-    if (!s.unmarshal<compressed>(cbuf, true)) {
-        printf("%s: FAIL (could not unmarshal ciphertext)\n", name);
-        return;
-    }
+        {
+            uint8_t sbuf[Signature::marshalledLength<compressed>];
+            s.marshal<compressed>(sbuf);
+            if (!s.unmarshal<compressed>(sbuf, true)) {
+                printf("%s: FAIL (could not unmarshal ciphertext)\n", name);
+                return;
+            }
+        }
 
-    if (!verify(p, attrs3, s, msg2)) {
-        printf("%s: FAIL (valid signature marked invalid)\n", name);
-        return;
+        if (!verify(p, attrs3, s, msg2)) {
+            printf("%s: FAIL (valid signature marked invalid)\n", name);
+            return;
+        }
     }
 
     printf("%s: PASS\n", name);
@@ -303,4 +321,5 @@ void run_wkdibe_tests() {
     test_wkdibe_sign();
     test_wkdibe_marshal<true>("Marshal Compressed");
     test_wkdibe_marshal<false>("Marshal Uncompressed");
+    printf("DONE\n");
 }
