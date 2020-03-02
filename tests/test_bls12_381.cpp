@@ -20,7 +20,7 @@ extern "C" {
 #if defined(__ARM_ARCH_6M__)
 constexpr int few_iters = 3;
 constexpr int std_iters = 10;
-constexpr int many_iters = 100;
+constexpr int many_iters = 10000;
 #else
 constexpr int few_iters = 10;
 constexpr int std_iters = 1000;
@@ -2156,6 +2156,7 @@ const char* test_pairing_bilinearity(void) {
 }
 
 const char* test_pairing_miller(void) {
+#if !defined(__ARM_ARCH_6M__) // Not enough memory on this platform
     for (int i = 0; i != std_iters; i++) {
         G1 a;
         G2 b;
@@ -2180,6 +2181,7 @@ const char* test_pairing_miller(void) {
             return "FAIL (prepared vs. affine)";
         }
     }
+#endif
 
     for (int i = 0; i != std_iters; i++) {
         G1 a;
