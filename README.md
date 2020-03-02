@@ -29,7 +29,7 @@ The result of running `make` is the `pairing.a` file, which can be statically li
 
 To build the go library, you must first build the `pairing.a` file. To do so, run `make`. This is necessary because CGo will only look for C and C++ files in the same directory as the Go package. Unfortunately, it is not as simple as running `go get`.
 
-Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output. There is code in the Makefile that should do this check automatically.
+Note: When building `pairing.a` using clang++ to use with Go on Ubuntu 18.04 (or, more generally, Ubuntu 16.10 or later), you may need to compile with `-fPIC`. To do this, simply edit the `CXXFLAGS` variable in the Makefile. This is necessary because CGo uses gcc to link, and the build of gcc that ships with Ubuntu 18.04 generates position-independent executables by default, causing linking to fail unless the `pairing.a` file also contains position-independent code (see https://wiki.ubuntu.com/SecurityTeam/PIE). Alternatively, you can download a different build of gcc that does not generate position-independent code by default, or just use g++ instead of clang++ to build `pairing.a`. You can check your build of gcc by running `gcc -v` and seeing if `--enable-default-pie` is in the output. There is code in the Makefile that should do this check automatically.
 
 Using this Library from C++
 --------------------------
@@ -85,6 +85,6 @@ Overall, the Go tests may be seen as more comprehensive because they validate co
 
 License
 -------
-This code is open-source under the BSD 3-Clause License. Some functions in `src/bls12_381/fq12_cyclotomic.cpp`, which are based on the techniques used by RELIC, are open-source under the Apache 2.0 License.
+This code is open-source under the BSD 3-Clause License. Some functions in `src/bls12_381/fq12_cyclotomic.cpp` and `src/bls12_381/curve_fast_multiply.cpp`, which are based on the techniques used by RELIC, are open-source under the Apache 2.0 License.
 
-It should also be noted that the logic to implement BLS12-381 using prime-field arithmetic is based on https://github.com/zkcrypto/pairing, which is open-source under the MIT License.
+The logic to implement BLS12-381 using prime-field arithmetic is based on https://github.com/zkcrypto/pairing, which is open-source under the MIT License.
