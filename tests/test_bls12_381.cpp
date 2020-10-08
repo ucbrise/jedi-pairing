@@ -188,6 +188,39 @@ const char* test_fr_mul(void) {
         }
     }
 
+    {
+        Fr a = Fr::one;
+        Fr b = Fr::one;
+        Fr c;
+        c.multiply(a, b);
+        Fr expected_prod = Fr::one;
+        if (!Fr::equal(c, expected_prod)) {
+            return "FAIL (one)";
+        }
+    }
+
+    {
+        Fr a = Fr::one;
+        Fr b = Fr::zero;
+        Fr c;
+        c.multiply(a, b);
+        Fr expected_prod = Fr::zero;
+        if (!Fr::equal(c, expected_prod)) {
+            return "FAIL (zero1)";
+        }
+    }
+
+    {
+        Fr a = Fr::zero;
+        Fr b = Fr::zero;
+        Fr c;
+        c.multiply(a, b);
+        Fr expected_prod = Fr::zero;
+        if (!Fr::equal(c, expected_prod)) {
+            return "FAIL (zero2)";
+        }
+    }
+
     /* Ensure that (a * b) * c = a * (b * c). */
     for (int i = 0; i != many_iters; i++) {
         Fr a;
@@ -253,6 +286,26 @@ const char* test_fr_squaring(void) {
         expected_square.set(expected_square_int);
         if (!Fr::equal(c, expected_square)) {
             return "FAIL (t1)";
+        }
+    }
+
+    {
+        Fr a = Fr::one;
+        Fr c;
+        c.square(a);
+        Fr expected_prod = Fr::one;
+        if (!Fr::equal(c, expected_prod)) {
+            return "FAIL (one)";
+        }
+    }
+
+    {
+        Fr a = Fr::zero;
+        Fr c;
+        c.square(a);
+        Fr expected_prod = Fr::zero;
+        if (!Fr::equal(c, expected_prod)) {
+            return "FAIL (zero)";
         }
     }
 
@@ -605,6 +658,39 @@ const char* test_fq_mul(void) {
         }
     }
 
+    {
+        Fq a = Fq::one;
+        Fq b = Fq::one;
+        Fq c;
+        c.multiply(a, b);
+        Fq expected_prod = Fq::one;
+        if (!Fq::equal(c, expected_prod)) {
+            return "FAIL (one)";
+        }
+    }
+
+    {
+        Fq a = Fq::one;
+        Fq b = Fq::zero;
+        Fq c;
+        c.multiply(a, b);
+        Fq expected_prod = Fq::zero;
+        if (!Fq::equal(c, expected_prod)) {
+            return "FAIL (zero1)";
+        }
+    }
+
+    {
+        Fq a = Fq::zero;
+        Fq b = Fq::zero;
+        Fq c;
+        c.multiply(a, b);
+        Fq expected_prod = Fq::zero;
+        if (!Fq::equal(c, expected_prod)) {
+            return "FAIL (zero2)";
+        }
+    }
+
     /* Ensure that (a * b) * c = a * (b * c). */
     for (int i = 0; i != many_iters; i++) {
         Fq a;
@@ -670,6 +756,26 @@ const char* test_fq_squaring(void) {
         expected_square.set(expected_square_int);
         if (!Fq::equal(c, expected_square)) {
             return "FAIL (t1)";
+        }
+    }
+
+    {
+        Fq a = Fq::one;
+        Fq c;
+        c.square(a);
+        Fq expected_prod = Fq::one;
+        if (!Fq::equal(c, expected_prod)) {
+            return "FAIL (one)";
+        }
+    }
+
+    {
+        Fq a = Fq::zero;
+        Fq c;
+        c.square(a);
+        Fq expected_prod = Fq::zero;
+        if (!Fq::equal(c, expected_prod)) {
+            return "FAIL (zero)";
         }
     }
 
