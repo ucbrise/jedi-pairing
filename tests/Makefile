@@ -50,7 +50,7 @@ all: test pairing.a
 pairing.a: $(PAIRING_OBJECTS) $(BINDIR)/bench_bls12_381.o $(BINDIR)/test_bls12_381.o $(BINDIR)/test_wkdibe.o
 	$(AR) rcs pairing.a $+
 
-test: $(PAIRING_OBJECTS) $(BINDIR)/test.o $(BINDIR)/platform_utils.o $(BINDIR)/test_bls12_381.o $(BINDIR)/test_wkdibe.o $(BINDIR)/bench_bls12_381.o
+test: $(PAIRING_OBJECTS) $(BINDIR)/test.o $(BINDIR)/platform_utils.o $(BINDIR)/test_bigint.o $(BINDIR)/test_bls12_381.o $(BINDIR)/test_wkdibe.o $(BINDIR)/bench_bls12_381.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $+ -o test
 
 $(BINDIR)/%.o: %.cpp
