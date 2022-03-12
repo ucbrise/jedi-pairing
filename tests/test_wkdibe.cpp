@@ -178,7 +178,7 @@ void test_wkdibe_adjust(void) {
 
 void test_wkdibe_sign(void) {
     MasterKey msk;
-    setup(p, msk, 10, false, random_bytes);
+    setup(p, msk, 10, true, random_bytes);
     keygen(sk1, p, msk, attrs2, random_bytes);
 
     Scalar msg;
