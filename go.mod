@@ -1,4 +1,4 @@
-module github.com/ucbrise/jedi-pairing
+module github.com/antimatterhq/jedi-pairing
 
 go 1.18
 
