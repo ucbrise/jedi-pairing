@@ -25,8 +25,9 @@ ARCHDIR = src/core/arch/$(ARCH)
 # ASFLAGS = -mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft
 # ARCHDIR = src/core/arch/armv6_m
 
-# To disable assembly optimizations, uncomment the following line (which adds -DDISABLE_ASM to CXXFLAGS)
-# CXXFLAGS += -DDISABLE_ASM
+ifeq ($(ARCH),arm64)
+CXXFLAGS += -DDISABLE_ASM
+endif
 
 PAIRING_CPP_SOURCES = $(wildcard src/core/*.cpp) $(wildcard src/bls12_381/*.cpp) $(wildcard src/wkdibe/*.cpp) $(wildcard src/lqibe/*.cpp) $(wildcard $(ARCHDIR)/*.cpp)
 PAIRING_ASM_SOURCES = $(wildcard $(ARCHDIR)/*.s)
