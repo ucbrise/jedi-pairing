@@ -49,21 +49,31 @@ PAIRING_ASM_SOURCES = $(wildcard $(ARCHDIR)/*.s)
 CPP_SOURCES = $(PAIRING_CPP_SOURCES)
 ASM_SOURCES = $(PAIRING_ASM_SOURCES)
 
+BIN_OS   ?= $(shell uname)
+BIN_ARCH ?= $(shell uname -m)
+
 BINDIR = bin
 PAIRING_OBJECTS = $(addprefix $(BINDIR)/,$(CPP_SOURCES:.cpp=.o)) $(addprefix $(BINDIR)/,$(ASM_SOURCES:.s=.o))
 
-all: pairing.a
+all: pairing.a ;
+
+$(BINDIR)/builtfor-%:
+	@echo "JEDI DETECTED ARCH CHANGE, CLEANING"
+	@rm -rf bin
+	@rm -rf pairing.a
+	@mkdir -p $(BINDIR)
+	@touch $@
 
 pairing.a: $(PAIRING_OBJECTS)
 	$(AR) rcs pairing.a $+
 
-$(BINDIR)/%.o: %.cpp
+$(BINDIR)/%.o: $(BINDIR)/builtfor-$(BIN_OS)-$(BIN_ARCH) %.cpp
 	mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(word 2,$+) -o $@
 
-$(BINDIR)/%.o: %.s
+$(BINDIR)/%.o: $(BINDIR)/builtfor-$(BIN_OS)-$(BIN_ARCH) %.s
 	mkdir -p $(dir $@)
-	$(AS) $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) $(word 2,$+) -o $@
 
 clean:
 	rm -rf bin pairing.a
